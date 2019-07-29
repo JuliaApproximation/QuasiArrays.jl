@@ -2,7 +2,7 @@ module QuasiArrays
 using Base, LinearAlgebra, LazyArrays
 import Base: getindex, size, axes, length, ==, isequal, iterate, CartesianIndices, LinearIndices,
                 Indices, IndexStyle, getindex, setindex!, parent, vec, convert, similar, copy, copyto!, zero,
-                map, eachindex, eltype, first, last, firstindex, lastindex, in
+                map, eachindex, eltype, first, last, firstindex, lastindex, in, reshape
 import Base: @_inline_meta, DimOrInd, OneTo, @_propagate_inbounds_meta, @_noinline_meta,
                 DimsInteger, error_if_canonical_getindex, @propagate_inbounds, _return_type,
                 _maybetail, tail, _getindex, _maybe_reshape, index_ndims, _unsafe_getindex,
@@ -28,7 +28,8 @@ import LazyArrays: MemoryLayout, UnknownLayout, Mul2, _materialize, MulLayout, â
                     LayoutApplyStyle, Applied, flatten, _flatten,
                     rowsupport, colsupport
 
-export AbstractQuasiArray, AbstractQuasiMatrix, AbstractQuasiVector, materialize
+export AbstractQuasiArray, AbstractQuasiMatrix, AbstractQuasiVector, materialize, 
+       QuasiArray, QuasiMatrix, QuasiVector, QuasiDiagonal
 
 abstract type AbstractQuasiArray{T,N} end
 AbstractQuasiVector{T} = AbstractQuasiArray{T,1}
@@ -45,11 +46,15 @@ include("indices.jl")
 include("abstractquasiarray.jl")
 include("multidimensional.jl")
 include("subquasiarray.jl")
+include("quasireshapedarray.jl")
 include("matmul.jl")
 include("abstractquasiarraymath.jl")
 
+
 include("quasiadjtrans.jl")
 include("quasidiagonal.jl")
+
+include("quasiarray.jl")
 
 
 materialize(M::Applied{<:Any,typeof(*),<:Tuple{Vararg{<:Union{Adjoint,QuasiAdjoint,QuasiDiagonal}}}}) =
