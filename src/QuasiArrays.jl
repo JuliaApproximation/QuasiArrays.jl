@@ -2,13 +2,15 @@ module QuasiArrays
 using Base, LinearAlgebra, LazyArrays
 import Base: getindex, size, axes, length, ==, isequal, iterate, CartesianIndices, LinearIndices,
                 Indices, IndexStyle, getindex, setindex!, parent, vec, convert, similar, copy, copyto!, zero,
-                map, eachindex, eltype, first, last, firstindex, lastindex, in, reshape
+                map, eachindex, eltype, first, last, firstindex, lastindex, in, reshape, all,
+                isreal, iszero, empty
 import Base: @_inline_meta, DimOrInd, OneTo, @_propagate_inbounds_meta, @_noinline_meta,
                 DimsInteger, error_if_canonical_getindex, @propagate_inbounds, _return_type,
                 _maybetail, tail, _getindex, _maybe_reshape, index_ndims, _unsafe_getindex,
                 index_shape, to_shape, unsafe_length, @nloops, @ncall, Slice, unalias
 import Base: ViewIndex, Slice, ScalarIndex, RangeIndex, view, viewindexing, ensure_indexable, index_dimsum,
-                check_parent_index_match, reindex, _isdisjoint, unsafe_indices,
+                check_parent_index_match, reindex, _isdisjoint, unsafe_indices, _unsafe_ind2sub,
+                _ind2sub, _sub2ind,
                 parentindices, reverse, ndims
 import Base: *, /, \, +, -, inv
 import Base: exp, log, sqrt,
@@ -39,7 +41,7 @@ AbstractQuasiVecOrMat{T} = Union{AbstractQuasiVector{T}, AbstractQuasiMatrix{T}}
 
 cardinality(d) = length(d)
 
-size(A::AbstractQuasiArray) = cardinality.(axes(A))
+size(A::AbstractQuasiArray) = map(cardinality, axes(A))
 axes(A::AbstractQuasiArray) = error("Override axes for $(typeof(A))")
 
 include("indices.jl")
