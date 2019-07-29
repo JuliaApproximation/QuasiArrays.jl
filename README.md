@@ -2,7 +2,7 @@
 A package for representing quasi-arrays
 
 [![Build Status](https://travis-ci.org/JuliaApproximation/QuasiArrays.jl.svg?branch=master)](https://travis-ci.org/JuliaApproximation/QuasiArrays.jl)
-[![Coverage Status](https://coveralls.io/repos/github/JuliaApproximation/QuasiArrays.jl/badge.svg?branch=master)](https://coveralls.io/github/JuliaApproximation/QuasiArrays.jl?branch=master)
+[![codecov](https://codecov.io/gh/JuliaApproximation/QuasiArrays.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaApproximation/QuasiArrays.jl)
 
 
 A _quasi-array_ is an array with non-classical indexing, including possibly 
