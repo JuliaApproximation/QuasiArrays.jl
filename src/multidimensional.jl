@@ -242,19 +242,19 @@ module QuasiIteratorsMD
 
     For cartesian to linear index conversion, see [`LinearIndices`](@ref).
     """
-    struct QuasiCartesianIndices{N,R<:NTuple{N,AbstractQuasiVector{<:Real}},RR<:NTuple{N,Real}} <: AbstractArray{QuasiCartesianIndex{N,RR},N}
+    const AbstractQuasiOrVector{T} = Union{AbstractVector{T},AbstractQuasiVector{T}}
+
+    struct QuasiCartesianIndices{N,R<:NTuple{N,AbstractQuasiOrVector{<:Real}},RR<:NTuple{N,Real}} <: AbstractArray{QuasiCartesianIndex{N,RR},N}
         indices::R
     end
 
-    QuasiCartesianIndices(nd::NTuple{N,AbstractQuasiVector{<:Real}}) where N = 
+    QuasiCartesianIndices(nd::NTuple{N,AbstractQuasiOrVector{<:Real}}) where N = 
         QuasiCartesianIndices{N,typeof(nd),Tuple{map(eltype,nd)...}}(nd)
 
     QuasiCartesianIndices(::Tuple{}) = QuasiCartesianIndices{0,typeof(())}(())
 
     QuasiCartesianIndices(index::QuasiCartesianIndex) = QuasiCartesianIndices(index.I)
     QuasiCartesianIndices(sz::NTuple{N,<:Real}) where {N} = QuasiCartesianIndices(map(Base.OneTo, sz))
-    QuasiCartesianIndices(inds::NTuple{N,Union{<:Real,AbstractQuasiVector{<:Real}}}) where {N} =
-        QuasiCartesianIndices(map(i->first(i):last(i), inds))
 
     QuasiCartesianIndices(A::AbstractQuasiArray) = QuasiCartesianIndices(axes(A))
 
