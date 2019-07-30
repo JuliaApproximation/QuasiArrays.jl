@@ -99,6 +99,10 @@ to_index(I::AbstractQuasiArray) = I
 to_index(I::AbstractQuasiArray{<:Union{AbstractArray, Colon}}) =
     throw(ArgumentError("invalid index: $I of type $(typeof(I))"))
 
+to_quasi_index(i::Real) = i
+to_quasi_index(i) = Base.to_index(i)
+to_index(A::AbstractQuasiArray, i) = to_quasi_index(i)
+
 LinearIndices(A::AbstractQuasiArray) = LinearIndices(axes(A))
 
 

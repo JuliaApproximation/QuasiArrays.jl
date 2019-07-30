@@ -11,8 +11,17 @@ end
 const QuasiMatrix{T,AXES<:Tuple} = QuasiArray{T,2,AXES}
 const QuasiVector{T,AXES<:Tuple} = QuasiArray{T,1,AXES}
 
+
 QuasiArray{T,N}(::UndefInitializer, axes::NTuple{N,AbstractQuasiVector{<:Real}}) where {T,N} =
+    QuasiArray{T,N}(undef, domain.(axes))
+QuasiArray{T,N}(::UndefInitializer, axes::NTuple{N,AbstractVector{<:Real}}) where {T,N} =
     QuasiArray(Array{T}(undef, map(length,axes)), axes)
+QuasiArray{T,N}(::UndefInitializer, axes::Vararg{AbstractVector{<:Real},N}) where {T,N} =
+    QuasiArray{T,N}(undef, axes)
+QuasiVector(::UndefInitializer, axes::AbstractVector{<:Real}) where T =
+    QuasiArray(Vector(undef,length(axes)), (axes,))
+QuasiMatrix(::UndefInitializer, ax1::AbstractVector{<:Real}, ax2::AbstractVector{<:Real}) where T =
+    QuasiArray(Matrix(undef,length(ax1),length(ax2)), (ax1,ax2))
 
 QuasiArray(par::AbstractArray{T,N}, axes::NTuple{N,AbstractVector{<:Real}}) where {T,N} = 
     QuasiArray{T,N,typeof(axes)}(par, axes)

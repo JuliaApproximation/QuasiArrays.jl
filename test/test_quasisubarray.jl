@@ -5,7 +5,7 @@ A = QuasiArray(rand(5,4,3), (range(0;stop=1,length=5), Base.OneTo(4), [2,3,6]))
 sA = view(A, 0.25:0.25, 1:4, :)
 @test @inferred(size(sA)) == (1, 4, 3)
 @test parent(sA) == A
-@test parentindices(sA) == (2:2, 1:5, Base.Slice(1:8))
+@test parentindices(sA) == (0.25:0.25, 1:4, Inclusion([2,3,6]))
 @test Base.parentdims(sA) == [1:3;]
 @test size(sA) == (1, 5, 8)
 @test axes(sA) === (Base.OneTo(1), Base.OneTo(5), Base.OneTo(8))
