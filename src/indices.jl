@@ -158,3 +158,10 @@ function checkindex(::Type{Bool}, inds::Inclusion, I::AbstractArray)
     end
     b
 end
+
+function checkindex(::Type{Bool}, inds::Inclusion, r::AbstractRange)
+    @_propagate_inbounds_meta
+    isempty(r) | (checkindex(Bool, inds, first(r)) & checkindex(Bool, inds, last(r)))
+end
+checkindex(::Type{Bool}, indx::Inclusion, I::AbstractVector{Bool}) = indx == axes1(I)
+checkindex(::Type{Bool}, indx::Inclusion, I::AbstractArray{Bool}) = false

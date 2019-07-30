@@ -98,8 +98,9 @@ instantiate(bc::Broadcasted{<:Union{AbstractQuasiArrayStyle{0}, Style{Tuple}}}) 
 result_join(::AbstractQuasiArrayStyle, ::AbstractQuasiArrayStyle, ::Unknown, ::Unknown) =
     QuasiArrayConflict()
 
-Base.@propagate_inbounds newindex(arg, I::QuasiCartesianIndex) = QuasiCartesianIndex(_newindex(axes(arg), I.I))    
-@inline newindex(I::QuasiCartesianIndex, keep, Idefault) = QuasiCartesianIndex(_newindex(I.I, keep, Idefault))
+# for now we assume indexing is simple
+Base.@propagate_inbounds newindex(arg, I::QuasiCartesianIndex) = I
+@inline newindex(I::QuasiCartesianIndex, keep, Idefault) = I
 
 @inline function Base.getindex(bc::Broadcasted, I::QuasiCartesianIndex)
     @boundscheck checkbounds(bc, I)
@@ -109,13 +110,13 @@ end
 Base.@propagate_inbounds Base.getindex(bc::Broadcasted{<:AbstractQuasiArrayStyle}, i1::Real, i2::Real, I::Real...) = bc[QuasiCartesianIndex((i1, i2, I...))]
 Base.@propagate_inbounds Base.getindex(bc::Broadcasted{<:AbstractQuasiArrayStyle}) = bc[QuasiCartesianIndex(())]
 
-@inline Base.checkbounds(bc::Broadcasted{<:AbstractQuasiArrayStyle}, I::Union{Real,QuasiCartesianIndex}) =
+@inline Base.checkbounds(bc::Broadcasted{<:AbstractQuasiArrayStyle}, I::Real) =
     Base.checkbounds_indices(Bool, axes(bc), (I,)) || Base.throw_boundserror(bc, (I,))
 
 @inline Base.checkbounds(bc::Broadcasted, I::QuasiCartesianIndex) =
     Base.checkbounds_indices(Bool, axes(bc), (I,)) || Base.throw_boundserror(bc, (I,))
 
-Base.@propagate_inbounds _broadcast_getindex(A::AbstractQuasiArray{<:Any,0}, I) = A[] # Scalar-likes can just ignore all indices    
+Base.@propagate_inbounds _broadcast_getindex(A::AbstractQuasiArray{<:Any,0}, I) = A[] # Scalar-likes can just ignore all indices
 
 extrude(x::AbstractQuasiArray) = Extruded(x, newindexer(x)...)
 

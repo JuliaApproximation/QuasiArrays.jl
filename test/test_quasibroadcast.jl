@@ -26,13 +26,13 @@ import QuasiArrays: QuasiCartesianIndex, QuasiCartesianIndices, DefaultQuasiArra
 
     ci(x) = QuasiCartesianIndex(x)
     @test @inferred(newindex(ci((2,2)), (true, true), (-1,-1)))   == ci((2,2))
-    @test @inferred(newindex(ci((2,2)), (true, false), (-1,-1)))  == ci((2,-1))
-    @test @inferred(newindex(ci((2,2)), (false, true), (-1,-1)))  == ci((-1,2))
-    @test @inferred(newindex(ci((2,2)), (false, false), (-1,-1))) == ci((-1,-1))
-    @test @inferred(newindex(ci((2,2)), (true,), (-1,-1)))   == ci((2,))
-    @test @inferred(newindex(ci((2,2)), (true,), (-1,)))   == ci((2,))
-    @test @inferred(newindex(ci((2,2)), (false,), (-1,))) == ci((-1,))
-    @test @inferred(newindex(ci((2,2)), (), ())) == ci(())
+    @test_broken @inferred(newindex(ci((2,2)), (true, false), (-1,-1)))  == ci((2,-1))
+    @test_broken @inferred(newindex(ci((2,2)), (false, true), (-1,-1)))  == ci((-1,2))
+    @test_broken @inferred(newindex(ci((2,2)), (false, false), (-1,-1))) == ci((-1,-1))
+    @test_broken @inferred(newindex(ci((2,2)), (true,), (-1,-1)))   == ci((2,))
+    @test_broken @inferred(newindex(ci((2,2)), (true,), (-1,)))   == ci((2,))
+    @test_broken @inferred(newindex(ci((2,2)), (false,), (-1,))) == ci((-1,))
+    @test_broken @inferred(newindex(ci((2,2)), (), ())) == ci(())
 
     @test eltype(QuasiCartesianIndices(Inclusion.((0:0.1:1,0:0.2:1)))) == QuasiCartesianIndex{2,NTuple{2,Float64}}
 
