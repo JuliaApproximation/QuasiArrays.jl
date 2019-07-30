@@ -2,8 +2,8 @@
 
 using QuasiArrays, Test
 import Base: OneTo
-import Base.Broadcast: check_broadcast_axes, newindex, broadcasted
-import QuasiArrays: QuasiCartesianIndex, QuasiCartesianIndices
+import Base.Broadcast: check_broadcast_axes, newindex, broadcasted, broadcastable, Broadcasted
+import QuasiArrays: QuasiCartesianIndex, QuasiCartesianIndices, DefaultQuasiArrayStyle
 
 Z = QuasiArray(zeros(3,4),(0:0.5:1,0:3))
 z = QuasiArray(zeros(3),(0:0.5:1,))
@@ -36,135 +36,39 @@ ci(x) = QuasiCartesianIndex(x)
 @test eltype(QuasiCartesianIndices(Inclusion.((0:0.1:1,0:0.2:1)))) == QuasiCartesianIndex{2,NTuple{2,Float64}}
 
 A = QuasiArray([1 0; 0 1], (0:0.5:0.5, 1:0.5:1.5))
+b = QuasiArray([1,2], (0:0.5:0.5,))
 @test @inferred(collect(eachindex(A))) == [QuasiCartesianIndex(0.0,1.0) QuasiCartesianIndex(0.0,1.5);
                             QuasiCartesianIndex(0.5,1.0) QuasiCartesianIndex(0.5,1.5)]
 @test collect(eachindex(A)) isa Matrix{QuasiCartesianIndex{2,NTuple{2,Float64}}}
-Base.BroadcastStyle(typeof(A))
+@test broadcastable(A) === A
+@test Base.BroadcastStyle(typeof(A)) === DefaultQuasiArrayStyle{2}()
 bc = broadcasted(+, A)
-@which broadcasted(+, A)
-typeof(bc) isa Broadcasted{DefaultQuasiArrayStyle{2}}
+@test bc isa Broadcasted{DefaultQuasiArrayStyle{2}}
+@test broadcast(+, A) == A
+@test broadcast(+, A, A) == QuasiArray([2 0; 0 2],axes(A))
+@test Base.BroadcastStyle(Base.BroadcastStyle(typeof(A)), Base.BroadcastStyle(Int)) == DefaultQuasiArrayStyle{2}()
+@test broadcast(+, A, 1) == QuasiArray([2 1; 1 2],axes(A))
+@test broadcast(+, A, b) == QuasiArray([2 1; 2 3],axes(A))
+A = QuasiArray([1 0; 0 1], (0:0.5:0.5, 1:0.5:1.5)); @test broadcast!(+, A, A, b) == QuasiArray([2 1; 2 3],axes(A))
+A = QuasiArray([1 0], (0:0, 1:0.5:1.5)); @test_throws DimensionMismatch broadcast!(+, A, A, b)
+A = QuasiArray([1 2], (0:0, 1:0.5:1.5)); B = QuasiArray([3,4], (0:0.5:0.5,));
+@test_broken A .* B == QuasiArray([ 3 6; 4 8], (0:0.5:0.5,1:0.5:1.5))
 
-for arr in (identity, as_sub)
-    @test broadcast(+, arr([1 0; 0 1]), arr([1, 4])) == [2 1; 4 5]
-    @test broadcast(+, arr([1 0; 0 1]), arr([1  4])) == [2 4; 1 5]
-    @test broadcast(+, arr([1  0]), arr([1, 4])) == [2 1; 5 4]
-    @test broadcast(+, arr([1, 0]), arr([1  4])) == [2 5; 1 4]
-    @test broadcast(+, arr([1, 0]), arr([1, 4])) == [2, 4]
-    @test broadcast(+, arr([1, 0]), 2) == [3, 2]
-
-    @test @inferred(broadcast(+, arr([1 0; 0 1]), arr([1, 4]))) == arr([2 1; 4 5])
-    @test arr([1 0; 0 1]) .+ arr([1  4]) == arr([2 4; 1 5])
-    @test arr([1  0]) .+ arr([1, 4]) == arr([2 1; 5 4])
-    @test arr([1, 0]) .+ arr([1  4]) == arr([2 5; 1 4])
-    @test arr([1, 0]) .+ arr([1, 4]) == arr([2, 4])
-    @test arr([1]) .+ arr([]) == arr([])
-
-    A = arr([1 0; 0 1]); @test broadcast!(+, A, A, arr([1, 4])) == arr([2 1; 4 5])
-    A = arr([1 0; 0 1]); @test broadcast!(+, A, A, arr([1  4])) == arr([2 4; 1 5])
-    A = arr([1  0]); @test_throws DimensionMismatch broadcast!(+, A, A, arr([1, 4]))
-    A = arr([1  0]); @test broadcast!(+, A, A, arr([1  4])) == arr([2 4])
-    A = arr([1  0]); @test broadcast!(+, A, A, 2) == arr([3 2])
-
-    @test arr([ 1    2])   .* arr([3,   4])   == [ 3 6; 4 8]
-    @test arr([24.0 12.0]) ./ arr([2.0, 3.0]) == [12 6; 8 4]
-    @test arr([1 2]) ./ arr([3, 4]) == [1/3 2/3; 1/4 2/4]
-    @test arr([1 2]) .\ arr([3, 4]) == [3 1.5; 4 2]
-    @test arr([3 4]) .^ arr([1, 2]) == [3 4; 9 16]
-    @test arr(BitArray([true false])) .* arr(BitArray([true, true])) == [true false; true false]
-    @test arr(BitArray([true false])) .^ arr(BitArray([false, true])) == [true true; true false]
-    @test arr(BitArray([true false])) .^ arr([0, 3]) == [true true; true false]
-
-    M = arr([11 12; 21 22])
-    @test getindex.((M,), [2 1; 1 2], arr([1, 2])) == [21 11; 12 22]
-    @test_throws BoundsError getindex.((M,), [2 1; 1 2], arr([1, -1]))
-    @test_throws BoundsError getindex.((M,), [2 1; 1 2], arr([1, 2]), [2])
-    @test getindex.((M,), [2 1; 1 2],arr([2, 1]), [1]) == [22 12; 11 21]
-
-    A = arr(zeros(2,2))
-    setindex!.((A,), arr([21 11; 12 22]), [2 1; 1 2], arr([1, 2]))
-    @test A == M
-    setindex!.((A,), 5, [1,2], [2 2])
-    @test A == [11 5; 21 5]
-    setindex!.((A,), 7, [1,2], [1 2])
-    @test A == fill(7, 2, 2)
-    A = arr(zeros(3,3))
-    setindex!.((A,), 10:12, 1:3, 1:3)
-    @test A == [10 0 0; 0 11 0; 0 0 12]
-    @test_throws BoundsError setindex!.((A,), 7, [1,-1], [1 2])
-
-    for f in ((==), (<) , (!=), (<=))
-        bittest(f, arr([1 0; 0 1]), arr([1, 4]))
-        bittest(f, arr([1 0; 0 1]), arr([1  4]))
-        bittest(f, arr([0, 1]), arr([1  4]))
-        bittest(f, arr([0  1]), arr([1, 4]))
-        bittest(f, arr([1, 0]), arr([1, 4]))
-        bittest(f, arr(rand(rb, n1, n2, n3)), arr(rand(rb, n1, n2, n3)))
-        bittest(f, arr(rand(rb,  1, n2, n3)), arr(rand(rb, n1,  1, n3)))
-        bittest(f, arr(rand(rb,  1, n2,  1)), arr(rand(rb, n1,  1, n3)))
-        bittest(f, arr(bitrand(n1, n2, n3)), arr(bitrand(n1, n2, n3)))
-    end
-end
-
-r1 = 1:1
-r2 = 1:5
-ratio = [1,1/2,1/3,1/4,1/5]
-@test r1.*r2 == [1:5;]
-@test r1./r2 == ratio
-m = [1:2;]'
-@test m.*r2 == [1:5 2:2:10]
-@test m./r2 ≈ [ratio 2ratio]
-@test m./[r2;] ≈ [ratio 2ratio]
-
-@test @inferred(broadcast(+,[0,1.2],reshape([0,-2],1,1,2))) == reshape([0 -2; 1.2 -0.8],2,1,2)
-rt = Base.return_types(broadcast, Tuple{typeof(+), Array{Float64, 3}, Array{Int, 1}})
-@test length(rt) == 1 && rt[1] == Array{Float64, 3}
-rt = Base.return_types(broadcast!, Tuple{Function, Array{Float64, 3}, Array{Float64, 3}, Array{Int, 1}})
-@test length(rt) == 1 && rt[1] == Array{Float64, 3}
-
-# f.(args...) syntax (#15032)
-let x = [1, 3.2, 4.7],
-    y = [3.5, pi, 1e-4],
+@testset "f.(args...) syntax (#15032)" begin
+    x = QuasiVector([1, 3.2, 4.7],0:0.5:1)
+    y = QuasiVector([3.5, pi, 1e-4],0:0.5:1)
     α = 0.2342
     @test sin.(x) == broadcast(sin, x)
-    @test sin.(α) == broadcast(sin, α)
-    @test sin.(3.2) == broadcast(sin, 3.2) == sin(3.2)
-    @test factorial.(3) == broadcast(factorial, 3)
     @test atan.(x, y) == broadcast(atan, x, y)
-    @test atan.(x, y') == broadcast(atan, x, y')
+    @test_broken atan.(x, y') == broadcast(atan, x, y')
     @test atan.(x, α) == broadcast(atan, x, α)
-    @test atan.(α, y') == broadcast(atan, α, y')
+    @test_broken atan.(α, y') == broadcast(atan, α, y')
 end
 
-# issue 14725
-let a = Number[2, 2.0, 4//2, 2+0im] / 2
-    @test eltype(a) == Number
-end
-let a = Real[2, 2.0, 4//2] / 2
-    @test eltype(a) == Real
-end
-let a = Real[2, 2.0, 4//2] / 2.0
-    @test eltype(a) == Float64
-end
-
-# issue 16164
-let a = broadcast(Float32, [3, 4, 5])
-    @test eltype(a) == Float32
-end
-
-# broadcasting scalars:
-@test sin.(1) === broadcast(sin, 1) === sin(1)
-@test (()->1234).() === broadcast(()->1234) === 1234
-
-# issue #4883
-@test isa(broadcast(tuple, [1 2 3], ["a", "b", "c"]), Matrix{Tuple{Int,String}})
-@test isa(broadcast((x,y)->(x==1 ? 1.0 : x, y), [1 2 3], ["a", "b", "c"]), Matrix{Tuple{Real,String}})
-let a = length.(["foo", "bar"])
-    @test isa(a, Vector{Int})
-    @test a == [3, 3]
-end
-let a = sin.([1, 2])
-    @test isa(a, Vector{Float64})
-    @test a ≈ [0.8414709848078965, 0.9092974268256817]
+@testset "sin"
+    a = sin.(QuasiVector([1, 2],0:0.5:0.5))
+    @test isa(a, QuasiVector{Float64})
+    @test a ≈ QuasiVector([0.8414709848078965, 0.9092974268256817],0:0.5:0.5)
 end
 
 # PR #17300: loop fusion

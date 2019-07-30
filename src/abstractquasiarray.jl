@@ -356,19 +356,17 @@ julia> similar(falses(10), Float64, 2, 4)
 ```
 
 """
+
+const QuasiDimOrInd = Union{Real, AbstractQuasiVector{<:Real}}
+
 similar(a::AbstractQuasiArray{T}) where {T}                             = similar(a, T)
-similar(a::AbstractQuasiArray, ::Type{T}) where {T}                     = similar(a, T, to_shape(axes(a)))
-similar(a::AbstractQuasiArray{T}, dims::Tuple) where {T}                = similar(a, T, to_shape(dims))
-similar(a::AbstractQuasiArray{T}, dims::DimOrInd...) where {T}          = similar(a, T, to_shape(dims))
-similar(a::AbstractQuasiArray, ::Type{T}, dims::DimOrInd...) where {T}  = similar(a, T, to_shape(dims))
-# Similar supports specifying dims as either Integers or AbstractUnitRanges or any mixed combination
-# thereof. Ideally, we'd just convert Integers to OneTos and then call a canonical method with the axes,
-# but we don't want to require all AbstractQuasiArray subtypes to dispatch on Base.OneTo. So instead we
-# define this method to convert supported axes to Ints, with the expectation that an offset array
-# package will define a method with dims::Tuple{Union{Integer, UnitRange}, Vararg{Union{Integer, UnitRange}}}
-similar(a::AbstractQuasiArray, ::Type{T}, dims::Tuple{Union{Integer, OneTo}, Vararg{Union{Integer, OneTo}}}) where {T} = similar(a, T, to_shape(dims))
-# similar creates an Array by default
-similar(a::AbstractQuasiArray, ::Type{T}, dims::Dims{N}) where {T,N}    = Array{T,N}(undef, dims)
+similar(a::AbstractQuasiArray, ::Type{T}) where {T}                     = similar(a, T, axes(a))
+similar(a::AbstractQuasiArray{T}, dims::Tuple) where {T}                = similar(a, T, dims)
+similar(a::AbstractQuasiArray{T}, dims::QuasiDimOrInd...) where {T}          = similar(a, T, dims)
+similar(a::AbstractQuasiArray, ::Type{T}, dims::QuasiDimOrInd...) where {T}  = similar(a, T, dims)
+similar(::Type{<:AbstractQuasiArray{T}}, shape::NTuple{N,AbstractQuasiVector{<:Real}}) where {N,T} = QuasiArray{T,N}(undef, shape)
+similar(a::AbstractQuasiArray, ::Type{T}, dims::NTuple{N,AbstractQuasiVector{<:Real}}) where {T,N} = QuasiArray{T,N}(undef, dims)
+similar(a::AbstractQuasiArray, ::Type{T}, dims::Vararg{AbstractQuasiVector{<:Real},N}) where {T,N} = QuasiArray{T,N}(undef, dims)
 
 """
     similar(storagetype, axes)
@@ -392,9 +390,7 @@ indices of the result will match `A`.
 would create a 1-dimensional logical array whose indices match those
 of the columns of `A`.
 """
-similar(::Type{T}, dims::DimOrInd...) where {T<:AbstractQuasiArray} = similar(T, dims)
-similar(::Type{T}, shape::Tuple{Union{Integer, OneTo}, Vararg{Union{Integer, OneTo}}}) where {T<:AbstractQuasiArray} = similar(T, to_shape(shape))
-similar(::Type{T}, dims::Dims) where {T<:AbstractQuasiArray} = T(undef, dims)
+similar(::Type{T}, dims::QuasiDimOrInd...) where {T<:AbstractQuasiArray} = similar(T, dims)
 
 """
     empty(v::AbstractQuasiVector, [eltype])
@@ -447,12 +443,10 @@ function copyto!(::IndexStyle, dest::AbstractQuasiArray, ::IndexStyle, src::Abst
 end
 
 function copyto!(::IndexStyle, dest::AbstractQuasiArray, ::IndexCartesian, src::AbstractQuasiArray)
-    destinds, srcinds = LinearIndices(dest), LinearIndices(src)
-    isempty(srcinds) || (checkbounds(Bool, destinds, first(srcinds)) && checkbounds(Bool, destinds, last(srcinds))) ||
-        throw(BoundsError(dest, srcinds))
+    axes(dest) == axes(src) || throw(BoundsError(dest, axes(src)))
     i = 0
-    @inbounds for a in src
-        dest[i+=1] = a
+    @inbounds for i in eachindex(src)
+        dest[i] = src[i]
     end
     return dest
 end

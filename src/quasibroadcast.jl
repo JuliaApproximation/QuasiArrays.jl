@@ -1,3 +1,6 @@
+axistype(a::AbstractQuasiArray{<:Real}, b::AbstractQuasiArray{<:Real}) = a
+
+
 """
 `Broadcast.AbstractQuasiArrayStyle{N} <: BroadcastStyle` is the abstract supertype for any style
 associated with an `AbstractQuasiArray` type.
@@ -73,6 +76,7 @@ Base.@pure function BroadcastStyle(a::A, b::B) where {A<:AbstractQuasiArrayStyle
 end
 # Any specific array type beats DefaultQuasiArrayStyle
 BroadcastStyle(a::AbstractQuasiArrayStyle{Any}, ::DefaultQuasiArrayStyle) = a
+BroadcastStyle(a::AbstractQuasiArrayStyle{N}, ::DefaultArrayStyle{0}) where N = a
 BroadcastStyle(a::AbstractQuasiArrayStyle{N}, ::DefaultQuasiArrayStyle{N}) where N = a
 BroadcastStyle(a::AbstractQuasiArrayStyle{M}, ::DefaultQuasiArrayStyle{N}) where {M,N} =
     typeof(a)(Val(max(M, N)))
@@ -84,6 +88,8 @@ Base.similar(bc::Broadcasted{QuasiArrayConflict}, ::Type{ElType}) where ElType =
     similar(QuasiArray{ElType}, axes(bc))
 
 _axes(bc::Broadcasted{<:AbstractQuasiArrayStyle{0}}, ::Nothing) = ()
+
+_eachindex(t::NTuple{N,AbstractQuasiVector{<:Real}}) where N = QuasiCartesianIndices(t)
 
 instantiate(bc::Broadcasted{<:Union{AbstractQuasiArrayStyle{0}, Style{Tuple}}}) = bc
 
@@ -104,8 +110,10 @@ Base.@propagate_inbounds Base.getindex(bc::Broadcasted{<:AbstractQuasiArrayStyle
 @inline Base.checkbounds(bc::Broadcasted{<:AbstractQuasiArrayStyle}, I::Union{Real,QuasiCartesianIndex}) =
     Base.checkbounds_indices(Bool, axes(bc), (I,)) || Base.throw_boundserror(bc, (I,))
 
+@inline Base.checkbounds(bc::Broadcasted, I::QuasiCartesianIndex) =
+    Base.checkbounds_indices(Bool, axes(bc), (I,)) || Base.throw_boundserror(bc, (I,))
 
-Base.@propagate_inbounds _broadcast_getindex(A::Union{Ref,AbstractQuasiArray{<:Any,0},Number}, I) = A[] # Scalar-likes can just ignore all indices    
+Base.@propagate_inbounds _broadcast_getindex(A::AbstractQuasiArray{<:Any,0}, I) = A[] # Scalar-likes can just ignore all indices    
 
 extrude(x::AbstractQuasiArray) = Extruded(x, newindexer(x)...)
 

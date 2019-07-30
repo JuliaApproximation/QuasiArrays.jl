@@ -7,51 +7,47 @@ using QuasiArrays, Test
     @test count(!iszero, QuasiVector([1, 2, 3],0:0.5:1)) == 3
 
     let a = QuasiVector(fill(1., 4),0:0.5:1.5), b = a+a, c = a-a, d = a+a+a
-        @test b[1] === 2. && b[2] === 2. && b[3] === 2. && b[4] === 2.
-        @test c[1] === 0. && c[2] === 0. && c[3] === 0. && c[4] === 0.
-        @test d[1] === 3. && d[2] === 3. && d[3] === 3. && d[4] === 3.
+        @test b[0.0] === 2. && b[0.5] === 2. && b[1.0] === 2. && b[1.5] === 2.
+        @test c[0.0] === 0. && c[0.5] === 0. && c[1.0] === 0. && c[1.5] === 0.
+        @test d[0.0] === 3. && d[0.5] === 3. && d[1.0] === 3. && d[1.5] === 3.
     end
 
-    @test length((1,)) == 1
-    @test length((1,2)) == 2
+    v = QuasiVector([1,2,3], 0:0.5:1)
+    @test isequal(1 .+ v, QuasiVector([2,3,4], 0:0.5:1))
+    @test isequal(v .+ 1, QuasiVector([2,3,4], 0:0.5:1))
+    @test isequal(1 .- v, QuasiVector([0,-1,-2], 0:0.5:1))
+    @test isequal(v .- 1, QuasiVector([0,1,2], 0:0.5:1))
 
-    @test isequal(1 .+ [1,2,3], [2,3,4])
-    @test isequal([1,2,3] .+ 1, [2,3,4])
-    @test isequal(1 .- [1,2,3], [0,-1,-2])
-    @test isequal([1,2,3] .- 1, [0,1,2])
+    @test isequal(5*v, QuasiVector([5,10,15], 0:0.5:1))
+    @test isequal(v*5, QuasiVector([5,10,15], 0:0.5:1))
+    @test isequal(1 ./ v, QuasiVector([1.0,0.5,1/3], 0:0.5:1))
+    @test isequal(v/5, QuasiVector([0.2,0.4,0.6], 0:0.5:1))
 
-    @test isequal(5*[1,2,3], [5,10,15])
-    @test isequal([1,2,3]*5, [5,10,15])
-    @test isequal(1 ./ [1,2,5], [1.0,0.5,0.2])
-    @test isequal([1,2,3]/5, [0.2,0.4,0.6])
+    @test isequal(2 .% v, QuasiVector([0,0,2], 0:0.5:1))
+    @test isequal(v .% 2, QuasiVector([1,0,1], 0:0.5:1))
+    @test isequal(2 .÷ v, QuasiVector([2,1,0], 0:0.5:1))
+    @test isequal(v .÷ 2, QuasiVector([0,1,1], 0:0.5:1))
+    @test isequal(-2 .% v, QuasiVector([0,0,-2], 0:0.5:1))
+    @test isequal(-2 .÷ v, QuasiVector([-2,-1,0], 0:0.5:1))
 
-    @test isequal(2 .% [1,2,3], [0,0,2])
-    @test isequal([1,2,3] .% 2, [1,0,1])
-    @test isequal(2 .÷ [1,2,3], [2,1,0])
-    @test isequal([1,2,3] .÷ 2, [0,1,1])
-    @test isequal(-2 .% [1,2,3], [0,0,-2])
-    @test isequal([-1,-2,-3].%2, [-1,0,-1])
-    @test isequal(-2 .÷ [1,2,3], [-2,-1,0])
-    @test isequal([-1,-2,-3] .÷ 2, [0,-1,-1])
+    a = QuasiArray(fill(1.,2,2),(0:0.5:0.5,1:0.5:1.5))
+    b = similar(a)
+    @test axes(b) === axes(a)
+    @test b.axes === a.axes
+    copyto!(b,a)
+    @test b == a
 
-    @test isequal(1 .<< [1,2,5], [2,4,32])
-    @test isequal(128 .>> [1,2,5], [64,32,4])
-    @test isequal(2 .>> 1, 1)
-    @test isequal(1 .<< 1, 2)
-    @test isequal([1,2,5] .<< [1,2,5], [2,8,160])
-    @test isequal([10,20,50] .>> [1,2,5], [5,5,1])
-
-    a = fill(1.,2,2)
-    a[1,1] = 1
-    a[1,2] = 2
-    a[2,1] = 3
-    a[2,2] = 4
+    a[0.0,1.0] = 1
+    a[0.0,1.5] = 2
+    a[0.5,1.0] = 3
+    a[0.5,1.5] = 4
     b = copy(a')
-    @test a[1,1] == 1. && a[1,2] == 2. && a[2,1] == 3. && a[2,2] == 4.
-    @test b[1,1] == 1. && b[2,1] == 2. && b[1,2] == 3. && b[2,2] == 4.
-    a[[1 2 3 4]] .= 0
-    @test a == zeros(2,2)
-    a[[1 2], [1 2]] .= 1
+    @test a[0.0,1.0] == 1. && a[0.0,1.5] == 2. && a[0.5,1.0] == 3. && a[0.5,1.5] == 4.
+    @test b[1.0,0.0] == 1. && b[1.5,0.0] == 2. && b[1.0,0.5] == 3. && b[1.5,0.5] == 4.
+    @test a[[0.0,0.5], [1.0,1.5]] == [1 2; 3 4]
+    a[[0.0,0.5], [1.0,1.5]] .= 1
+    @test a.parent == fill(1,2,2)
+    a[[0.0 0.5], [1.0 1.5]] .= 1
     @test a == fill(1.,2,2)
     a[[1 2], 1] .= 0
     @test a[1,1] == 0. && a[1,2] == 1. && a[2,1] == 0. && a[2,2] == 1.

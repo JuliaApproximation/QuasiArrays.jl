@@ -14,6 +14,24 @@ function promote_shape(a::AbstractQuasiArray, b::AbstractQuasiArray)
     promote_shape(axes(a), axes(b))
 end
 
+const QuasiIndices{N} = NTuple{N,AbstractQuasiVector{<:Real}}
+function promote_shape(a::QuasiIndices, b::QuasiIndices)
+    if length(a) < length(b)
+        return promote_shape(b, a)
+    end
+    for i=1:length(b)
+        if a[i] != b[i]
+            throw(DimensionMismatch("dimensions must match"))
+        end
+    end
+    for i=length(b)+1:length(a)
+        if a[i] != 1:1
+            throw(DimensionMismatch("dimensions must match"))
+        end
+    end
+    return a
+end
+
 
 # convert to a supported index type (array or Int)
 """

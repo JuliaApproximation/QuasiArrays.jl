@@ -462,7 +462,7 @@ _maybe_reshape(::IndexCartesian, A::AbstractQuasiVector, I...) = A
 function _unsafe_getindex(::IndexStyle, A::AbstractQuasiArray, I::Vararg{Union{Real, AbstractArray}, N}) where N
     # This is specifically not inlined to prevent excessive allocations in type unstable code
     shape = index_shape(I...)
-    dest = similar(A, shape)
+    dest = similar(Array{eltype(A)}, shape)
     map(unsafe_length, axes(dest)) == map(unsafe_length, shape) || throw_checksize_error(dest, shape)
     _unsafe_getindex!(dest, A, I...) # usually a generated function, don't allow it to impact inference result
     return dest
