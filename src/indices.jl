@@ -32,68 +32,6 @@ function promote_shape(a::QuasiIndices, b::QuasiIndices)
     return a
 end
 
-
-# convert to a supported index type (array or Int)
-"""
-    to_index(A, i)
-
-Convert index `i` to an `Int` or array of indices to be used as an index into array `A`.
-
-Custom array types may specialize `to_index(::CustomArray, i)` to provide
-special indexing behaviors. Note that some index types (like `Colon`) require
-more context in order to transform them into an array of indices; those get
-converted in the more complicated `to_indices` function. By default, this
-simply calls the generic `to_index(i)`. This must return either an `Int` or an
-`AbstractArray` of scalar indices that are supported by `A`.
-"""
-to_index(A, i) = to_index(i)
-
-"""
-    to_index(i)
-
-Convert index `i` to an `Int` or array of `Int`s to be used as an index for all arrays.
-
-Custom index types may specialize `to_index(::CustomIndex)` to provide special
-indexing behaviors. This must return either an `Int` or an `AbstractArray` of
-`Int`s.
-"""
-to_index(i::Real) = i
-to_index(i::Bool) = throw(ArgumentError("invalid index: $i of type $(typeof(i))"))
-to_index(I::AbstractArray{Bool}) = LogicalIndex(I)
-to_index(I::AbstractArray) = I
-to_index(I::AbstractArray{<:Union{AbstractArray, Colon}}) =
-    throw(ArgumentError("invalid index: $I of type $(typeof(I))"))
-to_index(::Colon) = throw(ArgumentError("colons must be converted by to_indices(...)"))
-to_index(i) = throw(ArgumentError("invalid index: $i of type $(typeof(i))"))
-
-# The general to_indices is mostly defined in multidimensional.jl, but this
-# definition is required for bootstrap:
-"""
-    to_indices(A, I::Tuple)
-
-Convert the tuple `I` to a tuple of indices for use in indexing into array `A`.
-
-The returned tuple must only contain either `Int`s or `AbstractArray`s of
-scalar indices that are supported by array `A`. It will error upon encountering
-a novel index type that it does not know how to process.
-
-For simple index types, it defers to the unexported `Base.to_index(A, i)` to
-process each index `i`. While this internal function is not intended to be
-called directly, `Base.to_index` may be extended by custom array or index types
-to provide custom indexing behaviors.
-
-More complicated index types may require more context about the dimension into
-which they index. To support those cases, `to_indices(A, I)` calls
-`to_indices(A, axes(A), I)`, which then recursively walks through both the
-given tuple of indices and the dimensional indices of `A` in tandem. As such,
-not all index types are guaranteed to propagate to `Base.to_index`.
-"""
-to_indices(A, I::Tuple) = (@_inline_meta; to_indices(A, axes(A), I))
-to_indices(A, I::Tuple{Any}) = (@_inline_meta; to_indices(A, (eachindex(IndexLinear(), A),), I))
-to_indices(A, inds, ::Tuple{}) = ()
-to_indices(A, inds, I::Tuple{Any, Vararg{Any}}) =
-    (@_inline_meta; (to_index(A, I[1]), to_indices(A, _maybetail(inds), tail(I))...))
-
 # check for valid sizes in A[I...] = X where X <: AbstractQuasiArray
 # we want to allow dimensions that are equal up to permutation, but only
 # for permutations that leave array elements in the same linear order.
@@ -182,6 +120,7 @@ Inclusion(domain) = Inclusion{eltype(domain),typeof(domain)}(domain)
 Inclusion(S::Inclusion) = S
 ==(A::Inclusion, B::Inclusion) = A.domain == B.domain
 domain(A::Inclusion) = A.domain
+domain(A::AbstractUnitRange) = A
 axes(S::Inclusion) = (S,)
 unsafe_indices(S::Inclusion) = (S,)
 axes1(S::Inclusion) = S
