@@ -20,7 +20,8 @@ import Base: exp, log, sqrt,
           acosh, asinh, atanh, acsch, asech, acoth
 import Base: Array, Matrix, Vector
 
-import Base.Broadcast: materialize
+import Base.Broadcast: materialize, BroadcastStyle, Style, broadcasted, Broadcasted, Unknown,
+                        newindex, _newindex, broadcastable
 
 import LinearAlgebra: transpose, adjoint, checkeltype_adjoint, checkeltype_transpose, Diagonal,
                         AbstractTriangular, pinv, inv
@@ -31,7 +32,7 @@ import LazyArrays: MemoryLayout, UnknownLayout, Mul2, _materialize, MulLayout, â
                     rowsupport, colsupport
 
 export AbstractQuasiArray, AbstractQuasiMatrix, AbstractQuasiVector, materialize, 
-       QuasiArray, QuasiMatrix, QuasiVector, QuasiDiagonal
+       QuasiArray, QuasiMatrix, QuasiVector, QuasiDiagonal, Inclusion
 
 abstract type AbstractQuasiArray{T,N} end
 AbstractQuasiVector{T} = AbstractQuasiArray{T,1}
@@ -49,6 +50,7 @@ include("abstractquasiarray.jl")
 include("multidimensional.jl")
 include("subquasiarray.jl")
 include("quasireshapedarray.jl")
+include("quasibroadcast.jl")
 include("matmul.jl")
 include("abstractquasiarraymath.jl")
 

@@ -163,6 +163,7 @@ end
 Inclusion(domain) = Inclusion{eltype(domain),typeof(domain)}(domain)
 Inclusion(S::Inclusion) = S
 ==(A::Inclusion, B::Inclusion) = A.domain == B.domain
+domain(A::Inclusion) = A.domain
 axes(S::Inclusion) = (S,)
 unsafe_indices(S::Inclusion) = (S,)
 axes1(S::Inclusion) = S
