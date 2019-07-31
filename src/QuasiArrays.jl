@@ -24,7 +24,7 @@ import Base: exp, log, sqrt,
 import Base: Array, Matrix, Vector
 
 import Base.Broadcast: materialize, BroadcastStyle, Style, broadcasted, Broadcasted, Unknown,
-                        newindex, _newindex, broadcastable, preprocess, _eachindex, _broadcast_getindex,
+                        newindex, broadcastable, preprocess, _eachindex, _broadcast_getindex,
                         DefaultArrayStyle, axistype
 
 import LinearAlgebra: transpose, adjoint, checkeltype_adjoint, checkeltype_transpose, Diagonal,

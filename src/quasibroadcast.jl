@@ -98,9 +98,16 @@ instantiate(bc::Broadcasted{<:Union{AbstractQuasiArrayStyle{0}, Style{Tuple}}}) 
 result_join(::AbstractQuasiArrayStyle, ::AbstractQuasiArrayStyle, ::Unknown, ::Unknown) =
     QuasiArrayConflict()
 
+Base.@propagate_inbounds _newindex(ax::Tuple, I::Tuple) = (ifelse(Base.unsafe_length(ax[1])==1, first(ax[1]), I[1]), _newindex(tail(ax), tail(I))...)
+Base.@propagate_inbounds _newindex(ax::Tuple{}, I::Tuple) = ()
+Base.@propagate_inbounds _newindex(ax::Tuple, I::Tuple{}) = (first(ax[1]), _newindex(tail(ax), ())...)
+Base.@propagate_inbounds _newindex(ax::Tuple{}, I::Tuple{}) = ()
+@inline _newindex(I, keep, Idefault) =
+    (ifelse(keep[1], I[1], Idefault[1]), _newindex(tail(I), tail(keep), tail(Idefault))...)
+@inline _newindex(I, keep::Tuple{}, Idefault) = ()  # truncate if keep is shorter than I
 # for now we assume indexing is simple
-Base.@propagate_inbounds newindex(arg, I::QuasiCartesianIndex) = I
-@inline newindex(I::QuasiCartesianIndex, keep, Idefault) = I
+Base.@propagate_inbounds newindex(arg, I::QuasiCartesianIndex) = QuasiCartesianIndex(_newindex(axes(arg), I.I))
+@inline newindex(I::QuasiCartesianIndex, keep, Idefault) = QuasiCartesianIndex(_newindex(I.I, keep, Idefault))
 
 @inline function Base.getindex(bc::Broadcasted, I::QuasiCartesianIndex)
     @boundscheck checkbounds(bc, I)
