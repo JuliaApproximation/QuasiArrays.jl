@@ -260,53 +260,12 @@ function checkbounds(::Type{Bool}, A::AbstractQuasiArray{<:Any,N}, I::AbstractQu
     axes(A) == axes(I)
 end
 
-"""
-    checkbounds(A, I...)
 
-Throw an error if the specified indices `I` are not in bounds for the given array `A`.
-"""
 function checkbounds(A::AbstractQuasiArray, I...)
     @_inline_meta
     checkbounds(Bool, A, I...) || throw_boundserror(A, I)
     nothing
 end
-
-
-"""
-    checkbounds_indices(Bool, IA, I)
-
-Return `true` if the "requested" indices in the tuple `I` fall within
-the bounds of the "permitted" indices specified by the tuple
-`IA`. This function recursively consumes elements of these tuples,
-usually in a 1-for-1 fashion,
-
-    checkbounds_indices(Bool, (IA1, IA...), (I1, I...)) = checkindex(Bool, IA1, I1) &
-                                                          checkbounds_indices(Bool, IA, I)
-
-Note that [`checkindex`](@ref) is being used to perform the actual
-bounds-check for a single dimension of the array.
-
-There are two important exceptions to the 1-1 rule: linear indexing and
-CartesianIndex{N}, both of which may "consume" more than one element
-of `IA`.
-
-See also [`checkbounds`](@ref).
-"""
-function checkbounds_indices(::Type{Bool}, IA::Tuple, I::Tuple)
-    @_inline_meta
-    checkindex(Bool, IA[1], I[1]) & checkbounds_indices(Bool, tail(IA), tail(I))
-end
-function checkbounds_indices(::Type{Bool}, ::Tuple{}, I::Tuple)
-    @_inline_meta
-    checkindex(Bool, OneTo(1), I[1]) & checkbounds_indices(Bool, (), tail(I))
-end
-checkbounds_indices(::Type{Bool}, IA::Tuple, ::Tuple{}) = (@_inline_meta; all(x->unsafe_length(x)==1, IA))
-checkbounds_indices(::Type{Bool}, ::Tuple{}, ::Tuple{}) = true
-
-throw_boundserror(A, I) = (@_noinline_meta; throw(BoundsError(A, I)))
-
-# check along a single dimension
-checkindex(::Type{Bool}, inds, i) = Base.checkindex(Bool, inds, i)
 
 
 # See also specializations in multidimensional
@@ -356,19 +315,17 @@ julia> similar(falses(10), Float64, 2, 4)
 ```
 
 """
+
+const QuasiDimOrInd = Union{Real, AbstractQuasiVector{<:Real}}
+
 similar(a::AbstractQuasiArray{T}) where {T}                             = similar(a, T)
-similar(a::AbstractQuasiArray, ::Type{T}) where {T}                     = similar(a, T, to_shape(axes(a)))
-similar(a::AbstractQuasiArray{T}, dims::Tuple) where {T}                = similar(a, T, to_shape(dims))
-similar(a::AbstractQuasiArray{T}, dims::DimOrInd...) where {T}          = similar(a, T, to_shape(dims))
-similar(a::AbstractQuasiArray, ::Type{T}, dims::DimOrInd...) where {T}  = similar(a, T, to_shape(dims))
-# Similar supports specifying dims as either Integers or AbstractUnitRanges or any mixed combination
-# thereof. Ideally, we'd just convert Integers to OneTos and then call a canonical method with the axes,
-# but we don't want to require all AbstractQuasiArray subtypes to dispatch on Base.OneTo. So instead we
-# define this method to convert supported axes to Ints, with the expectation that an offset array
-# package will define a method with dims::Tuple{Union{Integer, UnitRange}, Vararg{Union{Integer, UnitRange}}}
-similar(a::AbstractQuasiArray, ::Type{T}, dims::Tuple{Union{Integer, OneTo}, Vararg{Union{Integer, OneTo}}}) where {T} = similar(a, T, to_shape(dims))
-# similar creates an Array by default
-similar(a::AbstractQuasiArray, ::Type{T}, dims::Dims{N}) where {T,N}    = Array{T,N}(undef, dims)
+similar(a::AbstractQuasiArray, ::Type{T}) where {T}                     = similar(a, T, axes(a))
+similar(a::AbstractQuasiArray{T}, dims::Tuple) where {T}                = similar(a, T, dims)
+similar(a::AbstractQuasiArray{T}, dims::QuasiDimOrInd...) where {T}          = similar(a, T, dims)
+similar(a::AbstractQuasiArray, ::Type{T}, dims::QuasiDimOrInd...) where {T}  = similar(a, T, dims)
+similar(::Type{<:AbstractQuasiArray{T}}, shape::NTuple{N,AbstractQuasiVector{<:Real}}) where {N,T} = QuasiArray{T,N}(undef, shape)
+similar(a::AbstractQuasiArray, ::Type{T}, dims::NTuple{N,AbstractQuasiVector{<:Real}}) where {T,N} = QuasiArray{T,N}(undef, dims)
+similar(a::AbstractQuasiArray, ::Type{T}, dims::Vararg{AbstractQuasiVector{<:Real},N}) where {T,N} = QuasiArray{T,N}(undef, dims)
 
 """
     similar(storagetype, axes)
@@ -392,9 +349,7 @@ indices of the result will match `A`.
 would create a 1-dimensional logical array whose indices match those
 of the columns of `A`.
 """
-similar(::Type{T}, dims::DimOrInd...) where {T<:AbstractQuasiArray} = similar(T, dims)
-similar(::Type{T}, shape::Tuple{Union{Integer, OneTo}, Vararg{Union{Integer, OneTo}}}) where {T<:AbstractQuasiArray} = similar(T, to_shape(shape))
-similar(::Type{T}, dims::Dims) where {T<:AbstractQuasiArray} = T(undef, dims)
+similar(::Type{T}, dims::QuasiDimOrInd...) where {T<:AbstractQuasiArray} = similar(T, dims)
 
 """
     empty(v::AbstractQuasiVector, [eltype])
@@ -447,12 +402,10 @@ function copyto!(::IndexStyle, dest::AbstractQuasiArray, ::IndexStyle, src::Abst
 end
 
 function copyto!(::IndexStyle, dest::AbstractQuasiArray, ::IndexCartesian, src::AbstractQuasiArray)
-    destinds, srcinds = LinearIndices(dest), LinearIndices(src)
-    isempty(srcinds) || (checkbounds(Bool, destinds, first(srcinds)) && checkbounds(Bool, destinds, last(srcinds))) ||
-        throw(BoundsError(dest, srcinds))
+    axes(dest) == axes(src) || throw(BoundsError(dest, axes(src)))
     i = 0
-    @inbounds for a in src
-        dest[i+=1] = a
+    @inbounds for i in eachindex(src)
+        dest[i] = src[i]
     end
     return dest
 end
@@ -504,44 +457,6 @@ end
 
 isempty(a::AbstractQuasiArray) = (length(a) == 0)
 
-## Approach:
-# We only define one fallback method on getindex for all argument types.
-# That dispatches to an (inlined) internal _getindex function, where the goal is
-# to transform the indices such that we can call the only getindex method that
-# we require the type A{T,N} <: AbstractQuasiArray{T,N} to define; either:
-#       getindex(::A, ::Real) # if IndexStyle(A) == IndexLinear() OR
-#       getindex(::A{T,N}, ::Vararg{Int, N}) where {T,N} # if IndexCartesian()
-# If the subtype hasn't defined the required method, it falls back to the
-# _getindex function again where an error is thrown to prevent stack overflows.
-"""
-    getindex(A, inds...)
-
-Return a subset of array `A` as specified by `inds`, where each `ind` may be an
-`Int`, an [`AbstractRange`](@ref), or a [`Vector`](@ref). See the manual section on
-[array indexing](@ref man-array-indexing) for details.
-
-# Examples
-```jldoctest
-julia> A = [1 2; 3 4]
-2×2 Array{Int64,2}:
- 1  2
- 3  4
-
-julia> getindex(A, 1)
-1
-
-julia> getindex(A, [2, 1])
-2-element Array{Int64,1}:
- 3
- 1
-
-julia> getindex(A, 2:4)
-3-element Array{Int64,1}:
- 3
- 2
- 4
-```
-"""
 function getindex(A::AbstractQuasiArray, I...)
     @_propagate_inbounds_meta
     error_if_canonical_getindex(IndexStyle(A), A, I...)

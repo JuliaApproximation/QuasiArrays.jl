@@ -117,6 +117,14 @@ MemoryLayout(M::ApplyQuasiArray) = ApplyLayout(M.applied.f, MemoryLayout.(M.appl
 
 materialize(A::Applied{LazyQuasiArrayApplyStyle}) = ApplyQuasiArray(A)
 
+checkaxescompatible(A, B) = 
+    axes(A,2) == axes(B,1) || throw(DimensionMismatch("A has axes $(axes(A)) but B has axes $(axes(B))"))
+
+function materialize(A::Applied{LazyQuasiArrayApplyStyle,typeof(*)}) 
+    checkaxescompatible(A.args...)
+    ApplyQuasiArray(A)
+end
+
 @inline copyto!(dest::AbstractQuasiArray, M::Applied) = _copyto!(MemoryLayout(dest), dest, M)
 @inline _copyto!(_, dest::AbstractQuasiArray, M::Applied) = copyto!(dest, materialize(M))
 
