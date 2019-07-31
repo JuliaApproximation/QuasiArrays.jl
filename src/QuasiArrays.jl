@@ -3,16 +3,18 @@ using Base, LinearAlgebra, LazyArrays
 import Base: getindex, size, axes, length, ==, isequal, iterate, CartesianIndices, LinearIndices,
                 Indices, IndexStyle, getindex, setindex!, parent, vec, convert, similar, copy, copyto!, zero,
                 map, eachindex, eltype, first, last, firstindex, lastindex, in, reshape, all,
-                isreal, iszero, empty, isapprox
+                isreal, iszero, isempty, empty, isapprox
 import Base: @_inline_meta, DimOrInd, OneTo, @_propagate_inbounds_meta, @_noinline_meta,
                 DimsInteger, error_if_canonical_getindex, @propagate_inbounds, _return_type,
                 _maybetail, tail, _getindex, _maybe_reshape, index_ndims, _unsafe_getindex,
-                index_shape, to_shape, unsafe_length, @nloops, @ncall, Slice, unalias
+                index_shape, to_shape, unsafe_length, @nloops, @ncall, Slice, unalias,
+                to_index, to_indices, _to_subscript_indices
 import Base: ViewIndex, Slice, ScalarIndex, RangeIndex, view, viewindexing, ensure_indexable, index_dimsum,
                 check_parent_index_match, reindex, _isdisjoint, unsafe_indices, _unsafe_ind2sub,
                 _ind2sub, _sub2ind,
                 parentindices, reverse, ndims, checkbounds,
-                promote_shape
+                promote_shape, maybeview, checkindex, checkbounds_indices,
+                throw_boundserror
 import Base: *, /, \, +, -, inv
 import Base: exp, log, sqrt,
           cos, sin, tan, csc, sec, cot,
@@ -22,7 +24,7 @@ import Base: exp, log, sqrt,
 import Base: Array, Matrix, Vector
 
 import Base.Broadcast: materialize, BroadcastStyle, Style, broadcasted, Broadcasted, Unknown,
-                        newindex, _newindex, broadcastable, preprocess, _eachindex, _broadcast_getindex,
+                        newindex, broadcastable, preprocess, _eachindex, _broadcast_getindex,
                         DefaultArrayStyle, axistype
 
 import LinearAlgebra: transpose, adjoint, checkeltype_adjoint, checkeltype_transpose, Diagonal,
@@ -33,10 +35,12 @@ import LazyArrays: MemoryLayout, UnknownLayout, Mul2, _materialize, MulLayout, â
                     LayoutApplyStyle, Applied, flatten, _flatten,
                     rowsupport, colsupport
 
-export AbstractQuasiArray, AbstractQuasiMatrix, AbstractQuasiVector, materialize, 
+import Base.IteratorsMD
+
+export AbstractQuasiArray, AbstractQuasiMatrix, AbstractQuasiVector, materialize,
        QuasiArray, QuasiMatrix, QuasiVector, QuasiDiagonal, Inclusion
 
-if VERSION < v"1.2-"
+if VERSION < v"1.3-"
     """
     broadcast_preserving_zero_d(f, As...)
 
@@ -54,7 +58,7 @@ if VERSION < v"1.2-"
     broadcast_preserving_zero_d(f, as::Number...) = fill(f(as...))
 else
     import Base.Broadcast: broadcast_preserving_zero_d
-end       
+end
 
 abstract type AbstractQuasiArray{T,N} end
 AbstractQuasiVector{T} = AbstractQuasiArray{T,1}
@@ -103,6 +107,6 @@ function isapprox(x::AbstractQuasiArray, y::AbstractQuasiArray;
         # Fall back to a component-wise approximate comparison
         return all(ab -> isapprox(ab[1], ab[2]; rtol=rtol, atol=atol, nans=nans), zip(x, y))
     end
-end    
+end
 
 end

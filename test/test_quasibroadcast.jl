@@ -53,7 +53,7 @@ import QuasiArrays: QuasiCartesianIndex, QuasiCartesianIndices, DefaultQuasiArra
     A = QuasiArray([1 0; 0 1], (0:0.5:0.5, 1:0.5:1.5)); @test broadcast!(+, A, A, b) == QuasiArray([2 1; 2 3],axes(A))
     A = QuasiArray([1 0], (0:0, 1:0.5:1.5)); @test_throws DimensionMismatch broadcast!(+, A, A, b)
     A = QuasiArray([1 2], (0:0, 1:0.5:1.5)); B = QuasiArray([3,4], (0:0.5:0.5,));
-    @test_broken A .* B == QuasiArray([ 3 6; 4 8], (0:0.5:0.5,1:0.5:1.5))
+    @test A .* B == QuasiArray([ 3 6; 4 8], (0:0.5:0.5,1:0.5:1.5))
 
     @testset "f.(args...) syntax (#15032)" begin
         x = QuasiVector([1, 3.2, 4.7],0:0.5:1)

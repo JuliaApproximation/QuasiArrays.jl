@@ -437,20 +437,12 @@ getindex(t::Tuple,  i::QuasiCartesianIndex{1}) = getindex(t, i.I[1])
     return _unsafe_getindex(l, _maybe_reshape(l, A, I...), I...)
 end
 
-# Colons get converted to slices by `uncolon`
-@inline to_indices(A, inds, I::Tuple{Colon, Vararg{Any}}) =
-    (uncolon(inds, I), to_indices(A, _maybetail(inds), tail(I))...)
-
 @inline index_dimsum(::AbstractQuasiArray{Bool}, I...) = (true, index_dimsum(I...)...)
 @inline function index_dimsum(::AbstractQuasiArray{<:Any,N}, I...) where N
     (ntuple(x->true, Val(N))..., index_dimsum(I...)...)
 end
 
-slice(d::AbstractVector) = Slice(d)
-slice(d) = Inclusion(d)
-
-uncolon(inds::Tuple{},    I::Tuple{Colon, Vararg{Any}}) = slice(OneTo(1))
-uncolon(inds::Tuple,      I::Tuple{Colon, Vararg{Any}}) = slice(inds[1])
+Slice(d::AbstractQuasiVector{<:Real}) = Inclusion(d)
 
 
 _maybe_reshape(::IndexLinear, A::AbstractQuasiArray, I...) = A
