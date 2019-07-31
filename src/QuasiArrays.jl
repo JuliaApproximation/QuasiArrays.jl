@@ -40,7 +40,7 @@ import Base.IteratorsMD
 export AbstractQuasiArray, AbstractQuasiMatrix, AbstractQuasiVector, materialize,
        QuasiArray, QuasiMatrix, QuasiVector, QuasiDiagonal, Inclusion
 
-if VERSION < v"1.2-"
+if VERSION < v"1.3-"
     """
     broadcast_preserving_zero_d(f, As...)
 
