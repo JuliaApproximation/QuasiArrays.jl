@@ -12,22 +12,20 @@ const QuasiMatrix{T,AXES<:Tuple} = QuasiArray{T,2,AXES}
 const QuasiVector{T,AXES<:Tuple} = QuasiArray{T,1,AXES}
 
 
-QuasiArray{T,N}(::UndefInitializer, axes::NTuple{N,AbstractQuasiVector{<:Real}}) where {T,N} =
-    QuasiArray{T,N}(undef, domain.(axes))
-QuasiArray{T,N}(::UndefInitializer, axes::NTuple{N,AbstractVector{<:Real}}) where {T,N} =
+QuasiArray{T,N}(::UndefInitializer, axes::NTuple{N,AbstractQuasiOrVector{<:Real}}) where {T,N} =
     QuasiArray(Array{T}(undef, map(length,axes)), axes)
-QuasiArray{T,N}(::UndefInitializer, axes::Vararg{AbstractVector{<:Real},N}) where {T,N} =
+QuasiArray{T,N}(::UndefInitializer, axes::Vararg{AbstractQuasiOrVector{<:Real},N}) where {T,N} =
     QuasiArray{T,N}(undef, axes)
-QuasiVector(::UndefInitializer, axes::AbstractVector{<:Real}) where T =
+QuasiVector(::UndefInitializer, axes::AbstractQuasiOrVector{<:Real}) where T =
     QuasiArray(Vector(undef,length(axes)), (axes,))
-QuasiMatrix(::UndefInitializer, ax1::AbstractVector{<:Real}, ax2::AbstractVector{<:Real}) where T =
+QuasiMatrix(::UndefInitializer, ax1::AbstractQuasiOrVector{<:Real}, ax2::AbstractQuasiOrVector{<:Real}) where T =
     QuasiArray(Matrix(undef,length(ax1),length(ax2)), (ax1,ax2))
 
-QuasiArray(par::AbstractArray{T,N}, axes::NTuple{N,AbstractVector{<:Real}}) where {T,N} = 
+QuasiArray(par::AbstractArray{T,N}, axes::NTuple{N,AbstractQuasiOrVector{<:Real}}) where {T,N} = 
     QuasiArray{T,N,typeof(axes)}(par, axes)
-QuasiMatrix(par::AbstractMatrix{T}, axes::NTuple{2,AbstractVector{<:Real}}) where T = 
+QuasiMatrix(par::AbstractMatrix{T}, axes::NTuple{2,AbstractQuasiOrVector{<:Real}}) where T = 
     QuasiArray{T,2,typeof(axes)}(par, axes)
-QuasiVector(par::AbstractVector{T}, axes::Tuple{AbstractVector{<:Real}}) where T = 
+QuasiVector(par::AbstractVector{T}, axes::Tuple{AbstractQuasiOrVector{<:Real}}) where T = 
     QuasiArray{T,1,typeof(axes)}(par, axes)
 
 QuasiVector(par::AbstractVector{T}, axes::AbstractArray) where {T} = 
@@ -35,10 +33,12 @@ QuasiVector(par::AbstractVector{T}, axes::AbstractArray) where {T} =
 
 QuasiArray(par::AbstractArray, axes::Tuple) = QuasiArray(convert(Array, par), axes)
 
-QuasiArray{T,N}(par::AbstractArray, axes::NTuple{N,Inclusion}) where {T,N} = QuasiArray{T,N}(par, domain.(axes))
-QuasiArray(par::AbstractArray, axes::NTuple{N,Inclusion}) where N = QuasiArray(par, domain.(axes))
+_inclusion(d::Slice) = d
+_inclusion(d::OneTo) = d
+_inclusion(d) = Inclusion(d)
 
-axes(A::QuasiArray) = Inclusion.(A.axes)
+
+axes(A::QuasiArray) = _inclusion.(A.axes)
 parent(A::QuasiArray) = A.parent
 
 @propagate_inbounds @inline function getindex(A::QuasiArray{<:Any,N}, I::Vararg{Real,N}) where N
