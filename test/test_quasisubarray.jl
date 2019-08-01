@@ -9,20 +9,15 @@ sA = view(A, 0.25:0.25, 1:4, :)
 @test size(sA) == (1, 4, 3)
 @test axes(sA) == (Base.OneTo(1), Base.OneTo(4), Inclusion([2,3,6]))
 @test sA[1, 2, [2,3,6]][:] == [7,27,47]
-sA = view(A, 0.0:0.25:0.5, 1:4, 6)
-sA[1:3,1:4] .= -2
+sA = view(A, 0.0:0.25:1, 1:4, 6)
+sA[1:5,1:4] .= -2
 @test all(A[:,:,6] .== -2)
 fill!(sA, -3)
-@test all(A[:,:,5] .== -3)
-sA[:] .= 4
-@test all(A[:,:,5] .== 4)
-@test @inferred(strides(sA)) == (1,3)
-test_bounds(sA)
-sA = view(A, 1:3, 3:3, 2:5)
-@test Base.parentdims(sA) == [1:3;]
-@test size(sA) == (3,1,4)
-@test axes(sA) === (Base.OneTo(3), Base.OneTo(1), Base.OneTo(4))
-@test sA == A[1:3,3:3,2:5]
+@test all(A[:,:,6] .== -3)
+sA = view(A, 0.0:0.25:1, 3:3, 2:3)
+@test size(sA) == (5,1,2)
+@test axes(sA) === (Base.OneTo(5), Base.OneTo(1), Base.OneTo(2))
+@test sA == A[0.0:0.25:1,3:3,2:3]
 @test sA[:] == A[1:3,3,2:5][:]
 test_bounds(sA)
 sA = view(A, 1:2:3, 1:3:5, 1:2:8)

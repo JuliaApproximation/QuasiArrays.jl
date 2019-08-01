@@ -476,3 +476,12 @@ end
         return dest
     end
 end
+
+
+function fill!(A::AbstractQuasiArray{T}, x) where T
+    xT = convert(T, x)
+    for I in eachindex(A)
+        @inbounds A[I] = xT
+    end
+    A
+end
