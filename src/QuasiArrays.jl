@@ -14,7 +14,7 @@ import Base: ViewIndex, Slice, ScalarIndex, RangeIndex, view, viewindexing, ensu
                 _ind2sub, _sub2ind,
                 parentindices, reverse, ndims, checkbounds,
                 promote_shape, maybeview, checkindex, checkbounds_indices,
-                throw_boundserror
+                throw_boundserror, rdims
 import Base: *, /, \, +, -, inv
 import Base: exp, log, sqrt,
           cos, sin, tan, csc, sec, cot,
