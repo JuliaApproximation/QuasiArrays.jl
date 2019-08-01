@@ -1,14 +1,14 @@
 # This file is based on a part of Julia. License is MIT: https://julialang.org/license
 
 using QuasiArrays, Test
-import Base: OneTo
+import Base: OneTo, Slice
 import Base.Broadcast: check_broadcast_axes, newindex, broadcasted, broadcastable, Broadcasted
 import QuasiArrays: QuasiCartesianIndex, QuasiCartesianIndices, DefaultQuasiArrayStyle
 
 @testset "Broadcasting" begin
     Z = QuasiArray(zeros(3,4),(0:0.5:1,0:3))
     z = QuasiArray(zeros(3),(0:0.5:1,))
-    ax = Inclusion.((0:0.5:1,0:3))
+    ax = (Inclusion(0:0.5:1),Slice(0:3))
     @test @inferred(Broadcast.combine_axes(Z,Z)) == ax
     @test @inferred(Broadcast.combine_axes(Z,z)) == ax
     @test @inferred(Broadcast.combine_axes(z,Z)) == ax
@@ -46,11 +46,11 @@ import QuasiArrays: QuasiCartesianIndex, QuasiCartesianIndices, DefaultQuasiArra
     bc = broadcasted(+, A)
     @test bc isa Broadcasted{DefaultQuasiArrayStyle{2}}
     @test broadcast(+, A) == A
-    @test broadcast(+, A, A) == QuasiArray([2 0; 0 2],axes(A))
+    @test broadcast(+, A, A) == QuasiArray([2 0; 0 2],A.axes)
     @test Base.BroadcastStyle(Base.BroadcastStyle(typeof(A)), Base.BroadcastStyle(Int)) == DefaultQuasiArrayStyle{2}()
-    @test broadcast(+, A, 1) == QuasiArray([2 1; 1 2],axes(A))
-    @test broadcast(+, A, b) == QuasiArray([2 1; 2 3],axes(A))
-    A = QuasiArray([1 0; 0 1], (0:0.5:0.5, 1:0.5:1.5)); @test broadcast!(+, A, A, b) == QuasiArray([2 1; 2 3],axes(A))
+    @test broadcast(+, A, 1) == QuasiArray([2 1; 1 2],A.axes)
+    @test broadcast(+, A, b) == QuasiArray([2 1; 2 3],A.axes)
+    A = QuasiArray([1 0; 0 1], (0:0.5:0.5, 1:0.5:1.5)); @test broadcast!(+, A, A, b) == QuasiArray([2 1; 2 3],A.axes)
     A = QuasiArray([1 0], (0:0, 1:0.5:1.5)); @test_throws DimensionMismatch broadcast!(+, A, A, b)
     A = QuasiArray([1 2], (0:0, 1:0.5:1.5)); B = QuasiArray([3,4], (0:0.5:0.5,));
     @test A .* B == QuasiArray([ 3 6; 4 8], (0:0.5:0.5,1:0.5:1.5))
