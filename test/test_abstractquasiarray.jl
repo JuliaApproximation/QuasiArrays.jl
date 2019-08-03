@@ -77,4 +77,10 @@ using QuasiArrays, Test
         v3 = empty(v, Float64)
         @test !isempty(v)
     end
+
+    @testset "QuasiArray indexing" begin
+        v = QuasiArray([1, 2, 3],(0:0.5:1,))
+        @test axes(v) == axes(v[:]) == axes(v[Inclusion(0:0.5:1)]) == (Inclusion(0:0.5:1),)
+        @test v[0.5] == v[:][0.5] == v[Inclusion(0:0.5:1)][0.5] == 2
+    end
 end

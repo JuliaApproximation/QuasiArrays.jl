@@ -22,9 +22,9 @@ using QuasiArrays, Test
     @test convert(AbstractArray,sA) == convert(AbstractArray{Int},sA) ==
             Array(sA) == Array{Int}(sA) == A[0.0:0.25:1,3:3,2:3]
 
-    @test Matrix(view(sA,1:1,2:2,1))[1] == sA[1,2,1] == 17
+    @test Matrix(view(sA,1:1,1:1,1))[1] == sA[1,1,1] == 11
     # Test with mixed types
-    @test sA[:, Int16[1,2], big(2)] == [22 37; 24 39]
+    @test sA[:, Int16(1), [big(1),2]] == [11:15 31:35]
     sA = view(A, 0.25:0.25, 1:4, [2 3; 2 6])
     @test ndims(sA) == 4
     @test axes(sA) === (Base.OneTo(1), Base.OneTo(4), Base.OneTo(2), Base.OneTo(2))
