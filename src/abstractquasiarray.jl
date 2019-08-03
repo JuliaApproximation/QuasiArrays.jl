@@ -17,6 +17,21 @@ convert(::Type{T}, a::T) where {T<:AbstractQuasiArray} = a
 convert(::Type{AbstractQuasiArray{T}}, a::AbstractQuasiArray) where {T} = AbstractQuasiArray{T}(a)
 convert(::Type{AbstractQuasiArray{T,N}}, a::AbstractQuasiArray{<:Any,N}) where {T,N} = AbstractQuasiArray{T,N}(a)
 
+Array{T}(a::AbstractQuasiArray) where T = T[a[k] for k in eachindex(a)]
+Array{T,N}(a::AbstractQuasiArray{<:Any,N}) where {T,N} = Array{T}(a)
+Array(a::AbstractQuasiArray{T}) where T = Array{T}(a)
+Matrix(a::AbstractQuasiMatrix{T}) where T = Array{T}(a)
+Vector(a::AbstractQuasiVector{T}) where T = Array{T}(a)
+
+convert(::Type{AbstractArray{T}}, a::AbstractQuasiArray) where T = Array{T}(a)
+convert(::Type{AbstractArray}, a::AbstractQuasiArray{T}) where T = convert(AbstractArray{T}, a)
+convert(::Type{AbstractArray{T,N}}, a::AbstractQuasiArray{<:Any,N}) where {T,N} = convert(AbstractArray{T}, a)
+convert(::Type{AbstractMatrix}, a::AbstractQuasiMatrix) = convert(AbstractArray, a)
+convert(::Type{AbstractVector}, a::AbstractQuasiVector) = convert(AbstractArray, a)
+
+
+
+
 """
     size(A::AbstractQuasiArray, [dim])
 
@@ -267,105 +282,23 @@ function checkbounds(A::AbstractQuasiArray, I...)
     nothing
 end
 
-
-# See also specializations in multidimensional
-
-## Constructors ##
-
-# default arguments to similar()
-"""
-    similar(array, [element_type=eltype(array)], [dims=size(array)])
-
-Create an uninitialized mutable array with the given element type and size, based upon the
-given source array. The second and third arguments are both optional, defaulting to the
-given array's `eltype` and `size`. The dimensions may be specified either as a single tuple
-argument or as a series of integer arguments.
-
-Custom AbstractQuasiArray subtypes may choose which specific array type is best-suited to return
-for the given element type and dimensionality. If they do not specialize this method, the
-default is an `Array{element_type}(undef, dims...)`.
-
-For example, `similar(1:10, 1, 4)` returns an uninitialized `Array{Int,2}` since ranges are
-neither mutable nor support 2 dimensions:
-
-```julia-repl
-julia> similar(1:10, 1, 4)
-1×4 Array{Int64,2}:
- 4419743872  4374413872  4419743888  0
-```
-
-Conversely, `similar(trues(10,10), 2)` returns an uninitialized `BitVector` with two
-elements since `BitArray`s are both mutable and can support 1-dimensional arrays:
-
-```julia-repl
-julia> similar(trues(10,10), 2)
-2-element BitArray{1}:
- false
- false
-```
-
-Since `BitArray`s can only store elements of type [`Bool`](@ref), however, if you request a
-different element type it will create a regular `Array` instead:
-
-```julia-repl
-julia> similar(falses(10), Float64, 2, 4)
-2×4 Array{Float64,2}:
- 2.18425e-314  2.18425e-314  2.18425e-314  2.18425e-314
- 2.18425e-314  2.18425e-314  2.18425e-314  2.18425e-314
-```
-
-"""
-
-const QuasiDimOrInd = Union{Real, AbstractQuasiVector{<:Real}}
+const QuasiDimOrInd = Union{Real, AbstractQuasiOrVector{<:Real}}
 
 similar(a::AbstractQuasiArray{T}) where {T}                             = similar(a, T)
 similar(a::AbstractQuasiArray, ::Type{T}) where {T}                     = similar(a, T, axes(a))
 similar(a::AbstractQuasiArray{T}, dims::Tuple) where {T}                = similar(a, T, dims)
 similar(a::AbstractQuasiArray{T}, dims::QuasiDimOrInd...) where {T}          = similar(a, T, dims)
 similar(a::AbstractQuasiArray, ::Type{T}, dims::QuasiDimOrInd...) where {T}  = similar(a, T, dims)
-similar(::Type{<:AbstractQuasiArray{T}}, shape::NTuple{N,AbstractQuasiVector{<:Real}}) where {N,T} = QuasiArray{T,N}(undef, shape)
-similar(a::AbstractQuasiArray, ::Type{T}, dims::NTuple{N,AbstractQuasiVector{<:Real}}) where {T,N} = QuasiArray{T,N}(undef, dims)
-similar(a::AbstractQuasiArray, ::Type{T}, dims::Vararg{AbstractQuasiVector{<:Real},N}) where {T,N} = QuasiArray{T,N}(undef, dims)
+similar(::Type{<:AbstractQuasiArray{T}}, shape::NTuple{N,AbstractQuasiOrVector{<:Real}}) where {N,T} =
+    QuasiArray{T,N}(undef, convert.(AbstractVector, shape))
+similar(a::AbstractQuasiArray, ::Type{T}, dims::NTuple{N,AbstractQuasiOrVector{<:Real}}) where {T,N} =
+    QuasiArray{T,N}(undef, convert.(AbstractVector, dims))
+similar(a::AbstractQuasiArray, ::Type{T}, dims::Vararg{AbstractQuasiOrVector{<:Real},N}) where {T,N} =
+    QuasiArray{T,N}(undef, convert.(AbstractVector, dims))
 
-"""
-    similar(storagetype, axes)
 
-Create an uninitialized mutable array analogous to that specified by
-`storagetype`, but with `axes` specified by the last
-argument. `storagetype` might be a type or a function.
-
-**Examples**:
-
-    similar(Array{Int}, axes(A))
-
-creates an array that "acts like" an `Array{Int}` (and might indeed be
-backed by one), but which is indexed identically to `A`. If `A` has
-conventional indexing, this will be identical to
-`Array{Int}(undef, size(A))`, but if `A` has unconventional indexing then the
-indices of the result will match `A`.
-
-    similar(BitArray, (axes(A, 2),))
-
-would create a 1-dimensional logical array whose indices match those
-of the columns of `A`.
-"""
 similar(::Type{T}, dims::QuasiDimOrInd...) where {T<:AbstractQuasiArray} = similar(T, dims)
 
-"""
-    empty(v::AbstractQuasiVector, [eltype])
-
-Create an empty vector similar to `v`, optionally changing the `eltype`.
-
-# Examples
-
-```jldoctest
-julia> empty([1.0, 2.0, 3.0])
-0-element Array{Float64,1}
-
-julia> empty([1.0, 2.0, 3.0], String)
-0-element Array{String,1}
-```
-"""
 empty(a::AbstractQuasiVector{T}, ::Type{U}=T) where {T,U} = Vector{U}()
 
 # like empty, but should return a mutable collection, a Vector by default

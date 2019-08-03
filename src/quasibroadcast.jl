@@ -1,4 +1,5 @@
-axistype(a::AbstractQuasiArray{<:Real}, b::AbstractQuasiArray{<:Real}) = a
+axistype(a::AbstractQuasiVector{<:Real}, b::AbstractQuasiVector{<:Real}) = a
+axistype(a::AbstractQuasiVector{<:Real}, b::AbstractVector{<:Real}) = a
 
 
 """

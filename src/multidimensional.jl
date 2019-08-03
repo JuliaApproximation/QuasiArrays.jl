@@ -8,7 +8,7 @@ module QuasiIteratorsMD
     import Base: simd_outer_range, simd_inner_length, simd_index
     using Base: IndexLinear, IndexCartesian, AbstractCartesianIndex, fill_to_length, tail
     using Base.Iterators: Reverse
-    import QuasiArrays: AbstractQuasiArray, AbstractQuasiVector, domain
+    import QuasiArrays: AbstractQuasiArray, AbstractQuasiVector, domain, AbstractQuasiOrVector
 
     export QuasiCartesianIndex, QuasiCartesianIndices
 
@@ -242,7 +242,6 @@ module QuasiIteratorsMD
 
     For cartesian to linear index conversion, see [`LinearIndices`](@ref).
     """
-    const AbstractQuasiOrVector{T} = Union{AbstractVector{T},AbstractQuasiVector{T}}
 
     struct QuasiCartesianIndices{N,R<:NTuple{N,AbstractQuasiOrVector{<:Real}},RR<:NTuple{N,Real}} <: AbstractArray{QuasiCartesianIndex{N,RR},N}
         indices::R
@@ -476,4 +475,13 @@ end
         end
         return dest
     end
+end
+
+
+function fill!(A::AbstractQuasiArray{T}, x) where T
+    xT = convert(T, x)
+    for I in eachindex(A)
+        @inbounds A[I] = xT
+    end
+    A
 end

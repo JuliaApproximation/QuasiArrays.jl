@@ -122,6 +122,16 @@ struct Inclusion{T,AX} <: AbstractQuasiVector{T}
 end
 Inclusion(domain) = Inclusion{eltype(domain),typeof(domain)}(domain)
 Inclusion(S::Inclusion) = S
+Inclusion(S::Slice) = Inclusion(S.indices)
+
+convert(::Type{AbstractVector}, d::Inclusion{<:Any,<:AbstractVector}) =
+    convert(AbstractVector, d.domain)
+convert(::Type{AbstractArray}, d::Inclusion{<:Any,<:AbstractVector}) =
+    convert(AbstractArray, d.domain)
+Vector(d::Inclusion{<:Any,<:AbstractVector}) = Vector(d.domain)
+Array(d::Inclusion{<:Any,<:AbstractVector}) = Array(d.domain)
+
+
 ==(A::Inclusion, B::Inclusion) = A.domain == B.domain
 domain(A::Inclusion) = A.domain
 domain(A::AbstractUnitRange) = A
