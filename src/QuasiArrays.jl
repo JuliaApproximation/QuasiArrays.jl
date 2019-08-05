@@ -38,7 +38,8 @@ import LazyArrays: MemoryLayout, UnknownLayout, Mul2, _materialize, MulLayout, â
 import Base.IteratorsMD
 
 export AbstractQuasiArray, AbstractQuasiMatrix, AbstractQuasiVector, materialize,
-       QuasiArray, QuasiMatrix, QuasiVector, QuasiDiagonal, Inclusion
+       QuasiArray, QuasiMatrix, QuasiVector, QuasiDiagonal, Inclusion,
+       QuasiAdjoint, QuasiTranspose
 
 if VERSION < v"1.3-"
     """
