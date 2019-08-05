@@ -23,6 +23,12 @@ Array(a::AbstractQuasiArray{T}) where T = Array{T}(a)
 Matrix(a::AbstractQuasiMatrix{T}) where T = Array{T}(a)
 Vector(a::AbstractQuasiVector{T}) where T = Array{T}(a)
 
+convert(::Type{Array{T}}, a::AbstractQuasiArray) where T = Array{T}(a)
+convert(::Type{Array{T,N}}, a::AbstractQuasiArray{<:Any,N}) where {T,N} = Array{T}(a)
+convert(::Type{Array}, a::AbstractQuasiArray{T}) where T = Array{T}(a)
+convert(::Type{Matrix}, a::AbstractQuasiMatrix{T}) where T = Array{T}(a)
+convert(::Type{Vector}, a::AbstractQuasiVector{T}) where T = Array{T}(a)
+
 convert(::Type{AbstractArray{T}}, a::AbstractQuasiArray) where T = Array{T}(a)
 convert(::Type{AbstractArray}, a::AbstractQuasiArray{T}) where T = convert(AbstractArray{T}, a)
 convert(::Type{AbstractArray{T,N}}, a::AbstractQuasiArray{<:Any,N}) where {T,N} = convert(AbstractArray{T}, a)
@@ -304,19 +310,6 @@ empty(a::AbstractQuasiVector{T}, ::Type{U}=T) where {T,U} = Vector{U}()
 # like empty, but should return a mutable collection, a Vector by default
 emptymutable(a::AbstractQuasiVector{T}, ::Type{U}=T) where {T,U} = Vector{U}()
 
-## from general iterable to any array
-
-function copyto!(dest::AbstractQuasiArray, src)
-    destiter = eachindex(dest)
-    y = iterate(destiter)
-    for x in src
-        y === nothing &&
-            throw(ArgumentError(string("destination has fewer elements than required")))
-        dest[y[1]] = x
-        y = iterate(destiter, y[2])
-    end
-    return dest
-end
 
 ## copy between abstract arrays - generally more efficient
 ## since a single index variable can be used.
@@ -349,26 +342,6 @@ function copy(a::AbstractQuasiArray)
 end
 
 
-"""
-    copymutable(a)
-
-Make a mutable copy of an array or iterable `a`.  For `a::Array`,
-this is equivalent to `copy(a)`, but for other array types it may
-differ depending on the type of `similar(a)`.  For generic iterables
-this is equivalent to `collect(a)`.
-
-# Examples
-```jldoctest
-julia> tup = (1, 2, 3)
-(1, 2, 3)
-
-julia> Base.copymutable(tup)
-3-element Array{Int64,1}:
- 1
- 2
- 3
-```
-"""
 function copymutable(a::AbstractQuasiArray)
     @_propagate_inbounds_meta
     copyto!(similar(a), a)
@@ -458,27 +431,7 @@ _to_subscript_indices(A::AbstractQuasiArray{T,N}, I::Vararg{Real,N}) where {T,N}
 ## Setindex! is defined similarly. We first dispatch to an internal _setindex!
 # function that allows dispatch on array storage
 
-"""
-    setindex!(A, X, inds...)
-    A[inds...] = X
 
-Store values from array `X` within some subset of `A` as specified by `inds`.
-The syntax `A[inds...] = X` is equivalent to `setindex!(A, X, inds...)`.
-
-# Examples
-```jldoctest
-julia> A = zeros(2,2);
-
-julia> setindex!(A, [10, 20], [1, 2]);
-
-julia> A[[3, 4]] = [30, 40];
-
-julia> A
-2×2 Array{Float64,2}:
- 10.0  30.0
- 20.0  40.0
-```
-"""
 function setindex!(A::AbstractQuasiArray, v, I...)
     @_propagate_inbounds_meta
     error_if_canonical_setindex(IndexStyle(A), A, I...)
@@ -531,7 +484,7 @@ unaliascopy(A::AbstractQuasiArray)::typeof(A) = (@_noinline_meta; _unaliascopy(A
 """
     Base.mightalias(A::AbstractQuasiArray, B::AbstractQuasiArray)
 
-Perform a conservative test to check if arrays `A` and `B` might share the same memory.
+Perform a conservative test to check if quasi arrays `A` and `B` might share the same memory.
 
 By default, this simply checks if either of the arrays reference the same memory
 regions, as identified by their [`Base.dataids`](@ref).
@@ -650,50 +603,7 @@ end
 ## transform any set of dimensions
 ## dims specifies which dimensions will be transformed. for example
 ## dims==1:2 will call f on all slices A[:,:,...]
-"""
-    mapslices(f, A; dims)
 
-Transform the given dimensions of array `A` using function `f`. `f` is called on each slice
-of `A` of the form `A[...,:,...,:,...]`. `dims` is an integer vector specifying where the
-colons go in this expression. The results are concatenated along the remaining dimensions.
-For example, if `dims` is `[1,2]` and `A` is 4-dimensional, `f` is called on `A[:,:,i,j]`
-for all `i` and `j`.
-
-# Examples
-```jldoctest
-julia> a = reshape(Vector(1:16),(2,2,2,2))
-2×2×2×2 Array{Int64,4}:
-[:, :, 1, 1] =
- 1  3
- 2  4
-
-[:, :, 2, 1] =
- 5  7
- 6  8
-
-[:, :, 1, 2] =
-  9  11
- 10  12
-
-[:, :, 2, 2] =
- 13  15
- 14  16
-
-julia> mapslices(sum, a, dims = [1,2])
-1×1×2×2 Array{Int64,4}:
-[:, :, 1, 1] =
- 10
-
-[:, :, 2, 1] =
- 26
-
-[:, :, 1, 2] =
- 42
-
-[:, :, 2, 2] =
- 58
-```
-"""
 function mapslices(f, A::AbstractQuasiArray; dims)
     if isempty(dims)
         return map(f,A)
@@ -785,25 +695,6 @@ function map_n!(f::F, dest::AbstractQuasiArray, As) where F
     return dest
 end
 
-"""
-    map!(function, destination, collection...)
-
-Like [`map`](@ref), but stores the result in `destination` rather than a new
-collection. `destination` must be at least as large as the first collection.
-
-# Examples
-```jldoctest
-julia> x = zeros(3);
-
-julia> map!(x -> x * 2, x, [1, 2, 3]);
-
-julia> x
-3-element Array{Float64,1}:
- 2.0
- 4.0
- 6.0
-```
-"""
 map!(f::F, dest::AbstractQuasiArray, As::AbstractQuasiArray...) where {F} = map_n!(f, dest, As)
 
 

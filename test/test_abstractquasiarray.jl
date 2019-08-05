@@ -3,6 +3,22 @@ using QuasiArrays, Test
 @testset "AbstractQuasiArray" begin
     A = QuasiArray(rand(5,4,3), (range(0;stop=1,length=5), Base.OneTo(4), [2,3,6]))
 
+    @testset "Convert" begin
+        @test convert(typeof(A),A) === convert(AbstractQuasiArray{Float64},A) ===
+                convert(AbstractQuasiArray{Float64,3},A) === A
+        @test Array(A) == Array{Float64}(A) == Array{Float64,3}(A) ==
+                convert(Array,A) == convert(Array{Float64},A) ==
+                convert(Array{Float64,3},A) ==
+                convert(AbstractArray,A) == convert(AbstractArray{Float64},A) ==
+                convert(AbstractArray{Float64,3},A) == parent(A)
+        v = QuasiArray(1:5, (range(0;stop=1,length=5),))
+        @test Vector(v) == convert(AbstractVector,v) == Vector{Int}(v) ==
+                    convert(AbstractVector{Int},v) == parent(v)
+        M = QuasiArray(rand(5,4), (range(0;stop=1,length=5), Base.OneTo(4)))
+        @test Matrix(M) == convert(AbstractMatrix, M) == Matrix{Float64}(M) ==
+                convert(AbstractMatrix{Float64}, M) == parent(M)
+    end
+
     @testset "QuasiArray basics" begin
         @test_throws ArgumentError QuasiArray(rand(5,4,3), (range(0;stop=1,length=6), Base.OneTo(4), [1,3,4]))
         @test_throws MethodError QuasiArray(rand(5,4,3), Inclusion.((range(0;stop=1,length=6), Base.OneTo(4), [1,3,4])))
