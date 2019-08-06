@@ -93,6 +93,7 @@ _axes(bc::Broadcasted{<:AbstractQuasiArrayStyle{0}}, ::Nothing) = ()
 _eachindex(t::Tuple{AbstractQuasiVector{<:Real}}) = QuasiCartesianIndices(t)
 _eachindex(t::NTuple{N,AbstractQuasiVector{<:Real}}) where N = QuasiCartesianIndices(t)
 _eachindex(t::Tuple{AbstractQuasiVector{<:Real},Vararg{AbstractUnitRange}}) = QuasiCartesianIndices(t)
+_eachindex(t::Tuple{AbstractUnitRange,AbstractQuasiVector{<:Real},Vararg{AbstractUnitRange}}) = QuasiCartesianIndices(t)
 
 instantiate(bc::Broadcasted{<:Union{AbstractQuasiArrayStyle{0}, Style{Tuple}}}) = bc
 
