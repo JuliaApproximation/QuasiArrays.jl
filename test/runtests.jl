@@ -7,3 +7,4 @@ include("test_quasisubarray.jl")
 
 include("test_quasiadjtrans.jl")
 include("test_continuous.jl")
+include("test_matmul.jl")
