@@ -30,6 +30,15 @@ QuasiVector(par::AbstractVector{T}, axes::Tuple{AbstractVector{<:Real}}) where T
 
 QuasiVector(par::AbstractVector{T}, axes::AbstractArray) where {T} = 
     QuasiVector(par, (axes,))
+    
+
+QuasiArray(a::AbstractQuasiArray) = QuasiArray(Array(a), domain.(axes(a)))
+QuasiArray{T}(a::AbstractQuasiArray) where T = QuasiArray(Array{T}(a), domain.(axes(a)))
+QuasiArray{T,N}(a::AbstractQuasiArray{<:Any,N}) where {T,N} = QuasiArray(Array{T}(a), domain.(axes(a)))
+QuasiArray{T,N,AXES}(a::AbstractQuasiArray{<:Any,N}) where {T,N,AXES} = QuasiArray{T,N,AXES}(Array{T}(a), domain.(axes(a)))
+QuasiMatrix(a::AbstractQuasiMatrix) = QuasiArray(a)
+QuasiVector(a::AbstractQuasiVector) = QuasiArray(a)
+
 
 _inclusion(d::Slice) = d
 _inclusion(d::OneTo) = d
@@ -48,5 +57,7 @@ end
 @propagate_inbounds @inline function setindex!(A::QuasiArray{<:Any,N}, v, I::Vararg{Real,N}) where N
     @boundscheck checkbounds(A, I...)
     @inbounds A.parent[findfirst.(isequal.(I), A.axes)...] = v
-    v
+    A
 end
+
+convert(::Type{T}, a::AbstractQuasiArray) where {T<:QuasiArray} = a isa T ? a : T(a)

@@ -104,7 +104,7 @@ function setindex!(D::QuasiDiagonal, v, i::Int, j::Int)
     elseif !iszero(v)
         throw(ArgumentError("cannot set off-diagonal entry ($i, $j) to a nonzero value ($v)"))
     end
-    return v
+    return D
 end
 
 

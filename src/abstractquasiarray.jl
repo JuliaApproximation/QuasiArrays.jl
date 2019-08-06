@@ -585,7 +585,14 @@ function _sub2ind_vecs(inds, I::AbstractQuasiVector...)
     Iout
 end
 
-function _ind2sub(inds::Union{DimsInteger{N},Indices{N}}, ind::AbstractQuasiVector{<:Real}) where N
+_lookup(ind, r::Inclusion) = ind
+
+_ind2sub(dims::NTuple{N,Real}, ind::Real) where N = (@_inline_meta; _ind2sub_recurse(dims, ind-1))
+_ind2sub(inds::QuasiIndices, ind::Real)     = (@_inline_meta; _ind2sub_recurse(inds, ind-1))
+_ind2sub(inds::Tuple{Inclusion{<:Real},AbstractUnitRange{<:Integer}}, ind::Real)     = (@_inline_meta; _ind2sub_recurse(inds, ind-1))
+_ind2sub(inds::Tuple{AbstractUnitRange{<:Integer},Inclusion{<:Real}}, ind::Real)     = (@_inline_meta; _ind2sub_recurse(inds, ind-1))
+
+function _ind2sub(inds::Union{NTuple{N,Real},QuasiIndices{N}}, ind::AbstractQuasiVector{<:Real}) where N
     M = length(ind)
     t = ntuple(n->similar(ind),Val(N))
     for (i,idx) in pairs(IndexLinear(), ind)
