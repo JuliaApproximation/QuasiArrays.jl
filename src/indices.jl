@@ -120,10 +120,15 @@ role as `Slice` does for offset arrays.
 struct Inclusion{T,AX} <: AbstractQuasiVector{T}
     domain::AX
 end
-Inclusion(domain) = Inclusion{eltype(domain),typeof(domain)}(domain)
+Inclusion{T}(domain) where T = Inclusion{T,typeof(domain)}(domain)
+Inclusion{T}(S::Inclusion) where T = Inclusion{T}(S.domain)
+Inclusion{T}(S::Slice) where T = Inclusion{T}(S.indices)
+Inclusion(domain) = Inclusion{eltype(domain)}(domain)
 Inclusion(S::Inclusion) = S
 Inclusion(S::Slice) = Inclusion(S.indices)
 
+convert(::Type{Inclusion}, d::Inclusion) = d
+convert(::Type{Inclusion{T}}, d::Inclusion) where T = Inclusion{T}(d)
 convert(::Type{AbstractVector}, d::Inclusion{<:Any,<:AbstractVector}) =
     convert(AbstractVector, d.domain)
 convert(::Type{AbstractArray}, d::Inclusion{<:Any,<:AbstractVector}) =
