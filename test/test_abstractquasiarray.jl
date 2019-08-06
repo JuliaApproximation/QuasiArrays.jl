@@ -11,12 +11,16 @@ using QuasiArrays, Test
                 convert(Array{Float64,3},A) ==
                 convert(AbstractArray,A) == convert(AbstractArray{Float64},A) ==
                 convert(AbstractArray{Float64,3},A) == parent(A)
+        @test QuasiArray(A) == QuasiArray{Float64}(A) == QuasiArray{Float64,3}(A) ==
+                QuasiArray{Float64,3,typeof(A.axes)}(A) == copy(A) == A                
         v = QuasiArray(1:5, (range(0;stop=1,length=5),))
         @test Vector(v) == convert(AbstractVector,v) == Vector{Int}(v) ==
                     convert(AbstractVector{Int},v) == parent(v)
+        @test QuasiVector(v) == v                    
         M = QuasiArray(rand(5,4), (range(0;stop=1,length=5), Base.OneTo(4)))
         @test Matrix(M) == convert(AbstractMatrix, M) == Matrix{Float64}(M) ==
                 convert(AbstractMatrix{Float64}, M) == parent(M)
+        @test QuasiMatrix(M) == M
     end
 
     @testset "QuasiArray basics" begin

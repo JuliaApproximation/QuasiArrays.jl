@@ -61,9 +61,9 @@ import QuasiArrays: QuasiCartesianIndex, QuasiCartesianIndices, DefaultQuasiArra
         α = 0.2342
         @test sin.(x) == broadcast(sin, x)
         @test atan.(x, y) == broadcast(atan, x, y)
-        @test_broken atan.(x, y') == broadcast(atan, x, y')
+        @test atan.(x, y') == broadcast(atan, x, y')
         @test atan.(x, α) == broadcast(atan, x, α)
-        @test_broken atan.(α, y') == broadcast(atan, α, y')
+        @test atan.(α, y') == broadcast(atan, α, y')
     end
 
     @testset "sin" begin
