@@ -92,10 +92,8 @@ include("quasidiagonal.jl")
 
 
 
-function materialize(A::Applied{LazyQuasiArrayApplyStyle,typeof(*),<:Tuple{Vararg{<:Union{Adjoint,QuasiAdjoint,QuasiDiagonal}}}}) 
-    checkaxescompatible(A.args...)
-    ApplyQuasiArray(A)
-end
+materialize(M::Applied{LazyQuasiArrayApplyStyle,typeof(*),<:Tuple{Vararg{<:Union{Adjoint,QuasiAdjoint,QuasiDiagonal}}}}) =
+    apply(*,reverse(adjoint.(M.args))...)'
 
 materialize(M::Applied{<:Any,typeof(*),<:Tuple{Vararg{<:Union{Adjoint,QuasiAdjoint,QuasiDiagonal}}}}) =
     apply(*,reverse(adjoint.(M.args))...)'

@@ -117,8 +117,12 @@ MemoryLayout(M::ApplyQuasiArray) = ApplyLayout(M.applied.f, MemoryLayout.(M.appl
 
 materialize(A::Applied{LazyQuasiArrayApplyStyle}) = ApplyQuasiArray(A)
 
-checkaxescompatible(A, B) = 
+checkaxescompatible(A) = true
+function checkaxescompatible(A, B, C...)
     axes(A,2) == axes(B,1) || throw(DimensionMismatch("A has axes $(axes(A)) but B has axes $(axes(B))"))
+    checkaxescompatible(B, C...)
+end
+
 
 function materialize(A::Applied{LazyQuasiArrayApplyStyle,typeof(*)}) 
     checkaxescompatible(A.args...)

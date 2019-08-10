@@ -21,4 +21,10 @@ import QuasiArrays: ApplyQuasiArray
         @test A*B isa ApplyQuasiArray
         @test QuasiArray(A*B) == QuasiArray(A.parent*B,A.axes)
     end
+
+    @testset "Triple" begin
+        A = QuasiArray(rand(3,3),(0:0.5:1,0:0.5:1))
+        @test length((A*A*A).applied.args) == 3
+        @test (A*A*A) === apply(*,A,A,A)
+    end
 end
