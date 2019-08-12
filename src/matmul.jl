@@ -1,3 +1,9 @@
+# Used for when a lazy version should be constructed on materialize
+abstract type AbstractQuasiArrayApplyStyle <: ApplyStyle end
+struct LazyQuasiArrayApplyStyle <: AbstractQuasiArrayApplyStyle end
+struct QuasiArrayApplyStyle <: AbstractQuasiArrayApplyStyle end
+
+
 
 const QuasiArrayMulArray{p, q, T, V} =
     Applied{<:Any, typeof(*), <:Tuple{<:AbstractQuasiArray{T,p}, <:AbstractArray{V,q}}}
@@ -17,7 +23,7 @@ const QuasiMatMulQuasiMat{T, V} = QuasiArrayMulQuasiArray{2, 2, T, V}
 
 import LazyArrays: _mul, rowsupport
 
-function getindex(M::Mul, k::Real)
+function getindex(M::Mul{<:AbstractQuasiArrayApplyStyle}, k::Real)
     A,Bs = first(M.args), tail(M.args)
     B = _mul(Bs...)
     ret = zero(eltype(M))
@@ -27,7 +33,7 @@ function getindex(M::Mul, k::Real)
     ret
 end
 
-function getindex(M::Mul, k::Real, j::Real)
+function getindex(M::Mul{<:AbstractQuasiArrayApplyStyle}, k::Real, j::Real)
     A,Bs = first(M.args), tail(M.args)
     B = _mul(Bs...)
     ret = zero(eltype(M))
@@ -57,10 +63,6 @@ function getindex(M::QuasiMatMulVec, k::AbstractArray)
 end
 
 
-# Used for when a lazy version should be constructed on materialize
-abstract type AbstractQuasiArrayApplyStyle <: ApplyStyle end
-struct LazyQuasiArrayApplyStyle <: AbstractQuasiArrayApplyStyle end
-struct QuasiArrayApplyStyle <: AbstractQuasiArrayApplyStyle end
 
 ndims(M::Applied{LazyQuasiArrayApplyStyle,typeof(*)}) = ndims(last(M.args))
 
@@ -116,11 +118,18 @@ IndexStyle(::ApplyQuasiArray{<:Any,1}) = IndexLinear()
 MemoryLayout(M::ApplyQuasiArray) = ApplyLayout(M.applied.f, MemoryLayout.(M.applied.args))
 
 materialize(A::Applied{LazyQuasiArrayApplyStyle}) = ApplyQuasiArray(A)
+materialize(A::Applied{<:AbstractQuasiArrayApplyStyle}) = QuasiArray(A)
 
 checkaxescompatible(A) = true
 function checkaxescompatible(A, B, C...)
     axes(A,2) == axes(B,1) || throw(DimensionMismatch("A has axes $(axes(A)) but B has axes $(axes(B))"))
     checkaxescompatible(B, C...)
+end
+
+
+function materialize(A::Applied{<:AbstractQuasiArrayApplyStyle,typeof(*)}) 
+    checkaxescompatible(A.args...)
+    QuasiArray(A)
 end
 
 
@@ -233,22 +242,22 @@ end
 MemoryLayout(M::MulQuasiArray) = MulLayout(MemoryLayout.(M.applied.args))
 
 ApplyStyle(::typeof(*), ::AbstractQuasiArray, B...) =
-    LazyQuasiArrayApplyStyle()
+    QuasiArrayApplyStyle()
 ApplyStyle(::typeof(*), ::AbstractArray, ::AbstractQuasiArray, B...) =
-    LazyQuasiArrayApplyStyle()
+    QuasiArrayApplyStyle()
 ApplyStyle(::typeof(*), ::AbstractArray, ::AbstractArray, ::AbstractQuasiArray, B...) =
-    LazyQuasiArrayApplyStyle()
+    QuasiArrayApplyStyle()
 
 ApplyStyle(::typeof(\), ::AbstractQuasiArray, ::AbstractQuasiArray) =
-    LazyQuasiArrayApplyStyle()
+    QuasiArrayApplyStyle()
 ApplyStyle(::typeof(\), ::AbstractQuasiArray, ::AbstractArray) =
-    LazyQuasiArrayApplyStyle()
+    QuasiArrayApplyStyle()
 ApplyStyle(::typeof(\), ::AbstractArray, ::AbstractQuasiArray) =
-    LazyQuasiArrayApplyStyle()    
+    QuasiArrayApplyStyle()    
 
 for op in (:pinv, :inv)
     @eval ApplyStyle(::typeof($op), args::AbstractQuasiArray) =
-        LazyQuasiArrayApplyStyle()
+        QuasiArrayApplyStyle()
 end
 ## PInvQuasiMatrix
 

@@ -91,11 +91,7 @@ include("quasiadjtrans.jl")
 include("quasidiagonal.jl")
 
 
-
-materialize(M::Applied{LazyQuasiArrayApplyStyle,typeof(*),<:Tuple{Vararg{<:Union{Adjoint,QuasiAdjoint,QuasiDiagonal}}}}) =
-    apply(*,reverse(adjoint.(M.args))...)'
-
-materialize(M::Applied{<:Any,typeof(*),<:Tuple{Vararg{<:Union{Adjoint,QuasiAdjoint,QuasiDiagonal}}}}) =
+materialize(M::Applied{<:AbstractQuasiArrayApplyStyle,typeof(*),<:Tuple{Vararg{<:Union{Adjoint,QuasiAdjoint,QuasiDiagonal}}}}) =
     apply(*,reverse(adjoint.(M.args))...)'
 
 promote_leaf_eltypes(x::AbstractQuasiArray{T}) where {T<:Number} = T

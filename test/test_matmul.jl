@@ -20,6 +20,8 @@ import QuasiArrays: ApplyQuasiArray
         B = rand(3,3)
         @test A*B isa ApplyQuasiArray
         @test QuasiArray(A*B) == QuasiArray(A.parent*B,A.axes)
+        @test B*A' isa ApplyQuasiArray
+        (A*B)[0.5,1]
     end
 
     @testset "Triple" begin
