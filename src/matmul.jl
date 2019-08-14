@@ -126,6 +126,7 @@ function checkaxescompatible(A, B, C...)
     checkaxescompatible(B, C...)
 end
 
+QuasiArray(A::Applied) = QuasiArray(ApplyQuasiArray(A))
 
 function materialize(A::Applied{<:AbstractQuasiArrayApplyStyle,typeof(*)}) 
     checkaxescompatible(A.args...)
@@ -241,22 +242,22 @@ end
 
 MemoryLayout(M::MulQuasiArray) = MulLayout(MemoryLayout.(M.applied.args))
 
-ApplyStyle(::typeof(*), ::AbstractQuasiArray, B...) =
+ApplyStyle(::typeof(*), ::Type{<:AbstractQuasiArray}, B::Type...) =
     QuasiArrayApplyStyle()
-ApplyStyle(::typeof(*), ::AbstractArray, ::AbstractQuasiArray, B...) =
+ApplyStyle(::typeof(*), ::Type{<:AbstractArray}, ::Type{<:AbstractQuasiArray}, B::Type...) =
     QuasiArrayApplyStyle()
-ApplyStyle(::typeof(*), ::AbstractArray, ::AbstractArray, ::AbstractQuasiArray, B...) =
+ApplyStyle(::typeof(*), ::Type{<:AbstractArray}, ::Type{<:AbstractArray}, ::Type{<:AbstractQuasiArray}, B::Type...) =
     QuasiArrayApplyStyle()
 
-ApplyStyle(::typeof(\), ::AbstractQuasiArray, ::AbstractQuasiArray) =
+ApplyStyle(::typeof(\), ::Type{<:AbstractQuasiArray}, ::Type{<:AbstractQuasiArray}) =
     QuasiArrayApplyStyle()
-ApplyStyle(::typeof(\), ::AbstractQuasiArray, ::AbstractArray) =
+ApplyStyle(::typeof(\), ::Type{<:AbstractQuasiArray}, ::Type{<:AbstractArray}) =
     QuasiArrayApplyStyle()
-ApplyStyle(::typeof(\), ::AbstractArray, ::AbstractQuasiArray) =
+ApplyStyle(::typeof(\), ::Type{<:AbstractArray}, ::Type{<:AbstractQuasiArray}) =
     QuasiArrayApplyStyle()    
 
 for op in (:pinv, :inv)
-    @eval ApplyStyle(::typeof($op), args::AbstractQuasiArray) =
+    @eval ApplyStyle(::typeof($op), args::Type{<:AbstractQuasiArray}) =
         QuasiArrayApplyStyle()
 end
 ## PInvQuasiMatrix
@@ -297,24 +298,24 @@ _mulquasi_join(As, M::MulQuasiArray, Cs) = MulQuasiArray(As..., M.applied.args..
 _mulquasi_join(As, B, Cs) = *(As..., B, Cs...)
 
 
-function _materialize(M::Mul2{<:Any,<:Any,<:MulQuasiArray,<:MulQuasiArray}, _)
+function _materialize(M::Mul{<:Any,<:Tuple{<:MulQuasiArray,<:MulQuasiArray}}, _)
     As, Bs = M.args
     _mul_join(reverse(tail(reverse(As))), last(As) * first(Bs), tail(Bs))
 end
 
 
-function _materialize(M::Mul2{<:Any,<:Any,<:MulQuasiArray,<:AbstractQuasiArray}, _)
+function _materialize(M::Mul{<:Any,<:Tuple{<:MulQuasiArray,<:AbstractQuasiArray}}, _)
     As, B = M.args
     rmaterialize(Mul(As.applied.args..., B))
 end
 
-function _materialize(M::Mul2{<:Any,<:Any,<:AbstractQuasiArray,<:MulQuasiArray}, _)
+function _materialize(M::Mul{<:Any,<:Tuple{<:AbstractQuasiArray,<:MulQuasiArray}}, _)
     A, Bs = M.args
     *(A, Bs.applied.args...)
 end
 
 # A MulQuasiArray can't be materialized further left-to-right, so we do right-to-left
-function _materialize(M::Mul2{<:Any,<:Any,<:MulQuasiArray,<:AbstractArray}, _)
+function _materialize(M::Mul{<:Any,<:Tuple{<:MulQuasiArray,<:AbstractArray}}, _)
     As, B = M.args
     rmaterialize(Mul(As.applied.args..., B))
 end

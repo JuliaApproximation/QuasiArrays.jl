@@ -216,7 +216,7 @@ pinv(v::QuasiTransposeAbsVec, tol::Real = 0) = pinv(conj(v.parent)).parent
 /(u::QuasiTransposeAbsVec, A::QuasiAdjoint{<:Any,<:AbstractQuasiMatrix}) = transpose(conj(A.parent) \ u.parent) # technically should be transpose(copy(transpose(copy(A))) \ u.parent)
 
 
-function materialize(M::Mul2{<:Any,<:Any,<:QuasiAdjoint,<:QuasiAdjoint})
+function materialize(M::Mul{<:Any,<:Tuple{<:QuasiAdjoint,<:QuasiAdjoint}})
     Ac,Bc = M.args
     apply(*,parent(Bc),parent(Ac))'
 end

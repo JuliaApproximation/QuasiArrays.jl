@@ -32,8 +32,5 @@ import QuasiArrays: ApplyQuasiArray
         @test D[0.1,0.1] ≡ 0.1
         @test D[1,1] ≡ 1.0
         @test_throws BoundsError D[1.1,1.2]
-
-        D2 = D*D
-        @test D2 isa ApplyQuasiArray
     end
 end
