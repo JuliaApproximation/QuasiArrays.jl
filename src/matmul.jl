@@ -85,16 +85,20 @@ axes(L::Ldiv{<:Any,<:Any,<:AbstractQuasiVector}) =
 *(A::AbstractQuasiArray, B::Mul, C...) = fullmaterialize(apply(*,A, B.args..., C...))
 *(A::Mul, B::AbstractQuasiArray, C...) = fullmaterialize(apply(*,A.args..., B, C...))
 
+abstract type LazyQuasiArray{T,N} <: AbstractQuasiArray{T,N} end
 
-struct ApplyQuasiArray{T, N, App<:Applied} <: AbstractQuasiArray{T,N}
-    applied::App
+struct ApplyQuasiArray{T, N, F, Args<:Tuple} <: LazyQuasiArray{T,N}
+    f::F
+    args::Args
 end
 
-const ApplyQuasiVector{T, App<:Applied} = ApplyQuasiArray{T, 1, App}
-const ApplyQuasiMatrix{T, App<:Applied} = ApplyQuasiArray{T, 2, App}
+const ApplyQuasiVector{T, F, Args<:Tuple} = ApplyQuasiArray{T, 1, F, Args}
+const ApplyQuasiMatrix{T, F, Args<:Tuple} = ApplyQuasiArray{T, 2, F, Args}
 
+QuasiLazyArray(A::Applied) = ApplyQuasiArray(A)
 
-ApplyQuasiArray{T,N}(M::App) where {T,N,App<:Applied} = ApplyQuasiArray{T,N,App}(M)
+ApplyQuasiArray{T,N,F,Args}(M::Applied) where {T,N,F,Args} = ApplyQuasiArray{T,N,F,Args}(M.f, M.args)
+ApplyQuasiArray{T,N}(M::Applied{Style,F,Args}) where {T,N,Style,F,Args} = ApplyQuasiArray{T,N,F,Args}(instantiate(M))
 ApplyQuasiArray{T}(M::Applied) where {T} = ApplyQuasiArray{T,ndims(M)}(M)
 ApplyQuasiArray(M::Applied) = ApplyQuasiArray{eltype(M)}(M)
 ApplyQuasiVector(M::Applied) = ApplyQuasiVector{eltype(M)}(M)
@@ -107,8 +111,17 @@ ApplyQuasiArray{T,N}(f, factors...) where {T,N} = ApplyQuasiArray{T,N}(applied(f
 ApplyQuasiVector(f, factors...) = ApplyQuasiVector(applied(f, factors...))
 ApplyQuasiMatrix(f, factors...) = ApplyQuasiMatrix(applied(f, factors...))
 
+function getproperty(A::ApplyQuasiArray, d::Symbol)
+    if d == :applied
+        applied(A.f, A.args...)
+    else
+        getfield(A, d)
+    end
+end
+
 axes(A::ApplyQuasiArray) = axes(A.applied)
 size(A::ApplyQuasiArray) = map(length, axes(A))
+copy(A::ApplyQuasiArray) = copy(A.applied)
 
 IndexStyle(::ApplyQuasiArray{<:Any,1}) = IndexLinear()
 
@@ -133,7 +146,7 @@ function materialize(A::Applied{<:AbstractQuasiArrayApplyStyle,typeof(*)})
     QuasiArray(A)
 end
 
-
+copy(A::Applied{LazyQuasiArrayApplyStyle}) = ApplyArray(A)
 function materialize(A::Applied{LazyQuasiArrayApplyStyle,typeof(*)}) 
     checkaxescompatible(A.args...)
     ApplyQuasiArray(A)

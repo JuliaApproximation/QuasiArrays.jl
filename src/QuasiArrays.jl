@@ -25,7 +25,7 @@ import Base: Array, Matrix, Vector
 
 import Base.Broadcast: materialize, BroadcastStyle, Style, broadcasted, Broadcasted, Unknown,
                         newindex, broadcastable, preprocess, _eachindex, _broadcast_getindex,
-                        DefaultArrayStyle, axistype, throwdm
+                        DefaultArrayStyle, axistype, throwdm, instantiate
 
 import LinearAlgebra: transpose, adjoint, checkeltype_adjoint, checkeltype_transpose, Diagonal,
                         AbstractTriangular, pinv, inv, promote_leaf_eltypes
