@@ -1,3 +1,7 @@
+@inline mulaxes1(A::AbstractQuasiArray, C...) = axes(A,1)
+@inline mulaxes2(A::AbstractQuasiVector, C...) = ()
+@inline mulaxes2(A::AbstractQuasiMatrix, C...) = axes(A,2)
+
 # Used for when a lazy version should be constructed on materialize
 abstract type AbstractQuasiArrayApplyStyle <: ApplyStyle end
 struct LazyQuasiArrayApplyStyle <: AbstractQuasiArrayApplyStyle end
