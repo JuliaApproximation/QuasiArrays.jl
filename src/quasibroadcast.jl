@@ -95,7 +95,7 @@ _eachindex(t::NTuple{N,AbstractQuasiVector{<:Real}}) where N = QuasiCartesianInd
 _eachindex(t::Tuple{AbstractQuasiVector{<:Real},Vararg{AbstractUnitRange}}) = QuasiCartesianIndices(t)
 _eachindex(t::Tuple{AbstractUnitRange,AbstractQuasiVector{<:Real},Vararg{AbstractUnitRange}}) = QuasiCartesianIndices(t)
 
-instantiate(bc::Broadcasted{<:Union{AbstractQuasiArrayStyle{0}, Style{Tuple}}}) = bc
+instantiate(bc::Broadcasted{<:AbstractQuasiArrayStyle{0}}) = bc
 
 result_join(::AbstractQuasiArrayStyle, ::AbstractQuasiArrayStyle, ::Unknown, ::Unknown) =
     QuasiArrayConflict()

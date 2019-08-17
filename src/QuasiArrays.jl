@@ -3,7 +3,7 @@ using Base, LinearAlgebra, LazyArrays
 import Base: getindex, size, axes, length, ==, isequal, iterate, CartesianIndices, LinearIndices,
                 Indices, IndexStyle, getindex, setindex!, parent, vec, convert, similar, copy, copyto!, zero,
                 map, eachindex, eltype, first, last, firstindex, lastindex, in, reshape, all,
-                isreal, iszero, isempty, empty, isapprox, fill!
+                isreal, iszero, isempty, empty, isapprox, fill!, getproperty
 import Base: @_inline_meta, DimOrInd, OneTo, @_propagate_inbounds_meta, @_noinline_meta,
                 DimsInteger, error_if_canonical_getindex, @propagate_inbounds, _return_type,
                 _maybetail, tail, _getindex, _maybe_reshape, index_ndims, _unsafe_getindex,
@@ -25,15 +25,15 @@ import Base: Array, Matrix, Vector
 
 import Base.Broadcast: materialize, BroadcastStyle, Style, broadcasted, Broadcasted, Unknown,
                         newindex, broadcastable, preprocess, _eachindex, _broadcast_getindex,
-                        DefaultArrayStyle, axistype, throwdm
+                        DefaultArrayStyle, axistype, throwdm, instantiate
 
 import LinearAlgebra: transpose, adjoint, checkeltype_adjoint, checkeltype_transpose, Diagonal,
                         AbstractTriangular, pinv, inv, promote_leaf_eltypes
 
-import LazyArrays: MemoryLayout, UnknownLayout, Mul2, _materialize, MulLayout, ⋆,
+import LazyArrays: MemoryLayout, UnknownLayout, Mul, _materialize, MulLayout, ⋆,
                     _lmaterialize, InvOrPInv, ApplyStyle,
-                    LayoutApplyStyle, Applied, flatten, _flatten,
-                    rowsupport, colsupport
+                    Applied, flatten, _flatten,
+                    rowsupport, colsupport, mulaxes1, mulaxes2
 
 import Base.IteratorsMD
 
@@ -81,22 +81,24 @@ include("multidimensional.jl")
 include("subquasiarray.jl")
 include("quasireshapedarray.jl")
 include("quasibroadcast.jl")
-include("matmul.jl")
 include("abstractquasiarraymath.jl")
 
 include("quasiarray.jl")
 include("quasiarraymath.jl")
 
+include("matmul.jl")
 include("quasiadjtrans.jl")
 include("quasidiagonal.jl")
 
 
+struct AdjointStyle <: ApplyStyle end
 
-materialize(M::Applied{LazyQuasiArrayApplyStyle,typeof(*),<:Tuple{Vararg{<:Union{Adjoint,QuasiAdjoint,QuasiDiagonal}}}}) =
-    apply(*,reverse(adjoint.(M.args))...)'
+ApplyStyle(::typeof(*), ::Type{<:Adjoint}, ::Type{<:QuasiAdjoint}) = AdjointStyle()
+ApplyStyle(::typeof(*), ::Type{<:QuasiAdjoint}, ::Type{<:QuasiAdjoint}) = AdjointStyle()
+ApplyStyle(::typeof(*), ::Type{<:QuasiAdjoint}, ::Type{<:Adjoint}) = AdjointStyle()
+ApplyStyle(::typeof(*), ::Type{<:QuasiAdjoint}, ::Type{<:QuasiDiagonal}) = AdjointStyle()
 
-materialize(M::Applied{<:Any,typeof(*),<:Tuple{Vararg{<:Union{Adjoint,QuasiAdjoint,QuasiDiagonal}}}}) =
-    apply(*,reverse(adjoint.(M.args))...)'
+materialize(M::Applied{AdjointStyle,typeof(*)}) = apply(*,reverse(adjoint.(M.args))...)'
 
 promote_leaf_eltypes(x::AbstractQuasiArray{T}) where {T<:Number} = T
 promote_leaf_eltypes(x::AbstractQuasiArray) = mapreduce(promote_leaf_eltypes, promote_type, x; init=Bool)

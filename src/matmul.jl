@@ -1,3 +1,13 @@
+@inline mulaxes1(A::AbstractQuasiArray, C...) = axes(A,1)
+@inline mulaxes2(A::AbstractQuasiVector, C...) = ()
+@inline mulaxes2(A::AbstractQuasiMatrix, C...) = axes(A,2)
+
+# Used for when a lazy version should be constructed on materialize
+abstract type AbstractQuasiArrayApplyStyle <: ApplyStyle end
+struct LazyQuasiArrayApplyStyle <: AbstractQuasiArrayApplyStyle end
+struct QuasiArrayApplyStyle <: AbstractQuasiArrayApplyStyle end
+
+
 
 const QuasiArrayMulArray{p, q, T, V} =
     Applied{<:Any, typeof(*), <:Tuple{<:AbstractQuasiArray{T,p}, <:AbstractArray{V,q}}}
@@ -17,7 +27,7 @@ const QuasiMatMulQuasiMat{T, V} = QuasiArrayMulQuasiArray{2, 2, T, V}
 
 import LazyArrays: _mul, rowsupport
 
-function getindex(M::Mul, k::Real)
+function getindex(M::Mul{<:AbstractQuasiArrayApplyStyle}, k::Real)
     A,Bs = first(M.args), tail(M.args)
     B = _mul(Bs...)
     ret = zero(eltype(M))
@@ -27,7 +37,7 @@ function getindex(M::Mul, k::Real)
     ret
 end
 
-function getindex(M::Mul, k::Real, j::Real)
+function getindex(M::Mul{<:AbstractQuasiArrayApplyStyle}, k::Real, j::Real)
     A,Bs = first(M.args), tail(M.args)
     B = _mul(Bs...)
     ret = zero(eltype(M))
@@ -57,10 +67,6 @@ function getindex(M::QuasiMatMulVec, k::AbstractArray)
 end
 
 
-# Used for when a lazy version should be constructed on materialize
-abstract type AbstractQuasiArrayApplyStyle <: ApplyStyle end
-struct LazyQuasiArrayApplyStyle <: AbstractQuasiArrayApplyStyle end
-struct QuasiArrayApplyStyle <: AbstractQuasiArrayApplyStyle end
 
 ndims(M::Applied{LazyQuasiArrayApplyStyle,typeof(*)}) = ndims(last(M.args))
 
@@ -83,16 +89,20 @@ axes(L::Ldiv{<:Any,<:Any,<:AbstractQuasiVector}) =
 *(A::AbstractQuasiArray, B::Mul, C...) = fullmaterialize(apply(*,A, B.args..., C...))
 *(A::Mul, B::AbstractQuasiArray, C...) = fullmaterialize(apply(*,A.args..., B, C...))
 
+abstract type LazyQuasiArray{T,N} <: AbstractQuasiArray{T,N} end
 
-struct ApplyQuasiArray{T, N, App<:Applied} <: AbstractQuasiArray{T,N}
-    applied::App
+struct ApplyQuasiArray{T, N, F, Args<:Tuple} <: LazyQuasiArray{T,N}
+    f::F
+    args::Args
 end
 
-const ApplyQuasiVector{T, App<:Applied} = ApplyQuasiArray{T, 1, App}
-const ApplyQuasiMatrix{T, App<:Applied} = ApplyQuasiArray{T, 2, App}
+const ApplyQuasiVector{T, F, Args<:Tuple} = ApplyQuasiArray{T, 1, F, Args}
+const ApplyQuasiMatrix{T, F, Args<:Tuple} = ApplyQuasiArray{T, 2, F, Args}
 
+QuasiLazyArray(A::Applied) = ApplyQuasiArray(A)
 
-ApplyQuasiArray{T,N}(M::App) where {T,N,App<:Applied} = ApplyQuasiArray{T,N,App}(M)
+ApplyQuasiArray{T,N,F,Args}(M::Applied) where {T,N,F,Args} = ApplyQuasiArray{T,N,F,Args}(M.f, M.args)
+ApplyQuasiArray{T,N}(M::Applied{Style,F,Args}) where {T,N,Style,F,Args} = ApplyQuasiArray{T,N,F,Args}(instantiate(M))
 ApplyQuasiArray{T}(M::Applied) where {T} = ApplyQuasiArray{T,ndims(M)}(M)
 ApplyQuasiArray(M::Applied) = ApplyQuasiArray{eltype(M)}(M)
 ApplyQuasiVector(M::Applied) = ApplyQuasiVector{eltype(M)}(M)
@@ -105,8 +115,17 @@ ApplyQuasiArray{T,N}(f, factors...) where {T,N} = ApplyQuasiArray{T,N}(applied(f
 ApplyQuasiVector(f, factors...) = ApplyQuasiVector(applied(f, factors...))
 ApplyQuasiMatrix(f, factors...) = ApplyQuasiMatrix(applied(f, factors...))
 
+function getproperty(A::ApplyQuasiArray, d::Symbol)
+    if d == :applied
+        applied(A.f, A.args...)
+    else
+        getfield(A, d)
+    end
+end
+
 axes(A::ApplyQuasiArray) = axes(A.applied)
 size(A::ApplyQuasiArray) = map(length, axes(A))
+copy(A::ApplyQuasiArray) = copy(A.applied)
 
 IndexStyle(::ApplyQuasiArray{<:Any,1}) = IndexLinear()
 
@@ -116,6 +135,7 @@ IndexStyle(::ApplyQuasiArray{<:Any,1}) = IndexLinear()
 MemoryLayout(M::ApplyQuasiArray) = ApplyLayout(M.applied.f, MemoryLayout.(M.applied.args))
 
 materialize(A::Applied{LazyQuasiArrayApplyStyle}) = ApplyQuasiArray(A)
+materialize(A::Applied{<:AbstractQuasiArrayApplyStyle}) = QuasiArray(A)
 
 checkaxescompatible(A) = true
 function checkaxescompatible(A, B, C...)
@@ -123,7 +143,14 @@ function checkaxescompatible(A, B, C...)
     checkaxescompatible(B, C...)
 end
 
+QuasiArray(A::Applied) = QuasiArray(ApplyQuasiArray(A))
 
+function materialize(A::Applied{<:AbstractQuasiArrayApplyStyle,typeof(*)}) 
+    checkaxescompatible(A.args...)
+    QuasiArray(A)
+end
+
+copy(A::Applied{LazyQuasiArrayApplyStyle}) = ApplyArray(A)
 function materialize(A::Applied{LazyQuasiArrayApplyStyle,typeof(*)}) 
     checkaxescompatible(A.args...)
     ApplyQuasiArray(A)
@@ -232,23 +259,23 @@ end
 
 MemoryLayout(M::MulQuasiArray) = MulLayout(MemoryLayout.(M.applied.args))
 
-ApplyStyle(::typeof(*), ::AbstractQuasiArray, B...) =
-    LazyQuasiArrayApplyStyle()
-ApplyStyle(::typeof(*), ::AbstractArray, ::AbstractQuasiArray, B...) =
-    LazyQuasiArrayApplyStyle()
-ApplyStyle(::typeof(*), ::AbstractArray, ::AbstractArray, ::AbstractQuasiArray, B...) =
-    LazyQuasiArrayApplyStyle()
+ApplyStyle(::typeof(*), ::Type{<:AbstractQuasiArray}, B::Type...) =
+    QuasiArrayApplyStyle()
+ApplyStyle(::typeof(*), ::Type{<:AbstractArray}, ::Type{<:AbstractQuasiArray}, B::Type...) =
+    QuasiArrayApplyStyle()
+ApplyStyle(::typeof(*), ::Type{<:AbstractArray}, ::Type{<:AbstractArray}, ::Type{<:AbstractQuasiArray}, B::Type...) =
+    QuasiArrayApplyStyle()
 
-ApplyStyle(::typeof(\), ::AbstractQuasiArray, ::AbstractQuasiArray) =
-    LazyQuasiArrayApplyStyle()
-ApplyStyle(::typeof(\), ::AbstractQuasiArray, ::AbstractArray) =
-    LazyQuasiArrayApplyStyle()
-ApplyStyle(::typeof(\), ::AbstractArray, ::AbstractQuasiArray) =
-    LazyQuasiArrayApplyStyle()    
+ApplyStyle(::typeof(\), ::Type{<:AbstractQuasiArray}, ::Type{<:AbstractQuasiArray}) =
+    QuasiArrayApplyStyle()
+ApplyStyle(::typeof(\), ::Type{<:AbstractQuasiArray}, ::Type{<:AbstractArray}) =
+    QuasiArrayApplyStyle()
+ApplyStyle(::typeof(\), ::Type{<:AbstractArray}, ::Type{<:AbstractQuasiArray}) =
+    QuasiArrayApplyStyle()    
 
 for op in (:pinv, :inv)
-    @eval ApplyStyle(::typeof($op), args::AbstractQuasiArray) =
-        LazyQuasiArrayApplyStyle()
+    @eval ApplyStyle(::typeof($op), args::Type{<:AbstractQuasiArray}) =
+        QuasiArrayApplyStyle()
 end
 ## PInvQuasiMatrix
 
@@ -288,24 +315,24 @@ _mulquasi_join(As, M::MulQuasiArray, Cs) = MulQuasiArray(As..., M.applied.args..
 _mulquasi_join(As, B, Cs) = *(As..., B, Cs...)
 
 
-function _materialize(M::Mul2{<:Any,<:Any,<:MulQuasiArray,<:MulQuasiArray}, _)
+function _materialize(M::Mul{<:Any,<:Tuple{<:MulQuasiArray,<:MulQuasiArray}}, _)
     As, Bs = M.args
     _mul_join(reverse(tail(reverse(As))), last(As) * first(Bs), tail(Bs))
 end
 
 
-function _materialize(M::Mul2{<:Any,<:Any,<:MulQuasiArray,<:AbstractQuasiArray}, _)
+function _materialize(M::Mul{<:Any,<:Tuple{<:MulQuasiArray,<:AbstractQuasiArray}}, _)
     As, B = M.args
     rmaterialize(Mul(As.applied.args..., B))
 end
 
-function _materialize(M::Mul2{<:Any,<:Any,<:AbstractQuasiArray,<:MulQuasiArray}, _)
+function _materialize(M::Mul{<:Any,<:Tuple{<:AbstractQuasiArray,<:MulQuasiArray}}, _)
     A, Bs = M.args
     *(A, Bs.applied.args...)
 end
 
 # A MulQuasiArray can't be materialized further left-to-right, so we do right-to-left
-function _materialize(M::Mul2{<:Any,<:Any,<:MulQuasiArray,<:AbstractArray}, _)
+function _materialize(M::Mul{<:Any,<:Tuple{<:MulQuasiArray,<:AbstractArray}}, _)
     As, B = M.args
     rmaterialize(Mul(As.applied.args..., B))
 end
