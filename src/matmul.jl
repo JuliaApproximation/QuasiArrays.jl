@@ -132,60 +132,31 @@ IndexStyle(::ApplyQuasiArray{<:Any,1}) = IndexLinear()
 @propagate_inbounds getindex(A::ApplyQuasiArray{T,N}, kj::Vararg{Real,N}) where {T,N} =
     A.applied[kj...]
 
-MemoryLayout(M::ApplyQuasiArray) = ApplyLayout(M.applied.f, MemoryLayout.(M.applied.args))
+MemoryLayout(M::Type{ApplyQuasiArray{T,N,F,Args}}) where {T,N,F,Args} = ApplyLayout{F,tuple_type_memorylayouts(Args)}()
 
-materialize(A::Applied{LazyQuasiArrayApplyStyle}) = ApplyQuasiArray(A)
-materialize(A::Applied{<:AbstractQuasiArrayApplyStyle}) = QuasiArray(A)
+materialize(M::Applied{<:AbstractQuasiArrayApplyStyle}) = _materialize(instantiate(M), axes(M))
+_materialize(A::Applied{<:AbstractQuasiArrayApplyStyle}, _) = copy(instantiate(A))
 
-checkaxescompatible(A) = true
-function checkaxescompatible(A, B, C...)
-    axes(A,2) == axes(B,1) || throw(DimensionMismatch("A has axes $(axes(A)) but B has axes $(axes(B))"))
-    checkaxescompatible(B, C...)
-end
 
+copy(A::Applied{<:AbstractQuasiArrayApplyStyle}) = QuasiArray(A)
+copy(A::Applied{LazyQuasiArrayApplyStyle}) = ApplyQuasiArray(A)
 QuasiArray(A::Applied) = QuasiArray(ApplyQuasiArray(A))
-
-function materialize(A::Applied{<:AbstractQuasiArrayApplyStyle,typeof(*)}) 
-    checkaxescompatible(A.args...)
-    QuasiArray(A)
-end
-
-copy(A::Applied{LazyQuasiArrayApplyStyle}) = ApplyArray(A)
-function materialize(A::Applied{LazyQuasiArrayApplyStyle,typeof(*)}) 
-    checkaxescompatible(A.args...)
-    ApplyQuasiArray(A)
-end
-
-@inline copyto!(dest::AbstractQuasiArray, M::Applied) = _copyto!(MemoryLayout(dest), dest, M)
-@inline _copyto!(_, dest::AbstractQuasiArray, M::Applied) = copyto!(dest, materialize(M))
 
 
 ####
 # MulQuasiArray
 #####
 
-const MulQuasiArray{T, N, MUL<:Mul} = ApplyQuasiArray{T, N, MUL}
+const MulQuasiArray{T, N, Args<:Tuple} = ApplyQuasiArray{T, N, typeof(*), Args}
 
-const MulQuasiVector{T, MUL<:Mul} = MulQuasiArray{T, 1, MUL}
-const MulQuasiMatrix{T, MUL<:Mul} = MulQuasiArray{T, 2, MUL}
+const MulQuasiVector{T, Args<:Tuple} = MulQuasiArray{T, 1, Args}
+const MulQuasiMatrix{T, Args<:Tuple} = MulQuasiArray{T, 2, Args}
 
 const Vec = MulQuasiVector
 
 
-MulQuasiArray{T,N}(M::MUL) where {T,N,MUL<:Mul} = MulQuasiArray{T,N,MUL}(M)
-MulQuasiArray{T}(M::Mul) where {T} = MulQuasiArray{T,ndims(M)}(M)
-MulQuasiArray(M::Mul) = MulQuasiArray{eltype(M)}(M)
-MulQuasiVector(M::Mul) = MulQuasiVector{eltype(M)}(M)
-MulQuasiMatrix(M::Mul) = MulQuasiMatrix{eltype(M)}(M)
-
-MulQuasiArray(factors...) = MulQuasiArray(Mul(factors...))
-MulQuasiArray{T}(factors...) where T = MulQuasiArray{T}(Mul(factors...))
-MulQuasiArray{T,N}(factors...) where {T,N} = MulQuasiArray{T,N}(Mul(factors...))
-MulQuasiVector(factors...) = MulQuasiVector(Mul(factors...))
-MulQuasiMatrix(factors...) = MulQuasiMatrix(Mul(factors...))
-
-_MulArray(factors...) = MulQuasiArray(factors...)
-_MulArray(factors::AbstractArray...) = MulArray(factors...)
+_ApplyArray(F, factors...) = ApplyQuasiArray(F, factors...)
+_ApplyArray(F, factors::AbstractArray...) = ApplyArray(F, factors...)
 
 most(a) = reverse(tail(reverse(a)))
 
@@ -195,7 +166,7 @@ _factors(M::MulQuasiOrArray) = M.applied.args
 _factors(M) = (M,)
 
 _flatten(A::MulQuasiArray, B...) = _flatten(A.applied, B...)
-flatten(A::MulQuasiArray) = MulQuasiArray(flatten(A.applied))
+flatten(A::MulQuasiArray) = ApplyQuasiArray(flatten(A.applied))
 
 
 function fullmaterialize(M::Applied{<:Any,typeof(*)})
@@ -256,9 +227,6 @@ function copyto!(dest::MulQuasiArray, src::MulQuasiArray)
     dest
 end
 
-
-MemoryLayout(M::MulQuasiArray) = MulLayout(MemoryLayout.(M.applied.args))
-
 ApplyStyle(::typeof(*), ::Type{<:AbstractQuasiArray}, B::Type...) =
     QuasiArrayApplyStyle()
 ApplyStyle(::typeof(*), ::Type{<:AbstractArray}, ::Type{<:AbstractQuasiArray}, B::Type...) =
@@ -301,12 +269,6 @@ pinv(A::PInvQuasiMatrix) = first(A.applied.args)
 # Matrix * Array
 ####
 
-# the default is always Array
-
-_materialize(M::QuasiArrayMulArray, _) = MulQuasiArray(M)
-_materialize(M::ArrayMulQuasiArray, _) = MulQuasiArray(M)
-_materialize(M::QuasiArrayMulQuasiArray, _) = MulQuasiArray(M)
-
 
 
 # if multiplying two MulQuasiArrays simplifies the arguments, we materialize,
@@ -339,12 +301,12 @@ end
 
 function _lmaterialize(A::MulQuasiArray, B, C...)
     As = A.applied.args
-    flatten(_MulArray(reverse(tail(reverse(As)))..., _lmaterialize(last(As), B, C...)))
+    flatten(_ApplyArray(*, reverse(tail(reverse(As)))..., _lmaterialize(last(As), B, C...)))
 end
 
 
 
 function _rmaterialize(Z::MulQuasiArray, Y, W...)
     Zs = Z.applied.args
-    flatten(_MulArray(_rmaterialize(first(Zs), Y, W...), tail(Zs)...))
+    flatten(_ApplyArray(*, _rmaterialize(first(Zs), Y, W...), tail(Zs)...))
 end
