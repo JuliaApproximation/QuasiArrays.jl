@@ -4,7 +4,6 @@
 
 # Used for when a lazy version should be constructed on materialize
 abstract type AbstractQuasiArrayApplyStyle <: ApplyStyle end
-struct LazyQuasiArrayApplyStyle <: AbstractQuasiArrayApplyStyle end
 struct QuasiArrayApplyStyle <: AbstractQuasiArrayApplyStyle end
 
 
@@ -25,8 +24,6 @@ const QuasiMatMulMat{T, V} = QuasiArrayMulArray{2, 2, T, V}
 const QuasiMatMulQuasiMat{T, V} = QuasiArrayMulQuasiArray{2, 2, T, V}
 
 
-import LazyArrays: _mul, rowsupport
-
 function getindex(M::Mul{<:AbstractQuasiArrayApplyStyle}, k::Real)
     A,Bs = first(M.args), tail(M.args)
     B = _mul(Bs...)
@@ -37,7 +34,7 @@ function getindex(M::Mul{<:AbstractQuasiArrayApplyStyle}, k::Real)
     ret
 end
 
-function getindex(M::Mul{<:AbstractQuasiArrayApplyStyle}, k::Real, j::Real)
+function _mul_quasi_getindex(M::Mul, k::Real, j::Real)
     A,Bs = first(M.args), tail(M.args)
     B = _mul(Bs...)
     ret = zero(eltype(M))
@@ -47,15 +44,12 @@ function getindex(M::Mul{<:AbstractQuasiArrayApplyStyle}, k::Real, j::Real)
     ret
 end
 
+getindex(M::Mul{<:AbstractQuasiArrayApplyStyle}, k::Real, j::Real) =
+    _mul_quasi_getindex(M, k, j)
 
-function getindex(M::QuasiMatMulVec, k::Real)
-    A,B = M.args
-    ret = zero(eltype(M))
-    @inbounds for j in axes(A,2)
-        ret += A[k,j] * B[j]
-    end
-    ret
-end
+getindex(M::Mul{<:AbstractQuasiArrayApplyStyle}, k::Integer, j::Integer) =
+    _mul_quasi_getindex(M, k, j)
+
 
 function getindex(M::QuasiMatMulVec, k::AbstractArray)
     A,B = M.args
@@ -65,10 +59,6 @@ function getindex(M::QuasiMatMulVec, k::AbstractArray)
     end
     ret
 end
-
-
-
-ndims(M::Applied{LazyQuasiArrayApplyStyle,typeof(*)}) = ndims(last(M.args))
 
 
 *(A::AbstractQuasiArray, B...) = fullmaterialize(apply(*,A,B...))
@@ -89,8 +79,38 @@ axes(L::Ldiv{<:Any,<:Any,<:AbstractQuasiVector}) =
 *(A::AbstractQuasiArray, B::Mul, C...) = fullmaterialize(apply(*,A, B.args..., C...))
 *(A::Mul, B::AbstractQuasiArray, C...) = fullmaterialize(apply(*,A.args..., B, C...))
 
+##
+# LazyQuasiArray
+##
+
+"""
+A `LazyQuasiArray` is an abstract type for any array that is
+stored and should be manipulated lazily.
+"""
 abstract type LazyQuasiArray{T,N} <: AbstractQuasiArray{T,N} end
 
+const LazyQuasiVector{T} = LazyQuasiArray{T,1}
+const LazyQuasiMatrix{T} = LazyQuasiArray{T,2}
+
+
+struct LazyQuasiArrayApplyStyle <: AbstractQuasiArrayApplyStyle end
+ndims(M::Applied{LazyQuasiArrayApplyStyle,typeof(*)}) = ndims(last(M.args))
+
+ApplyStyle(::typeof(*), ::Type{<:LazyQuasiArray}, ::Type...) = LazyQuasiArrayApplyStyle()
+ApplyStyle(::typeof(*), ::Type{<:AbstractArray}, ::Type{<:LazyQuasiArray}, ::Type...) = LazyQuasiArrayApplyStyle()
+ApplyStyle(::typeof(*), ::Type{<:AbstractQuasiArray}, ::Type{<:LazyQuasiArray}, ::Type...) = LazyQuasiArrayApplyStyle()
+ApplyStyle(::typeof(*), ::Type{<:LazyQuasiArray}, ::Type{<:LazyQuasiArray}, ::Type...) = LazyQuasiArrayApplyStyle()
+
+
+
+###
+# ApplyQuasiArray
+###
+
+"""
+A `ApplyQuasiArray` is a lazy realization of a function that
+creates a quasi-array.
+"""
 struct ApplyQuasiArray{T, N, F, Args<:Tuple} <: LazyQuasiArray{T,N}
     f::F
     args::Args
@@ -202,8 +222,8 @@ fullmaterialize(M) = flatten(M)
 
 
 
-adjoint(A::MulQuasiArray) = MulQuasiArray(reverse(adjoint.(A.applied.args))...)
-transpose(A::MulQuasiArray) = MulQuasiArray(reverse(transpose.(A.applied.args))...)
+adjoint(A::MulQuasiArray) = ApplyQuasiArray(*, reverse(adjoint.(A.applied.args))...)
+transpose(A::MulQuasiArray) = ApplyQuasiArray(*, reverse(transpose.(A.applied.args))...)
 
 function similar(A::MulQuasiArray)
     B,a = A.applied.args
@@ -227,23 +247,16 @@ function copyto!(dest::MulQuasiArray, src::MulQuasiArray)
     dest
 end
 
-ApplyStyle(::typeof(*), ::Type{<:AbstractQuasiArray}, B::Type...) =
-    QuasiArrayApplyStyle()
-ApplyStyle(::typeof(*), ::Type{<:AbstractArray}, ::Type{<:AbstractQuasiArray}, B::Type...) =
-    QuasiArrayApplyStyle()
-ApplyStyle(::typeof(*), ::Type{<:AbstractArray}, ::Type{<:AbstractArray}, ::Type{<:AbstractQuasiArray}, B::Type...) =
-    QuasiArrayApplyStyle()
+ApplyStyle(::typeof(*), ::Type{<:AbstractQuasiArray}, B::Type...) = QuasiArrayApplyStyle()
+ApplyStyle(::typeof(*), ::Type{<:AbstractArray}, ::Type{<:AbstractQuasiArray}, B::Type...) = QuasiArrayApplyStyle()
+ApplyStyle(::typeof(*), ::Type{<:AbstractArray}, ::Type{<:AbstractArray}, ::Type{<:AbstractQuasiArray}, B::Type...) = QuasiArrayApplyStyle()
 
-ApplyStyle(::typeof(\), ::Type{<:AbstractQuasiArray}, ::Type{<:AbstractQuasiArray}) =
-    QuasiArrayApplyStyle()
-ApplyStyle(::typeof(\), ::Type{<:AbstractQuasiArray}, ::Type{<:AbstractArray}) =
-    QuasiArrayApplyStyle()
-ApplyStyle(::typeof(\), ::Type{<:AbstractArray}, ::Type{<:AbstractQuasiArray}) =
-    QuasiArrayApplyStyle()    
+ApplyStyle(::typeof(\), ::Type{<:AbstractQuasiArray}, ::Type{<:AbstractQuasiArray}) = QuasiArrayApplyStyle()
+ApplyStyle(::typeof(\), ::Type{<:AbstractQuasiArray}, ::Type{<:AbstractArray}) = QuasiArrayApplyStyle()
+ApplyStyle(::typeof(\), ::Type{<:AbstractArray}, ::Type{<:AbstractQuasiArray}) = QuasiArrayApplyStyle()    
 
 for op in (:pinv, :inv)
-    @eval ApplyStyle(::typeof($op), args::Type{<:AbstractQuasiArray}) =
-        QuasiArrayApplyStyle()
+    @eval ApplyStyle(::typeof($op), args::Type{<:AbstractQuasiArray}) = QuasiArrayApplyStyle()
 end
 ## PInvQuasiMatrix
 

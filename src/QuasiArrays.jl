@@ -33,7 +33,8 @@ import LinearAlgebra: transpose, adjoint, checkeltype_adjoint, checkeltype_trans
 import LazyArrays: MemoryLayout, UnknownLayout, Mul, _materialize, ApplyLayout, ⋆,
                     _lmaterialize, InvOrPInv, ApplyStyle,
                     Applied, flatten, _flatten,
-                    rowsupport, colsupport, mulaxes1, mulaxes2, tuple_type_memorylayouts
+                    rowsupport, colsupport, mulaxes1, mulaxes2, tuple_type_memorylayouts,
+                    _mul, rowsupport
 
 import Base.IteratorsMD
 
@@ -89,16 +90,6 @@ include("quasiarraymath.jl")
 include("matmul.jl")
 include("quasiadjtrans.jl")
 include("quasidiagonal.jl")
-
-
-struct AdjointStyle <: ApplyStyle end
-
-ApplyStyle(::typeof(*), ::Type{<:Adjoint}, ::Type{<:QuasiAdjoint}) = AdjointStyle()
-ApplyStyle(::typeof(*), ::Type{<:QuasiAdjoint}, ::Type{<:QuasiAdjoint}) = AdjointStyle()
-ApplyStyle(::typeof(*), ::Type{<:QuasiAdjoint}, ::Type{<:Adjoint}) = AdjointStyle()
-ApplyStyle(::typeof(*), ::Type{<:QuasiAdjoint}, ::Type{<:QuasiDiagonal}) = AdjointStyle()
-
-materialize(M::Applied{AdjointStyle,typeof(*)}) = apply(*,reverse(adjoint.(M.args))...)'
 
 promote_leaf_eltypes(x::AbstractQuasiArray{T}) where {T<:Number} = T
 promote_leaf_eltypes(x::AbstractQuasiArray) = mapreduce(promote_leaf_eltypes, promote_type, x; init=Bool)

@@ -216,13 +216,25 @@ pinv(v::QuasiTransposeAbsVec, tol::Real = 0) = pinv(conj(v.parent)).parent
 /(u::QuasiTransposeAbsVec, A::QuasiAdjoint{<:Any,<:AbstractQuasiMatrix}) = transpose(conj(A.parent) \ u.parent) # technically should be transpose(copy(transpose(copy(A))) \ u.parent)
 
 
-function materialize(M::Mul{<:Any,<:Tuple{<:QuasiAdjoint,<:QuasiAdjoint}})
-    Ac,Bc = M.args
-    apply(*,parent(Bc),parent(Ac))'
-end
-
 function adjoint(M::Mul)
     Mul(reverse(adjoint.(M.args))...)
 end
 
 ==(A::QuasiAdjoint, B::QuasiAdjoint) = parent(A) == parent(B)
+
+struct AdjointStyle <: ApplyStyle end
+
+materialize(M::Applied{AdjointStyle,typeof(*)}) = apply(*,reverse(adjoint.(M.args))...)'
+
+ApplyStyle(::typeof(*), ::Type{<:Adjoint}, ::Type{<:QuasiAdjoint}) = AdjointStyle()
+ApplyStyle(::typeof(*), ::Type{<:QuasiAdjoint}, ::Type{<:QuasiAdjoint}) = AdjointStyle()
+ApplyStyle(::typeof(*), ::Type{<:QuasiAdjoint}, ::Type{<:Adjoint}) = AdjointStyle()
+ 
+ApplyStyle(::typeof(*), ::Type{<:QuasiAdjoint{<:Any,<:LazyQuasiArray}}, ::Type{<:QuasiAdjoint}) = AdjointStyle()
+ApplyStyle(::typeof(*), ::Type{<:QuasiAdjoint{<:Any,<:LazyQuasiArray}}, ::Type{<:QuasiAdjoint{<:Any,<:LazyQuasiArray}}) = AdjointStyle()
+ApplyStyle(::typeof(*), ::Type{<:Adjoint}, ::Type{<:QuasiAdjoint{<:Any,<:LazyQuasiArray}}) = AdjointStyle()
+
+ApplyStyle(::typeof(*), ::Type{<:QuasiAdjoint{<:Any,<:LazyQuasiArray}}, ::Type...) = LazyQuasiArrayApplyStyle()
+ApplyStyle(::typeof(*), ::Type{<:AbstractArray}, ::Type{<:QuasiAdjoint{<:Any,<:LazyQuasiArray}}, ::Type...) = LazyQuasiArrayApplyStyle()
+ApplyStyle(::typeof(*), ::Type{<:AbstractQuasiArray}, ::Type{<:QuasiAdjoint{<:Any,<:LazyQuasiArray}}, ::Type...) = LazyQuasiArrayApplyStyle()
+ApplyStyle(::typeof(*), ::Type{<:LazyQuasiArray}, ::Type{<:QuasiAdjoint{<:Any,<:LazyQuasiArray}}, ::Type...) = LazyQuasiArrayApplyStyle()

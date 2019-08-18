@@ -195,3 +195,6 @@ for f in (:exp, :log, :sqrt,
           :acosh, :asinh, :atanh, :acsch, :asech, :acoth)
     @eval $f(D::QuasiDiagonal) = QuasiDiagonal($f.(D.diag))
 end
+
+
+ApplyStyle(::typeof(*), ::Type{<:QuasiAdjoint}, ::Type{<:QuasiDiagonal}) = AdjointStyle()
