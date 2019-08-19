@@ -197,4 +197,4 @@ for f in (:exp, :log, :sqrt,
 end
 
 
-ApplyStyle(::typeof(*), ::Type{<:QuasiAdjoint}, ::Type{<:QuasiDiagonal}) = AdjointStyle()
+quasimulapplystyle(::AdjointLayout, ::DiagonalLayout) = AdjointStyle()

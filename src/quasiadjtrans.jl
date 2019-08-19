@@ -223,18 +223,8 @@ end
 ==(A::QuasiAdjoint, B::QuasiAdjoint) = parent(A) == parent(B)
 
 struct AdjointStyle <: ApplyStyle end
+struct AdjointLayout{LAY} <: MemoryLayout end
 
 materialize(M::Applied{AdjointStyle,typeof(*)}) = apply(*,reverse(adjoint.(M.args))...)'
 
-ApplyStyle(::typeof(*), ::Type{<:Adjoint}, ::Type{<:QuasiAdjoint}) = AdjointStyle()
-ApplyStyle(::typeof(*), ::Type{<:QuasiAdjoint}, ::Type{<:QuasiAdjoint}) = AdjointStyle()
-ApplyStyle(::typeof(*), ::Type{<:QuasiAdjoint}, ::Type{<:Adjoint}) = AdjointStyle()
- 
-ApplyStyle(::typeof(*), ::Type{<:QuasiAdjoint{<:Any,<:LazyQuasiArray}}, ::Type{<:QuasiAdjoint}) = AdjointStyle()
-ApplyStyle(::typeof(*), ::Type{<:QuasiAdjoint{<:Any,<:LazyQuasiArray}}, ::Type{<:QuasiAdjoint{<:Any,<:LazyQuasiArray}}) = AdjointStyle()
-ApplyStyle(::typeof(*), ::Type{<:Adjoint}, ::Type{<:QuasiAdjoint{<:Any,<:LazyQuasiArray}}) = AdjointStyle()
-
-ApplyStyle(::typeof(*), ::Type{<:QuasiAdjoint{<:Any,<:LazyQuasiArray}}, ::Type...) = LazyQuasiArrayApplyStyle()
-ApplyStyle(::typeof(*), ::Type{<:AbstractArray}, ::Type{<:QuasiAdjoint{<:Any,<:LazyQuasiArray}}, ::Type...) = LazyQuasiArrayApplyStyle()
-ApplyStyle(::typeof(*), ::Type{<:AbstractQuasiArray}, ::Type{<:QuasiAdjoint{<:Any,<:LazyQuasiArray}}, ::Type...) = LazyQuasiArrayApplyStyle()
-ApplyStyle(::typeof(*), ::Type{<:LazyQuasiArray}, ::Type{<:QuasiAdjoint{<:Any,<:LazyQuasiArray}}, ::Type...) = LazyQuasiArrayApplyStyle()
+quasimulapplystyle(::AdjointLayout, ::AdjointLayout, ::AdjointLayout...) = AdjointStyle()
