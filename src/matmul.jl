@@ -97,7 +97,7 @@ const LazyQuasiMatrix{T} = LazyQuasiArray{T,2}
 struct LazyQuasiArrayApplyStyle <: AbstractQuasiArrayApplyStyle end
 struct LazyLayout <: MemoryLayout end
 
-MemoryLayout(::LazyQuasiArray) = LazyLayout()
+MemoryLayout(::Type{<:LazyQuasiArray}) = LazyLayout()
 ndims(M::Applied{LazyQuasiArrayApplyStyle,typeof(*)}) = ndims(last(M.args))
 
 quasimulapplystyle(::LazyLayout, ::LazyLayout, lay...) = LazyQuasiArrayApplyStyle()
