@@ -222,9 +222,6 @@ end
 
 ==(A::QuasiAdjoint, B::QuasiAdjoint) = parent(A) == parent(B)
 
-struct AdjointStyle <: ApplyStyle end
-struct AdjointLayout{LAY} <: MemoryLayout end
 
-materialize(M::Applied{AdjointStyle,typeof(*)}) = apply(*,reverse(adjoint.(M.args))...)'
-
-quasimulapplystyle(::AdjointLayout, ::AdjointLayout, ::AdjointLayout...) = AdjointStyle()
+MemoryLayout(::Type{QuasiTranspose{T,P}}) where {T,P} = transposelayout(MemoryLayout(P))
+MemoryLayout(::Type{QuasiAdjoint{T,P}}) where {T,P} = adjointlayout(T, MemoryLayout(P))

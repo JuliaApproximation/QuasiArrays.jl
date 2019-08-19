@@ -196,5 +196,3 @@ for f in (:exp, :log, :sqrt,
     @eval $f(D::QuasiDiagonal) = QuasiDiagonal($f.(D.diag))
 end
 
-
-quasimulapplystyle(::AdjointLayout, ::DiagonalLayout) = AdjointStyle()

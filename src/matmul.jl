@@ -100,8 +100,14 @@ struct LazyLayout <: MemoryLayout end
 MemoryLayout(::Type{<:LazyQuasiArray}) = LazyLayout()
 ndims(M::Applied{LazyQuasiArrayApplyStyle,typeof(*)}) = ndims(last(M.args))
 
+transposelayout(::LazyLayout) = LazyLayout()
+conjlayout(::LazyLayout) = LazyLayout()
 quasimulapplystyle(::LazyLayout, ::LazyLayout, lay...) = LazyQuasiArrayApplyStyle()
-quasimulapplystyle(::LazyLayout, _, lay...) = LazyQuasiArrayApplyStyle()
+quasimulapplystyle(_, ::LazyLayout, lay...) = LazyQuasiArrayApplyStyle()
+quasimulapplystyle(::LazyLayout, lay...) = LazyQuasiArrayApplyStyle()
+quasimulapplystyle(::LazyLayout, ::LazyLayout, ::LazyLayout, lay...) = LazyQuasiArrayApplyStyle()
+quasimulapplystyle(_, ::LazyLayout, ::LazyLayout, lay...) = LazyQuasiArrayApplyStyle()
+quasimulapplystyle(_, _, ::LazyLayout, lay...) = LazyQuasiArrayApplyStyle()
 
 
 
@@ -252,7 +258,7 @@ end
 
 quasimulapplystyle(_...) = QuasiArrayApplyStyle()
 
-ApplyStyle(::typeof(*), ::Type{A}, ::Type{B}) where {A<:AbstractQuasiArray,B<:Union{AbstractArray,AbstractQuasiArray}} = quasimulapplystyle(MemoryLayout(A), MemoryLayout(B))
+ApplyStyle(::typeof(*), ::Type{A}, ::Type{B}, C::Type...) where {A<:AbstractQuasiArray,B<:Union{AbstractArray,AbstractQuasiArray}} = quasimulapplystyle(MemoryLayout(A), MemoryLayout(B), MemoryLayout.(C)...)
 ApplyStyle(::typeof(*), ::Type{A}, ::Type{B}) where {A<:AbstractArray,B<:AbstractQuasiArray} = quasimulapplystyle(MemoryLayout(A), MemoryLayout(B))
 ApplyStyle(::typeof(*), ::Type{A}, ::Type{B}, ::Type{C}) where {A<:AbstractQuasiArray,B<:Union{AbstractArray,AbstractQuasiArray},C<:Union{AbstractArray,AbstractQuasiArray}} = 
     quasimulapplystyle(MemoryLayout(A), MemoryLayout(B), MemoryLayout(C))
