@@ -1,6 +1,9 @@
 @inline mulaxes1(A::AbstractQuasiArray, C...) = axes(A,1)
 @inline mulaxes2(A::AbstractQuasiVector, C...) = ()
 @inline mulaxes2(A::AbstractQuasiMatrix, C...) = axes(A,2)
+@inline ldivaxes1(A::AbstractQuasiArray, B) = axes(A,2)
+@inline ldivaxes2(_, B::AbstractQuasiMatrix) = axes(B,2)
+@inline ldivaxes2(_, ::AbstractQuasiVector) = ()
 
 # Used for when a lazy version should be constructed on materialize
 abstract type AbstractQuasiArrayApplyStyle <: ApplyStyle end
@@ -74,7 +77,7 @@ axes(L::Ldiv{<:Any,<:Any,<:AbstractQuasiMatrix}) =
 axes(L::Ldiv{<:Any,<:Any,<:AbstractQuasiVector}) =
     (axes(L.args[1], 2),)    
 
- \(A::AbstractQuasiArray, B::AbstractQuasiArray) = materialize(Ldiv(A,B))
+ \(A::AbstractQuasiArray, B::AbstractQuasiArray) = apply(\,A,B)
 
 
 *(A::AbstractQuasiArray, B::Mul, C...) = apply(*,A, B.args..., C...)
@@ -259,7 +262,7 @@ end
 quasimulapplystyle(_...) = QuasiArrayApplyStyle()
 
 ApplyStyle(::typeof(*), ::Type{A}, ::Type{B}, C::Type...) where {A<:AbstractQuasiArray,B<:Union{AbstractArray,AbstractQuasiArray}} = quasimulapplystyle(MemoryLayout(A), MemoryLayout(B), MemoryLayout.(C)...)
-ApplyStyle(::typeof(*), ::Type{A}, ::Type{B}) where {A<:AbstractArray,B<:AbstractQuasiArray} = quasimulapplystyle(MemoryLayout(A), MemoryLayout(B))
+ApplyStyle(::typeof(*), ::Type{A}, ::Type{B}, C::Type...) where {A<:AbstractArray,B<:AbstractQuasiArray} = quasimulapplystyle(MemoryLayout(A), MemoryLayout(B), MemoryLayout.(C)...)
 ApplyStyle(::typeof(*), ::Type{A}, ::Type{B}, ::Type{C}) where {A<:AbstractQuasiArray,B<:Union{AbstractArray,AbstractQuasiArray},C<:Union{AbstractArray,AbstractQuasiArray}} = 
     quasimulapplystyle(MemoryLayout(A), MemoryLayout(B), MemoryLayout(C))
 ApplyStyle(::typeof(*), ::Type{A}, ::Type{B}, ::Type{C}) where {A<:AbstractArray,B<:AbstractQuasiArray,C<:Union{AbstractArray,AbstractQuasiArray}} = 
@@ -347,3 +350,10 @@ function _rmaterialize(Z::MulQuasiArray, Y, W...)
     Zs = Z.applied.args
     flatten(_ApplyArray(*, _rmaterialize(first(Zs), Y, W...), tail(Zs)...))
 end
+
+
+####
+# Lazy \ ApplyArray. This applies to first arg.
+#####
+
+materialize(L::Ldiv{LazyLayout,<:ApplyLayout{typeof(*)}}) = *(L.A\first(L.B.args), tail(L.B.args)...)

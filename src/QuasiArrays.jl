@@ -34,6 +34,7 @@ import LazyArrays: MemoryLayout, UnknownLayout, Mul, _materialize, ApplyLayout, 
                     _lmaterialize, InvOrPInv, ApplyStyle,
                     Applied, flatten, _flatten,
                     rowsupport, colsupport, mulaxes1, mulaxes2, tuple_type_memorylayouts,
+                    ldivaxes1, ldivaxes2,
                     _mul, rowsupport, DiagonalLayout, adjointlayout, transposelayout, conjlayout
 
 import Base.IteratorsMD
