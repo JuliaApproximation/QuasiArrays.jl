@@ -1,10 +1,3 @@
-@inline mulaxes1(A::AbstractQuasiArray, C...) = axes(A,1)
-@inline mulaxes2(A::AbstractQuasiVector, C...) = ()
-@inline mulaxes2(A::AbstractQuasiMatrix, C...) = axes(A,2)
-@inline ldivaxes1(A::AbstractQuasiArray, B) = axes(A,2)
-@inline ldivaxes2(_, B::AbstractQuasiMatrix) = axes(B,2)
-@inline ldivaxes2(_, ::AbstractQuasiVector) = ()
-
 # Used for when a lazy version should be constructed on materialize
 abstract type AbstractQuasiArrayApplyStyle <: ApplyStyle end
 struct QuasiArrayApplyStyle <: AbstractQuasiArrayApplyStyle end
@@ -110,6 +103,7 @@ quasimulapplystyle(_, ::LazyLayout, lay...) = LazyQuasiArrayApplyStyle()
 quasimulapplystyle(::LazyLayout, lay...) = LazyQuasiArrayApplyStyle()
 quasimulapplystyle(::LazyLayout, ::LazyLayout, ::LazyLayout, lay...) = LazyQuasiArrayApplyStyle()
 quasimulapplystyle(_, ::LazyLayout, ::LazyLayout, lay...) = LazyQuasiArrayApplyStyle()
+quasimulapplystyle(::LazyLayout, _, ::LazyLayout, lay...) = LazyQuasiArrayApplyStyle()
 quasimulapplystyle(_, _, ::LazyLayout, lay...) = LazyQuasiArrayApplyStyle()
 
 
@@ -225,13 +219,6 @@ end
 fullmaterialize(M::ApplyQuasiArray) = flatten(fullmaterialize(M.applied))
 fullmaterialize(M) = flatten(M)
 
-*(A::MulQuasiArray, B::MulQuasiArray) = flatten(fullmaterialize(apply(*,A.applied.args..., B.applied.args...)))
-*(A::MulQuasiArray, B::AbstractQuasiArray) = flatten(fullmaterialize(apply(*,A.applied.args..., B)))
-*(A::AbstractQuasiArray, B::MulQuasiArray) = flatten(fullmaterialize(apply(*,A, B.applied.args...)))
-*(A::MulQuasiArray, B::AbstractArray) = flatten(fullmaterialize(apply(*,A.applied.args..., B)))
-*(A::AbstractArray, B::MulQuasiArray) = flatten(fullmaterialize(apply(*,A, B.applied.args...)))
-
-
 
 adjoint(A::MulQuasiArray) = ApplyQuasiArray(*, reverse(adjoint.(A.applied.args))...)
 transpose(A::MulQuasiArray) = ApplyQuasiArray(*, reverse(transpose.(A.applied.args))...)
@@ -259,24 +246,45 @@ function copyto!(dest::MulQuasiArray, src::MulQuasiArray)
 end
 
 
+
+
+_mul_tail_support(j, Z) = maximum(last.(colsupport.(Ref(Z),j)))
+_mul_tail_support(j, Z, Y, X...) = _mul_tail_support(OneTo(_mul_tail_support(j,Z)), Y, X...)
+
+function _mul_getindex(k, j, A, B) 
+    M = min(_mul_tail_support(j,B), maximum(last.(rowsupport.(Ref(A),k))))
+    A[k,1:M]*B[1:M,j]
+end
+
+function _mul_getindex(k, j, A, B, C, D...) 
+    N = _mul_tail_support(j, reverse(D)..., C, B)
+    M = min(maximum(last.(rowsupport.(Ref(A),k))), N)
+    _mul_getindex(OneTo(N), j, A[k,OneTo(M)]*B[OneTo(M),OneTo(N)], C, D...)
+end
+
+getindex(A::MulQuasiMatrix, k::AbstractVector{<:Real}, j::AbstractVector{<:Real}) = 
+    _mul_getindex(k, j, A.args...)
+ 
+
+
 quasimulapplystyle(_...) = QuasiArrayApplyStyle()
 
 ApplyStyle(::typeof(*), ::Type{A}, ::Type{B}, C::Type...) where {A<:AbstractQuasiArray,B<:Union{AbstractArray,AbstractQuasiArray}} = quasimulapplystyle(MemoryLayout(A), MemoryLayout(B), MemoryLayout.(C)...)
 ApplyStyle(::typeof(*), ::Type{A}, ::Type{B}, C::Type...) where {A<:AbstractArray,B<:AbstractQuasiArray} = quasimulapplystyle(MemoryLayout(A), MemoryLayout(B), MemoryLayout.(C)...)
-ApplyStyle(::typeof(*), ::Type{A}, ::Type{B}, ::Type{C}) where {A<:AbstractQuasiArray,B<:Union{AbstractArray,AbstractQuasiArray},C<:Union{AbstractArray,AbstractQuasiArray}} = 
-    quasimulapplystyle(MemoryLayout(A), MemoryLayout(B), MemoryLayout(C))
-ApplyStyle(::typeof(*), ::Type{A}, ::Type{B}, ::Type{C}) where {A<:AbstractArray,B<:AbstractQuasiArray,C<:Union{AbstractArray,AbstractQuasiArray}} = 
-    quasimulapplystyle(MemoryLayout(A), MemoryLayout(B), MemoryLayout(C))
-ApplyStyle(::typeof(*), ::Type{A}, ::Type{B}, ::Type{C}) where {A<:AbstractArray,B<:AbstractArray,C<:AbstractQuasiArray} = 
-    quasimulapplystyle(MemoryLayout(A), MemoryLayout(B), MemoryLayout(C))
-ApplyStyle(::typeof(*), ::Type{A}, ::Type{B}, ::Type{C}, ::Type{D}) where {A<:AbstractQuasiArray,B<:Union{AbstractArray,AbstractQuasiArray},C<:Union{AbstractArray,AbstractQuasiArray},D<:Union{AbstractArray,AbstractQuasiArray}} = 
-    quasimulapplystyle(MemoryLayout(A), MemoryLayout(B), MemoryLayout(C), MemoryLayout(D))
-ApplyStyle(::typeof(*), ::Type{A}, ::Type{B}, ::Type{C}, ::Type{D}) where {A<:AbstractArray,B<:AbstractQuasiArray,C<:Union{AbstractArray,AbstractQuasiArray},D<:Union{AbstractArray,AbstractQuasiArray}} = 
-    quasimulapplystyle(MemoryLayout(A), MemoryLayout(B), MemoryLayout(C), MemoryLayout(D))
-ApplyStyle(::typeof(*), ::Type{A}, ::Type{B}, ::Type{C}, ::Type{D}) where {A<:AbstractArray,B<:AbstractArray,C<:AbstractQuasiArray,D<:Union{AbstractArray,AbstractQuasiArray}} = 
-    quasimulapplystyle(MemoryLayout(A), MemoryLayout(B), MemoryLayout(C), MemoryLayout(D))
-ApplyStyle(::typeof(*), ::Type{A}, ::Type{B}, ::Type{C}, ::Type{D}) where {A<:AbstractArray,B<:AbstractArray,C<:AbstractArray,D<:AbstractQuasiArray} = 
-    quasimulapplystyle(MemoryLayout(A), MemoryLayout(B), MemoryLayout(C), MemoryLayout(D))    
+ApplyStyle(::typeof(*), ::Type{A}, ::Type{B}, ::Type{C}, D::Type...) where {A<:AbstractQuasiArray,B<:Union{AbstractArray,AbstractQuasiArray},C<:Union{AbstractArray,AbstractQuasiArray}} = 
+    quasimulapplystyle(MemoryLayout(A), MemoryLayout(B), MemoryLayout(C), MemoryLayout.(D)...)
+ApplyStyle(::typeof(*), ::Type{A}, ::Type{B}, ::Type{C}, D::Type...) where {A<:AbstractArray,B<:AbstractQuasiArray,C<:Union{AbstractArray,AbstractQuasiArray}} = 
+    quasimulapplystyle(MemoryLayout(A), MemoryLayout(B), MemoryLayout(C), MemoryLayout.(D)...)
+ApplyStyle(::typeof(*), ::Type{A}, ::Type{B}, ::Type{C}, D::Type...) where {A<:AbstractArray,B<:AbstractArray,C<:AbstractQuasiArray} = 
+    quasimulapplystyle(MemoryLayout(A), MemoryLayout(B), MemoryLayout(C), MemoryLayout.(D)...)
+ApplyStyle(::typeof(*), ::Type{A}, ::Type{B}, ::Type{C}, ::Type{D}, E::Type...) where {A<:AbstractQuasiArray,B<:Union{AbstractArray,AbstractQuasiArray},C<:Union{AbstractArray,AbstractQuasiArray},D<:Union{AbstractArray,AbstractQuasiArray}} = 
+    quasimulapplystyle(MemoryLayout(A), MemoryLayout(B), MemoryLayout(C), MemoryLayout(D), MemoryLayout.(E)...)
+ApplyStyle(::typeof(*), ::Type{A}, ::Type{B}, ::Type{C}, ::Type{D}, E::Type...) where {A<:AbstractArray,B<:AbstractQuasiArray,C<:Union{AbstractArray,AbstractQuasiArray},D<:Union{AbstractArray,AbstractQuasiArray}} = 
+    quasimulapplystyle(MemoryLayout(A), MemoryLayout(B), MemoryLayout(C), MemoryLayout(D), MemoryLayout.(E)...)
+ApplyStyle(::typeof(*), ::Type{A}, ::Type{B}, ::Type{C}, ::Type{D}, E::Type...) where {A<:AbstractArray,B<:AbstractArray,C<:AbstractQuasiArray,D<:Union{AbstractArray,AbstractQuasiArray}} = 
+    quasimulapplystyle(MemoryLayout(A), MemoryLayout(B), MemoryLayout(C), MemoryLayout(D), MemoryLayout.(E)...)
+ApplyStyle(::typeof(*), ::Type{A}, ::Type{B}, ::Type{C}, ::Type{D}, E::Type...) where {A<:AbstractArray,B<:AbstractArray,C<:AbstractArray,D<:AbstractQuasiArray} = 
+    quasimulapplystyle(MemoryLayout(A), MemoryLayout(B), MemoryLayout(C), MemoryLayout(D), MemoryLayout.(E)...)    
 
 ApplyStyle(::typeof(\), ::Type{<:AbstractQuasiArray}, ::Type{<:AbstractQuasiArray}) = QuasiArrayApplyStyle()
 ApplyStyle(::typeof(\), ::Type{<:AbstractQuasiArray}, ::Type{<:AbstractArray}) = QuasiArrayApplyStyle()
@@ -288,18 +296,15 @@ end
 ## PInvQuasiMatrix
 
 
-const PInvQuasiMatrix{T, PINV<:InvOrPInv} = ApplyQuasiMatrix{T,PINV}
-const InvQuasiMatrix{T, INV<:Inv} = PInvQuasiMatrix{T,INV}
-
-PInvQuasiMatrix(M) = _PInvQuasiMatrix(PInv(M))
-InvQuasiMatrix(M) = _PInvQuasiMatrix(Inv(M))
+const PInvQuasiMatrix{T, ARGS} = ApplyQuasiMatrix{T,typeof(pinv),ARGS}
+const InvQuasiMatrix{T, ARGS} = ApplyQuasiMatrix{T,typeof(inv),ARGS}
 
 axes(A::PInvQuasiMatrix) = axes(A.applied)
 size(A::PInvQuasiMatrix) = map(length, axes(A))
-pinv(A::PInvQuasiMatrix) = first(A.applied.args)
+pinv(A::PInvQuasiMatrix) = first(A.args)
 
 @propagate_inbounds getindex(A::PInvQuasiMatrix{T}, k::Int, j::Int) where T =
-    (A.pinv*[Zeros(j-1); one(T); Zeros(size(A,2) - j)])[k]
+    (A.applied*[Zeros(j-1); one(T); Zeros(size(A,2) - j)])[k]
 
 *(A::PInvQuasiMatrix, B::AbstractQuasiMatrix, C...) = apply(*,A.applied, B, C...)
 *(A::PInvQuasiMatrix, B::MulQuasiArray, C...) = apply(*,A.applied, B.applied, C...)
@@ -311,43 +316,15 @@ pinv(A::PInvQuasiMatrix) = first(A.applied.args)
 
 
 
-# if multiplying two MulQuasiArrays simplifies the arguments, we materialize,
-# otherwise we leave it as a lazy object
-_mulquasi_join(As, M::MulQuasiArray, Cs) = MulQuasiArray(As..., M.applied.args..., Cs...)
-_mulquasi_join(As, B, Cs) = *(As..., B, Cs...)
-
-
-function _materialize(M::Mul{<:Any,<:Tuple{<:MulQuasiArray,<:MulQuasiArray}}, _)
-    As, Bs = M.args
-    _mul_join(reverse(tail(reverse(As))), last(As) * first(Bs), tail(Bs))
-end
-
-
-function _materialize(M::Mul{<:Any,<:Tuple{<:MulQuasiArray,<:AbstractQuasiArray}}, _)
-    As, B = M.args
-    rmaterialize(Mul(As.applied.args..., B))
-end
-
-function _materialize(M::Mul{<:Any,<:Tuple{<:AbstractQuasiArray,<:MulQuasiArray}}, _)
-    A, Bs = M.args
-    *(A, Bs.applied.args...)
-end
-
-# A MulQuasiArray can't be materialized further left-to-right, so we do right-to-left
-function _materialize(M::Mul{<:Any,<:Tuple{<:MulQuasiArray,<:AbstractArray}}, _)
-    As, B = M.args
-    rmaterialize(Mul(As.applied.args..., B))
-end
-
 function _lmaterialize(A::MulQuasiArray, B, C...)
-    As = A.applied.args
+    As = A.args
     flatten(_ApplyArray(*, reverse(tail(reverse(As)))..., _lmaterialize(last(As), B, C...)))
 end
 
 
 
 function _rmaterialize(Z::MulQuasiArray, Y, W...)
-    Zs = Z.applied.args
+    Zs = Z.args
     flatten(_ApplyArray(*, _rmaterialize(first(Zs), Y, W...), tail(Zs)...))
 end
 
@@ -356,4 +333,24 @@ end
 # Lazy \ ApplyArray. This applies to first arg.
 #####
 
-materialize(L::Ldiv{LazyLayout,<:ApplyLayout{typeof(*)}}) = *(L.A\first(L.B.args), tail(L.B.args)...)
+struct LmaterializeApplyStyle <: ApplyStyle end
+
+quasimulapplystyle(::ApplyLayout{typeof(inv)}, _) = LdivApplyStyle()
+quasimulapplystyle(::ApplyLayout{typeof(pinv)}, _) = LdivApplyStyle()
+quasimulapplystyle(::ApplyLayout{typeof(inv)}, ::LazyLayout) = LdivApplyStyle()
+quasimulapplystyle(::ApplyLayout{typeof(pinv)}, ::LazyLayout) = LdivApplyStyle()
+quasimulapplystyle(::ApplyLayout{typeof(inv)}, ::LazyLayout, _...) = LmaterializeApplyStyle()
+quasimulapplystyle(::ApplyLayout{typeof(pinv)}, ::LazyLayout, _...) = LmaterializeApplyStyle()
+quasimulapplystyle(::ApplyLayout{typeof(*)}, ::ApplyLayout{typeof(*)}, _...) = LmaterializeApplyStyle()
+quasimulapplystyle(::ApplyLayout{typeof(*)}, _...) = LmaterializeApplyStyle()
+quasimulapplystyle(::ApplyLayout{typeof(*)}, ::LazyLayout, _...) = LmaterializeApplyStyle()
+quasimulapplystyle(::ApplyLayout{typeof(*)}, ::LazyLayout, ::LazyLayout, _...) = LmaterializeApplyStyle()
+
+
+ApplyStyle(::typeof(\), ::Type{<:AbstractQuasiArray}, ::Type{<:Applied}) = LdivApplyStyle()
+\(A::AbstractQuasiArray, B::Applied) = apply(\, A, B)
+materialize(L::Ldiv{LazyLayout,<:ApplyLayout{typeof(*)}}) = *(L.A \  first(L.B.args),  tail(L.B.args)...)
+materialize(L::Ldiv{LazyLayout,<:ApplyLayout{typeof(*)},<:Any,<:AbstractQuasiArray}) = L.A \  L.B.applied
+
+
+materialize(A::Applied{LmaterializeApplyStyle,typeof(*)}) = lmaterialize(A)

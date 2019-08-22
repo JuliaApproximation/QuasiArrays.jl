@@ -95,10 +95,18 @@ _maybe_reindex(V, I, A::Tuple{Any, Vararg{Any}}) = (@_inline_meta; _maybe_reinde
 _subarray(A::AbstractArray, idxs) = SubArray(A, idxs)
 _subarray(A::AbstractQuasiArray, idxs) = SubQuasiArray(A, idxs)
 
-function _maybe_reindex(V, I, ::Tuple{})
-    @_inline_meta
-    @inbounds idxs = to_indices(V.parent, reindex(V, V.indices, I))
-    _subarray(V.parent, idxs)
+if VERSION < v"1.2-"
+    function _maybe_reindex(V, I, ::Tuple{})
+        @_inline_meta
+        @inbounds idxs = to_indices(V.parent, reindex(V, V.indices, I))
+        _subarray(V.parent, idxs)
+    end
+else
+    function _maybe_reindex(V, I, ::Tuple{})
+        @_inline_meta
+        @inbounds idxs = to_indices(V.parent, reindex(V.indices, I))
+        _subarray(V.parent, idxs)
+    end
 end
 ## Re-indexing is the heart of a view, transforming A[i, j][x, y] to A[i[x], j[y]]
 #
