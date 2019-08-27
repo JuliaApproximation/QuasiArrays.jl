@@ -334,6 +334,7 @@ end
 #####
 
 struct LmaterializeApplyStyle <: ApplyStyle end
+struct FlattenApplyStyle <: ApplyStyle end
 
 quasimulapplystyle(::ApplyLayout{typeof(inv)}, _) = LdivApplyStyle()
 quasimulapplystyle(::ApplyLayout{typeof(pinv)}, _) = LdivApplyStyle()
@@ -341,10 +342,10 @@ quasimulapplystyle(::ApplyLayout{typeof(inv)}, ::LazyLayout) = LdivApplyStyle()
 quasimulapplystyle(::ApplyLayout{typeof(pinv)}, ::LazyLayout) = LdivApplyStyle()
 quasimulapplystyle(::ApplyLayout{typeof(inv)}, ::LazyLayout, _...) = LmaterializeApplyStyle()
 quasimulapplystyle(::ApplyLayout{typeof(pinv)}, ::LazyLayout, _...) = LmaterializeApplyStyle()
-quasimulapplystyle(::ApplyLayout{typeof(*)}, ::ApplyLayout{typeof(*)}, _...) = LmaterializeApplyStyle()
-quasimulapplystyle(::ApplyLayout{typeof(*)}, _...) = LmaterializeApplyStyle()
-quasimulapplystyle(::ApplyLayout{typeof(*)}, ::LazyLayout, _...) = LmaterializeApplyStyle()
-quasimulapplystyle(::ApplyLayout{typeof(*)}, ::LazyLayout, ::LazyLayout, _...) = LmaterializeApplyStyle()
+quasimulapplystyle(::ApplyLayout{typeof(*)}, ::ApplyLayout{typeof(*)}, _...) = FlattenApplyStyle()
+quasimulapplystyle(::ApplyLayout{typeof(*)}, _...) = FlattenApplyStyle()
+quasimulapplystyle(::ApplyLayout{typeof(*)}, ::LazyLayout, _...) = FlattenApplyStyle()
+quasimulapplystyle(::ApplyLayout{typeof(*)}, ::LazyLayout, ::LazyLayout, _...) = FlattenApplyStyle()
 
 
 ApplyStyle(::typeof(\), ::Type{<:AbstractQuasiArray}, ::Type{<:Applied}) = LdivApplyStyle()
@@ -354,3 +355,4 @@ materialize(L::Ldiv{LazyLayout,<:ApplyLayout{typeof(*)},<:Any,<:AbstractQuasiArr
 
 
 materialize(A::Applied{LmaterializeApplyStyle,typeof(*)}) = lmaterialize(A)
+materialize(A::Applied{FlattenApplyStyle,typeof(*)}) = materialize(flatten(A))
