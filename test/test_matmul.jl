@@ -27,6 +27,7 @@ import QuasiArrays: apply
     @testset "Triple" begin
         A = QuasiArray(rand(3,3),(0:0.5:1,0:0.5:1))
         @test A isa QuasiArray
-        @test Array(A*A*A) ≈ Array(A)*Array(A)*Array(A)
+        @test Array(A*A) ≈ Array(A)^2
+        @test Array(A*A*A) ≈ Array(A)^3
     end
 end

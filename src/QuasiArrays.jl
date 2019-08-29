@@ -30,11 +30,11 @@ import Base.Broadcast: materialize, BroadcastStyle, Style, broadcasted, Broadcas
 import LinearAlgebra: transpose, adjoint, checkeltype_adjoint, checkeltype_transpose, Diagonal,
                         AbstractTriangular, pinv, inv, promote_leaf_eltypes
 
-import LazyArrays: MemoryLayout, UnknownLayout, Mul, _materialize, ApplyLayout, ⋆,
-                    lmaterialize, _lmaterialize, InvOrPInv, ApplyStyle,
+import LazyArrays: MemoryLayout, UnknownLayout, Mul, ApplyLayout, ⋆,
+                    lmaterialize, _lmaterialize, InvOrPInv, ApplyStyle, LazyLayout,
                     Applied, flatten, _flatten,
                     rowsupport, colsupport, tuple_type_memorylayouts,
-                    LdivApplyStyle,
+                    LdivApplyStyle, most,
                     _mul, rowsupport, DiagonalLayout, adjointlayout, transposelayout, conjlayout
 
 import Base.IteratorsMD

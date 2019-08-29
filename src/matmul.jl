@@ -91,13 +91,10 @@ const LazyQuasiMatrix{T} = LazyQuasiArray{T,2}
 
 
 struct LazyQuasiArrayApplyStyle <: AbstractQuasiArrayApplyStyle end
-struct LazyLayout <: MemoryLayout end
 
 MemoryLayout(::Type{<:LazyQuasiArray}) = LazyLayout()
 ndims(M::Applied{LazyQuasiArrayApplyStyle,typeof(*)}) = ndims(last(M.args))
 
-transposelayout(::LazyLayout) = LazyLayout()
-conjlayout(::LazyLayout) = LazyLayout()
 quasimulapplystyle(::LazyLayout, ::LazyLayout, lay...) = LazyQuasiArrayApplyStyle()
 quasimulapplystyle(_, ::LazyLayout, lay...) = LazyQuasiArrayApplyStyle()
 quasimulapplystyle(::LazyLayout, lay...) = LazyQuasiArrayApplyStyle()
@@ -159,9 +156,6 @@ IndexStyle(::ApplyQuasiArray{<:Any,1}) = IndexLinear()
 
 MemoryLayout(M::Type{ApplyQuasiArray{T,N,F,Args}}) where {T,N,F,Args} = ApplyLayout{F,tuple_type_memorylayouts(Args)}()
 
-materialize(M::Applied{<:AbstractQuasiArrayApplyStyle}) = _materialize(instantiate(M), axes(M))
-_materialize(A::Applied{<:AbstractQuasiArrayApplyStyle}, _) = copy(instantiate(A))
-
 
 copy(A::Applied{<:AbstractQuasiArrayApplyStyle}) = QuasiArray(A)
 copy(A::Applied{LazyQuasiArrayApplyStyle}) = ApplyQuasiArray(A)
@@ -182,8 +176,6 @@ const Vec = MulQuasiVector
 
 _ApplyArray(F, factors...) = ApplyQuasiArray(F, factors...)
 _ApplyArray(F, factors::AbstractArray...) = ApplyArray(F, factors...)
-
-most(a) = reverse(tail(reverse(a)))
 
 MulQuasiOrArray = Union{MulArray,MulQuasiArray}
 
