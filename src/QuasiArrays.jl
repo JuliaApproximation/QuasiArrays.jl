@@ -31,7 +31,7 @@ import LinearAlgebra: transpose, adjoint, checkeltype_adjoint, checkeltype_trans
                         AbstractTriangular, pinv, inv, promote_leaf_eltypes
 
 import LazyArrays: MemoryLayout, UnknownLayout, Mul, ApplyLayout, ⋆,
-                    lmaterialize, _lmaterialize, InvOrPInv, ApplyStyle, LazyLayout,
+                    lmaterialize, _lmaterialize, InvOrPInv, ApplyStyle, LazyLayout, FlattenMulStyle,
                     Applied, flatten, _flatten,
                     rowsupport, colsupport, tuple_type_memorylayouts,
                     LdivApplyStyle, most,

@@ -66,9 +66,9 @@ for op in (:pinv, :inv)
 end
 
 axes(L::Ldiv{<:Any,<:Any,<:AbstractQuasiMatrix}) =
-    (axes(L.args[1], 2),axes(L.args[2],2))
+    (axes(L.A, 2),axes(L.B,2))
 axes(L::Ldiv{<:Any,<:Any,<:AbstractQuasiVector}) =
-    (axes(L.args[1], 2),)    
+    (axes(L.A, 2),)    
 
  \(A::AbstractQuasiArray, B::AbstractQuasiArray) = apply(\,A,B)
 
@@ -285,6 +285,8 @@ end
 const PInvQuasiMatrix{T, ARGS} = ApplyQuasiMatrix{T,typeof(pinv),ARGS}
 const InvQuasiMatrix{T, ARGS} = ApplyQuasiMatrix{T,typeof(inv),ARGS}
 
+parent(A::PInvQuasiMatrix) = first(A.args)
+parent(A::InvQuasiMatrix) = first(A.args)
 axes(A::PInvQuasiMatrix) = axes(Applied(A))
 size(A::PInvQuasiMatrix) = map(length, axes(A))
 pinv(A::PInvQuasiMatrix) = first(A.args)
@@ -320,7 +322,6 @@ end
 #####
 
 struct LmaterializeApplyStyle <: ApplyStyle end
-struct FlattenApplyStyle <: ApplyStyle end
 
 quasimulapplystyle(::ApplyLayout{typeof(inv)}, _) = LdivApplyStyle()
 quasimulapplystyle(::ApplyLayout{typeof(pinv)}, _) = LdivApplyStyle()
@@ -328,17 +329,16 @@ quasimulapplystyle(::ApplyLayout{typeof(inv)}, ::LazyLayout) = LdivApplyStyle()
 quasimulapplystyle(::ApplyLayout{typeof(pinv)}, ::LazyLayout) = LdivApplyStyle()
 quasimulapplystyle(::ApplyLayout{typeof(inv)}, ::LazyLayout, _...) = LmaterializeApplyStyle()
 quasimulapplystyle(::ApplyLayout{typeof(pinv)}, ::LazyLayout, _...) = LmaterializeApplyStyle()
-quasimulapplystyle(::ApplyLayout{typeof(*)}, ::ApplyLayout{typeof(*)}, _...) = FlattenApplyStyle()
-quasimulapplystyle(::ApplyLayout{typeof(*)}, _...) = FlattenApplyStyle()
-quasimulapplystyle(::ApplyLayout{typeof(*)}, ::LazyLayout, _...) = FlattenApplyStyle()
-quasimulapplystyle(::ApplyLayout{typeof(*)}, ::LazyLayout, ::LazyLayout, _...) = FlattenApplyStyle()
+quasimulapplystyle(::ApplyLayout{typeof(*)}, ::ApplyLayout{typeof(*)}, _...) = FlattenMulStyle()
+quasimulapplystyle(::ApplyLayout{typeof(*)}, _...) = FlattenMulStyle()
+quasimulapplystyle(::ApplyLayout{typeof(*)}, ::LazyLayout, _...) = FlattenMulStyle()
+quasimulapplystyle(::ApplyLayout{typeof(*)}, ::LazyLayout, ::LazyLayout, _...) = FlattenMulStyle()
 
 
 ApplyStyle(::typeof(\), ::Type{<:AbstractQuasiArray}, ::Type{<:Applied}) = LdivApplyStyle()
 \(A::AbstractQuasiArray, B::Applied) = apply(\, A, B)
-materialize(L::Ldiv{LazyLayout,<:ApplyLayout{typeof(*)}}) = *(L.A \  first(L.B.args),  tail(L.B.args)...)
-materialize(L::Ldiv{LazyLayout,<:ApplyLayout{typeof(*)},<:Any,<:AbstractQuasiArray}) = L.A \  Applied(L.B)
+copy(L::Ldiv{LazyLayout,<:ApplyLayout{typeof(*)}}) = *(L.A \  first(L.B.args),  tail(L.B.args)...)
+copy(L::Ldiv{LazyLayout,<:ApplyLayout{typeof(*)},<:Any,<:AbstractQuasiArray}) = L.A \  Applied(L.B)
 
 
-materialize(A::Applied{LmaterializeApplyStyle,typeof(*)}) = lmaterialize(A)
-materialize(A::Applied{FlattenApplyStyle,typeof(*)}) = materialize(flatten(A))
+copy(A::Applied{LmaterializeApplyStyle,typeof(*)}) = lmaterialize(A)
