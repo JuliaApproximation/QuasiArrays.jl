@@ -20,7 +20,7 @@ const QuasiMatMulMat{T, V} = QuasiArrayMulArray{2, 2, T, V}
 const QuasiMatMulQuasiMat{T, V} = QuasiArrayMulQuasiArray{2, 2, T, V}
 
 
-function getindex(M::Mul{<:AbstractQuasiArrayApplyStyle}, k::Real)
+function getindex(M::Mul{<:AbstractQuasiArrayApplyStyle}, k::Number)
     A,Bs = first(M.args), tail(M.args)
     B = _mul(Bs...)
     ret = zero(eltype(M))
@@ -30,7 +30,7 @@ function getindex(M::Mul{<:AbstractQuasiArrayApplyStyle}, k::Real)
     ret
 end
 
-function _mul_quasi_getindex(M::Mul, k::Real, j::Real)
+function _mul_quasi_getindex(M::Mul, k::Number, j::Number)
     A,Bs = first(M.args), tail(M.args)
     B = _mul(Bs...)
     ret = zero(eltype(M))
@@ -40,7 +40,7 @@ function _mul_quasi_getindex(M::Mul, k::Real, j::Real)
     ret
 end
 
-getindex(M::Mul{<:AbstractQuasiArrayApplyStyle}, k::Real, j::Real) =
+getindex(M::Mul{<:AbstractQuasiArrayApplyStyle}, k::Number, j::Number) =
     _mul_quasi_getindex(M, k, j)
 
 getindex(M::Mul{<:AbstractQuasiArrayApplyStyle}, k::Integer, j::Integer) =
@@ -145,7 +145,7 @@ copy(A::ApplyQuasiArray) = copy(Applied(A))
 
 IndexStyle(::ApplyQuasiArray{<:Any,1}) = IndexLinear()
 
-@propagate_inbounds getindex(A::ApplyQuasiArray{T,N}, kj::Vararg{Real,N}) where {T,N} =
+@propagate_inbounds getindex(A::ApplyQuasiArray{T,N}, kj::Vararg{Number,N}) where {T,N} =
     Applied(A)[kj...]
 
 MemoryLayout(M::Type{ApplyQuasiArray{T,N,F,Args}}) where {T,N,F,Args} = ApplyLayout{F,tuple_type_memorylayouts(Args)}()
@@ -248,7 +248,7 @@ function _mul_getindex(k, j, A, B, C, D...)
     _mul_getindex(OneTo(N), j, A[k,OneTo(M)]*B[OneTo(M),OneTo(N)], C, D...)
 end
 
-getindex(A::MulQuasiMatrix, k::AbstractVector{<:Real}, j::AbstractVector{<:Real}) = 
+getindex(A::MulQuasiMatrix, k::AbstractVector{<:Number}, j::AbstractVector{<:Number}) = 
     _mul_getindex(k, j, A.args...)
  
 

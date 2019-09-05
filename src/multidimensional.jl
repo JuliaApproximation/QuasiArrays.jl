@@ -62,16 +62,16 @@ module QuasiIteratorsMD
         I::II
         QuasiCartesianIndex{N,II}(index::II) where {N,II} = new(index)
     end
-    QuasiCartesianIndex{N}(index::NTuple{N,Real}) where N = QuasiCartesianIndex{N,typeof(index)}(index)
-    QuasiCartesianIndex(index::NTuple{N,Real}) where {N} = QuasiCartesianIndex{N}(index)
-    QuasiCartesianIndex(index::Real...) = QuasiCartesianIndex(index)
-    QuasiCartesianIndex{N}(index::Vararg{Real,N}) where {N} = QuasiCartesianIndex{N}(index)
+    QuasiCartesianIndex{N}(index::NTuple{N,Number}) where N = QuasiCartesianIndex{N,typeof(index)}(index)
+    QuasiCartesianIndex(index::NTuple{N,Number}) where {N} = QuasiCartesianIndex{N}(index)
+    QuasiCartesianIndex(index::Number...) = QuasiCartesianIndex(index)
+    QuasiCartesianIndex{N}(index::Vararg{Number,N}) where {N} = QuasiCartesianIndex{N}(index)
     # Allow passing tuples smaller than N
     QuasiCartesianIndex{N}(index::Tuple) where {N} = QuasiCartesianIndex{N}(fill_to_length(index, 1, Val(N)))
-    QuasiCartesianIndex{N}(index::Real...) where {N} = QuasiCartesianIndex{N}(index)
+    QuasiCartesianIndex{N}(index::Number...) where {N} = QuasiCartesianIndex{N}(index)
     QuasiCartesianIndex{N}() where {N} = QuasiCartesianIndex{N}(())
     # Un-nest passed QuasiCartesianIndexes
-    QuasiCartesianIndex(index::Union{Real, QuasiCartesianIndex}...) = QuasiCartesianIndex(flatten(index))
+    QuasiCartesianIndex(index::Union{Number, QuasiCartesianIndex}...) = QuasiCartesianIndex(flatten(index))
     flatten(I::Tuple{}) = I
     flatten(I::Tuple{Any}) = I
     flatten(I::Tuple{<:QuasiCartesianIndex}) = I[1].I
@@ -79,7 +79,7 @@ module QuasiIteratorsMD
     @inline _flatten() = ()
     @inline _flatten(i, I...)                 = (i, _flatten(I...)...)
     @inline _flatten(i::QuasiCartesianIndex, I...) = (i.I..., _flatten(I...)...)
-    QuasiCartesianIndex(index::Tuple{Vararg{Union{Real, QuasiCartesianIndex}}}) = QuasiCartesianIndex(index...)
+    QuasiCartesianIndex(index::Tuple{Vararg{Union{Number, QuasiCartesianIndex}}}) = QuasiCartesianIndex(index...)
     show(io::IO, i::QuasiCartesianIndex) = (print(io, "QuasiCartesianIndex"); show(io, i.I))
 
     # length
@@ -115,8 +115,8 @@ module QuasiIteratorsMD
     @inline max(index1::QuasiCartesianIndex{N}, index2::QuasiCartesianIndex{N}) where {N} =
         QuasiCartesianIndex{N}(map(max, index1.I, index2.I))
 
-    @inline (*)(a::Real, index::QuasiCartesianIndex{N}) where {N} = QuasiCartesianIndex{N}(map(x->a*x, index.I))
-    @inline (*)(index::QuasiCartesianIndex, a::Real) = *(a,index)
+    @inline (*)(a::Number, index::QuasiCartesianIndex{N}) where {N} = QuasiCartesianIndex{N}(map(x->a*x, index.I))
+    @inline (*)(index::QuasiCartesianIndex, a::Number) = *(a,index)
 
     # comparison
     @inline isless(I1::QuasiCartesianIndex{N}, I2::QuasiCartesianIndex{N}) where {N} = _isless(0, I1.I, I2.I)
@@ -243,17 +243,17 @@ module QuasiIteratorsMD
     For cartesian to linear index conversion, see [`LinearIndices`](@ref).
     """
 
-    struct QuasiCartesianIndices{N,R<:NTuple{N,AbstractQuasiOrVector{<:Real}},RR<:NTuple{N,Real}} <: AbstractArray{QuasiCartesianIndex{N,RR},N}
+    struct QuasiCartesianIndices{N,R<:NTuple{N,AbstractQuasiOrVector{<:Number}},RR<:NTuple{N,Number}} <: AbstractArray{QuasiCartesianIndex{N,RR},N}
         indices::R
     end
 
-    QuasiCartesianIndices(nd::NTuple{N,AbstractQuasiOrVector{<:Real}}) where N = 
+    QuasiCartesianIndices(nd::NTuple{N,AbstractQuasiOrVector{<:Number}}) where N = 
         QuasiCartesianIndices{N,typeof(nd),Tuple{map(eltype,nd)...}}(nd)
 
     QuasiCartesianIndices(::Tuple{}) = QuasiCartesianIndices{0,typeof(())}(())
 
     QuasiCartesianIndices(index::QuasiCartesianIndex) = QuasiCartesianIndices(index.I)
-    QuasiCartesianIndices(sz::NTuple{N,<:Real}) where {N} = QuasiCartesianIndices(map(Base.OneTo, sz))
+    QuasiCartesianIndices(sz::NTuple{N,<:Number}) where {N} = QuasiCartesianIndices(map(Base.OneTo, sz))
 
     QuasiCartesianIndices(A::AbstractQuasiArray) = QuasiCartesianIndices(axes(A))
 
@@ -364,12 +364,12 @@ end
 @inline checkbounds_indices(::Type{Bool}, IA::Tuple, I::Tuple{QuasiCartesianIndex,Vararg{Any}}) =
     checkbounds_indices(Bool, IA, (I[1].I..., tail(I)...))
 
-# Indexing into Array with mixtures of Reals and QuasiCartesianIndices is
+# Indexing into Array with mixtures of Numbers and QuasiCartesianIndices is
 # extremely performance-sensitive. While the abstract fallbacks support this,
 # codegen has extra support for SIMDification that sub2ind doesn't (yet) support
-@propagate_inbounds getindex(A::Array, i1::Union{Real, QuasiCartesianIndex}, I::Union{Real, QuasiCartesianIndex}...) =
+@propagate_inbounds getindex(A::Array, i1::Union{Number, QuasiCartesianIndex}, I::Union{Number, QuasiCartesianIndex}...) =
     A[to_indices(A, (i1, I...))...]
-@propagate_inbounds setindex!(A::Array, v, i1::Union{Real, QuasiCartesianIndex}, I::Union{Real, QuasiCartesianIndex}...) =
+@propagate_inbounds setindex!(A::Array, v, i1::Union{Number, QuasiCartesianIndex}, I::Union{Number, QuasiCartesianIndex}...) =
     (A[to_indices(A, (i1, I...))...] = v; A)
 
 # Support indexing with an array of QuasiCartesianIndex{N}s
@@ -413,7 +413,7 @@ end
 
 # In simple cases, we know that we don't need to use axes(A). Optimize those
 # until Julia gets smart enough to elide the call on its own:
-@inline to_indices(A, I::Tuple{Vararg{Union{Real, QuasiCartesianIndex}}}) = to_indices(A, (), I)
+@inline to_indices(A, I::Tuple{Vararg{Union{Number, QuasiCartesianIndex}}}) = to_indices(A, (), I)
 # But some index types require more context spanning multiple indices
 # QuasiCartesianIndexes are simple; they just splat out
 @inline to_indices(A, inds, I::Tuple{QuasiCartesianIndex, Vararg{Any}}) =
@@ -431,7 +431,7 @@ const CI0 = Union{QuasiCartesianIndex{0}, AbstractArray{QuasiCartesianIndex{0}}}
 getindex(x::Number, i::QuasiCartesianIndex{0}) = x
 getindex(t::Tuple,  i::QuasiCartesianIndex{1}) = getindex(t, i.I[1])
 
-@inline function _getindex(l::IndexStyle, A::AbstractQuasiArray, I::Union{Real, AbstractArray}...)
+@inline function _getindex(l::IndexStyle, A::AbstractQuasiArray, I::Union{Number, AbstractArray}...)
     @boundscheck checkbounds(A, I...)
     return _unsafe_getindex(l, _maybe_reshape(l, A, I...), I...)
 end
@@ -441,7 +441,7 @@ end
     (ntuple(x->true, Val(N))..., index_dimsum(I...)...)
 end
 
-Slice(d::AbstractQuasiVector{<:Real}) = Inclusion(d)
+Slice(d::AbstractQuasiVector{<:Number}) = Inclusion(d)
 
 
 _maybe_reshape(::IndexLinear, A::AbstractQuasiArray, I...) = A
@@ -450,7 +450,7 @@ _maybe_reshape(::IndexCartesian, A::AbstractQuasiVector, I...) = A
 @inline __maybe_reshape(A::AbstractQuasiArray{T,N}, ::NTuple{N,Any}) where {T,N} = A
 @inline __maybe_reshape(A::AbstractQuasiArray, ::NTuple{N,Any}) where {N} = reshape(A, Val(N))
 
-function _unsafe_getindex(::IndexStyle, A::AbstractQuasiArray, I::Vararg{Union{Real, AbstractArray}, N}) where N
+function _unsafe_getindex(::IndexStyle, A::AbstractQuasiArray, I::Vararg{Union{Number, AbstractArray}, N}) where N
     # This is specifically not inlined to prevent excessive allocations in type unstable code
     shape = index_shape(I...)
     dest = similar(Array{eltype(A)}, shape)
@@ -460,7 +460,7 @@ function _unsafe_getindex(::IndexStyle, A::AbstractQuasiArray, I::Vararg{Union{R
 end
 
 # Always index with the exactly indices provided.
-@generated function _unsafe_getindex!(dest::Union{AbstractArray,AbstractQuasiArray}, src::AbstractQuasiArray, I::Vararg{Union{Real, AbstractArray}, N}) where N
+@generated function _unsafe_getindex!(dest::Union{AbstractArray,AbstractQuasiArray}, src::AbstractQuasiArray, I::Vararg{Union{Number, AbstractArray}, N}) where N
     quote
         @_inline_meta
         D = eachindex(dest)

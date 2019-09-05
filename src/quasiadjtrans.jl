@@ -105,18 +105,18 @@ axes(v::AdjOrTransAbsVec) = (Base.OneTo(1), axes(v.parent)...)
 axes(A::AdjOrTransAbsMat) = reverse(axes(A.parent))
 IndexStyle(::Type{<:AdjOrTransAbsVec}) = IndexCartesian()
 IndexStyle(::Type{<:AdjOrTransAbsMat}) = IndexCartesian()
-@propagate_inbounds function getindex(A::AdjOrTransAbsVec, i::Real, j::Real) 
+@propagate_inbounds function getindex(A::AdjOrTransAbsVec, i::Number, j::Number) 
     @boundscheck i == 1 || throw(BoundsError(A,i,j))
     wrapperop(A)(A.parent[j])
 end
-@propagate_inbounds getindex(A::AdjOrTransAbsMat, i::Real, j::Real) = wrapperop(A)(A.parent[j, i])
-@propagate_inbounds function setindex!(A::AdjOrTransAbsVec, x, i::Real, j::Real) 
+@propagate_inbounds getindex(A::AdjOrTransAbsMat, i::Number, j::Number) = wrapperop(A)(A.parent[j, i])
+@propagate_inbounds function setindex!(A::AdjOrTransAbsVec, x, i::Number, j::Number) 
     @boundscheck i == 1 || throw(BoundsError(A,i,j))
     (setindex!(A.parent, wrapperop(A)(x), j); A)
 end
-@propagate_inbounds setindex!(A::AdjOrTransAbsMat, x, i::Real, j::Real) = (setindex!(A.parent, wrapperop(A)(x), j, i); A)
+@propagate_inbounds setindex!(A::AdjOrTransAbsMat, x, i::Number, j::Number) = (setindex!(A.parent, wrapperop(A)(x), j, i); A)
 # AbstractQuasiArray interface, additional definitions to retain wrapper over vectors where appropriate
-@propagate_inbounds getindex(v::AdjOrTransAbsVec, ::Colon, is::AbstractArray{<:Real}) = wrapperop(v)(v.parent[is])
+@propagate_inbounds getindex(v::AdjOrTransAbsVec, ::Colon, is::AbstractArray{<:Number}) = wrapperop(v)(v.parent[is])
 @propagate_inbounds getindex(v::AdjOrTransAbsVec, ::Colon, ::Colon) = wrapperop(v)(v.parent[:])
 
 # conversion of underlying storage
@@ -201,8 +201,8 @@ end
     sum(uu*vv for (uu, vv) in zip(u, v))
 
 ## pseudoinversion
-pinv(v::QuasiAdjointAbsVec, tol::Real = 0) = pinv(v.parent, tol).parent
-pinv(v::QuasiTransposeAbsVec, tol::Real = 0) = pinv(conj(v.parent)).parent
+pinv(v::QuasiAdjointAbsVec, tol::Number = 0) = pinv(v.parent, tol).parent
+pinv(v::QuasiTransposeAbsVec, tol::Number = 0) = pinv(conj(v.parent)).parent
 
 
 ## left-division \

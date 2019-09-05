@@ -14,7 +14,7 @@ function promote_shape(a::AbstractQuasiArray, b::AbstractQuasiArray)
     promote_shape(axes(a), axes(b))
 end
 
-const QuasiIndices{N} = NTuple{N,AbstractQuasiVector{<:Real}}
+const QuasiIndices{N} = NTuple{N,AbstractQuasiVector{<:Number}}
 function promote_shape(a::QuasiIndices, b::QuasiIndices)
     if length(a) < length(b)
         return promote_shape(b, a)
@@ -99,7 +99,7 @@ to_index(I::AbstractQuasiArray) = I
 to_index(I::AbstractQuasiArray{<:Union{AbstractArray, Colon}}) =
     throw(ArgumentError("invalid index: $I of type $(typeof(I))"))
 
-to_quasi_index(i::Real) = i
+to_quasi_index(i::Number) = i
 to_quasi_index(i) = Base.to_index(i)
 to_index(A::AbstractQuasiArray, i) = to_quasi_index(i)
 
@@ -153,16 +153,16 @@ size(S::Inclusion) = (cardinality(S.domain),)
 length(S::Inclusion) = cardinality(S.domain)
 unsafe_length(S::Inclusion) = cardinality(S.domain)
 cardinality(S::Inclusion) = cardinality(S.domain)
-getindex(S::Inclusion{T}, i::Real) where T =
+getindex(S::Inclusion{T}, i::Number) where T =
     (@_inline_meta; @boundscheck checkbounds(S, i); convert(T,i))
-getindex(S::Inclusion{T}, i::AbstractVector{<:Real}) where T =
+getindex(S::Inclusion{T}, i::AbstractVector{<:Number}) where T =
     (@_inline_meta; @boundscheck checkbounds(S, i); convert(AbstractVector{T},i))
 show(io::IO, r::Inclusion) = print(io, "Inclusion(", r.domain, ")")
 iterate(S::Inclusion, s...) = iterate(S.domain, s...)
 
 in(x, S::Inclusion) = x in S.domain
 
-checkindex(::Type{Bool}, inds::Inclusion, i::Real) = i ∈ inds.domain
+checkindex(::Type{Bool}, inds::Inclusion, i::Number) = i ∈ inds.domain
 checkindex(::Type{Bool}, inds::Inclusion, ::Colon) = true
 checkindex(::Type{Bool}, inds::Inclusion, ::Inclusion) = true
 function checkindex(::Type{Bool}, inds::Inclusion, I::AbstractArray)

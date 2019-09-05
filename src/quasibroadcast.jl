@@ -1,5 +1,5 @@
-axistype(a::AbstractQuasiVector{<:Real}, b::AbstractQuasiVector{<:Real}) = a
-axistype(a::AbstractQuasiVector{<:Real}, b::AbstractVector{<:Real}) = a
+axistype(a::AbstractQuasiVector{<:Number}, b::AbstractQuasiVector{<:Number}) = a
+axistype(a::AbstractQuasiVector{<:Number}, b::AbstractVector{<:Number}) = a
 
 
 """
@@ -90,10 +90,10 @@ Base.similar(bc::Broadcasted{QuasiArrayConflict}, ::Type{ElType}) where ElType =
 
 _axes(bc::Broadcasted{<:AbstractQuasiArrayStyle{0}}, ::Nothing) = ()
 
-_eachindex(t::Tuple{AbstractQuasiVector{<:Real}}) = QuasiCartesianIndices(t)
-_eachindex(t::NTuple{N,AbstractQuasiVector{<:Real}}) where N = QuasiCartesianIndices(t)
-_eachindex(t::Tuple{AbstractQuasiVector{<:Real},Vararg{AbstractUnitRange}}) = QuasiCartesianIndices(t)
-_eachindex(t::Tuple{AbstractUnitRange,AbstractQuasiVector{<:Real},Vararg{AbstractUnitRange}}) = QuasiCartesianIndices(t)
+_eachindex(t::Tuple{AbstractQuasiVector{<:Number}}) = QuasiCartesianIndices(t)
+_eachindex(t::NTuple{N,AbstractQuasiVector{<:Number}}) where N = QuasiCartesianIndices(t)
+_eachindex(t::Tuple{AbstractQuasiVector{<:Number},Vararg{AbstractUnitRange}}) = QuasiCartesianIndices(t)
+_eachindex(t::Tuple{AbstractUnitRange,AbstractQuasiVector{<:Number},Vararg{AbstractUnitRange}}) = QuasiCartesianIndices(t)
 
 instantiate(bc::Broadcasted{<:AbstractQuasiArrayStyle{0}}) = bc
 
@@ -116,10 +116,10 @@ Base.@propagate_inbounds newindex(arg, I::QuasiCartesianIndex) = QuasiCartesianI
     @inbounds _broadcast_getindex(bc, I)
 end
 
-Base.@propagate_inbounds Base.getindex(bc::Broadcasted{<:AbstractQuasiArrayStyle}, i1::Real, i2::Real, I::Real...) = bc[QuasiCartesianIndex((i1, i2, I...))]
+Base.@propagate_inbounds Base.getindex(bc::Broadcasted{<:AbstractQuasiArrayStyle}, i1::Number, i2::Number, I::Number...) = bc[QuasiCartesianIndex((i1, i2, I...))]
 Base.@propagate_inbounds Base.getindex(bc::Broadcasted{<:AbstractQuasiArrayStyle}) = bc[QuasiCartesianIndex(())]
 
-@inline Base.checkbounds(bc::Broadcasted{<:AbstractQuasiArrayStyle}, I::Real) =
+@inline Base.checkbounds(bc::Broadcasted{<:AbstractQuasiArrayStyle}, I::Number) =
     Base.checkbounds_indices(Bool, axes(bc), (I,)) || Base.throw_boundserror(bc, (I,))
 
 @inline Base.checkbounds(bc::Broadcasted, I::QuasiCartesianIndex) =

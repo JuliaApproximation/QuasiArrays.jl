@@ -163,14 +163,14 @@ end
 # In general, we simply re-index the parent indices by the provided ones
 SlowSubQuasiArray{T,N,P,I} = SubQuasiArray{T,N,P,I,false}
 if VERSION < v"1.2-"
-    function getindex(V::SlowSubQuasiArray{T,N}, I::Vararg{Real,N}) where {T,N}
+    function getindex(V::SlowSubQuasiArray{T,N}, I::Vararg{Number,N}) where {T,N}
         @_inline_meta
         @boundscheck checkbounds(V, I...)
         @inbounds r = V.parent[reindex(V, V.indices, I)...]
         r
     end
 else
-    function getindex(V::SlowSubQuasiArray{T,N}, I::Vararg{Real,N}) where {T,N}
+    function getindex(V::SlowSubQuasiArray{T,N}, I::Vararg{Number,N}) where {T,N}
         @_inline_meta
         @boundscheck checkbounds(V, I...)
         @inbounds r = V.parent[reindex(V.indices, I)...]
@@ -179,7 +179,7 @@ else
 end
 
 FastSubQuasiArray{T,N,P,I} = SubQuasiArray{T,N,P,I,true}
-function getindex(V::FastSubQuasiArray, i::Real)
+function getindex(V::FastSubQuasiArray, i::Number)
     @_inline_meta
     @boundscheck checkbounds(V, i)
     @inbounds r = V.parent[V.offset1 + V.stride1*i]
@@ -187,7 +187,7 @@ function getindex(V::FastSubQuasiArray, i::Real)
 end
 # We can avoid a multiplication if the first parent index is a Colon or AbstractUnitRange
 FastContiguousSubQuasiArray{T,N,P,I<:Tuple{Union{Slice, AbstractUnitRange}, Vararg{Any}}} = SubQuasiArray{T,N,P,I,true}
-function getindex(V::FastContiguousSubQuasiArray, i::Real)
+function getindex(V::FastContiguousSubQuasiArray, i::Number)
     @_inline_meta
     @boundscheck checkbounds(V, i)
     @inbounds r = V.parent[V.offset1 + i]
@@ -195,27 +195,27 @@ function getindex(V::FastContiguousSubQuasiArray, i::Real)
 end
 
 if VERSION < v"1.2-"
-    function setindex!(V::SlowSubQuasiArray{T,N}, x, I::Vararg{Real,N}) where {T,N}
+    function setindex!(V::SlowSubQuasiArray{T,N}, x, I::Vararg{Number,N}) where {T,N}
         @_inline_meta
         @boundscheck checkbounds(V, I...)
         @inbounds V.parent[reindex(V, V.indices, I)...] = x
         V
     end
 else
-    function setindex!(V::SlowSubQuasiArray{T,N}, x, I::Vararg{Real,N}) where {T,N}
+    function setindex!(V::SlowSubQuasiArray{T,N}, x, I::Vararg{Number,N}) where {T,N}
         @_inline_meta
         @boundscheck checkbounds(V, I...)
         @inbounds V.parent[reindex(V.indices, I)...] = x
         V
     end
 end
-function setindex!(V::FastSubQuasiArray, x, i::Real)
+function setindex!(V::FastSubQuasiArray, x, i::Number)
     @_inline_meta
     @boundscheck checkbounds(V, i)
     @inbounds V.parent[V.offset1 + V.stride1*i] = x
     V
 end
-function setindex!(V::FastContiguousSubQuasiArray, x, i::Real)
+function setindex!(V::FastContiguousSubQuasiArray, x, i::Number)
     @_inline_meta
     @boundscheck checkbounds(V, i)
     @inbounds V.parent[V.offset1 + i] = x
@@ -303,7 +303,7 @@ _pointer(V::SubQuasiArray, i::Int) = pointer(V, Base._ind2sub(axes(V), i))
 # indices, it's worth optimizing these implementations thoroughly
 axes(S::SubQuasiArray) = (@_inline_meta; _indices_sub(S, S.indices...))
 _indices_sub(S::SubQuasiArray) = ()
-_indices_sub(S::SubQuasiArray, ::Real, I...) = (@_inline_meta; _indices_sub(S, I...))
+_indices_sub(S::SubQuasiArray, ::Number, I...) = (@_inline_meta; _indices_sub(S, I...))
 function _indices_sub(S::SubQuasiArray, i1::Union{AbstractQuasiArray,AbstractArray}, I...)
     @_inline_meta
     (unsafe_indices(i1)..., _indices_sub(S, I...)...)
