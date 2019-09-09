@@ -1,9 +1,3 @@
-# Used for when a lazy version should be constructed on materialize
-abstract type AbstractQuasiArrayApplyStyle <: ApplyStyle end
-struct QuasiArrayApplyStyle <: AbstractQuasiArrayApplyStyle end
-
-
-
 const QuasiArrayMulArray{p, q, T, V} =
     Applied{<:Any, typeof(*), <:Tuple{<:AbstractQuasiArray{T,p}, <:AbstractArray{V,q}}}
 
@@ -75,85 +69,6 @@ axes(L::Ldiv{<:Any,<:Any,<:AbstractQuasiVector}) =
 
 *(A::AbstractQuasiArray, B::Mul, C...) = apply(*,A, B.args..., C...)
 *(A::Mul, B::AbstractQuasiArray, C...) = apply(*,A.args..., B, C...)
-
-##
-# LazyQuasiArray
-##
-
-"""
-A `LazyQuasiArray` is an abstract type for any array that is
-stored and should be manipulated lazily.
-"""
-abstract type LazyQuasiArray{T,N} <: AbstractQuasiArray{T,N} end
-
-const LazyQuasiVector{T} = LazyQuasiArray{T,1}
-const LazyQuasiMatrix{T} = LazyQuasiArray{T,2}
-
-
-struct LazyQuasiArrayApplyStyle <: AbstractQuasiArrayApplyStyle end
-
-MemoryLayout(::Type{<:LazyQuasiArray}) = LazyLayout()
-ndims(M::Applied{LazyQuasiArrayApplyStyle,typeof(*)}) = ndims(last(M.args))
-
-quasimulapplystyle(::LazyLayout, ::LazyLayout, lay...) = LazyQuasiArrayApplyStyle()
-quasimulapplystyle(_, ::LazyLayout, lay...) = LazyQuasiArrayApplyStyle()
-quasimulapplystyle(::LazyLayout, lay...) = LazyQuasiArrayApplyStyle()
-quasimulapplystyle(::LazyLayout, ::LazyLayout, ::LazyLayout, lay...) = LazyQuasiArrayApplyStyle()
-quasimulapplystyle(_, ::LazyLayout, ::LazyLayout, lay...) = LazyQuasiArrayApplyStyle()
-quasimulapplystyle(::LazyLayout, _, ::LazyLayout, lay...) = LazyQuasiArrayApplyStyle()
-quasimulapplystyle(_, _, ::LazyLayout, lay...) = LazyQuasiArrayApplyStyle()
-
-
-
-###
-# ApplyQuasiArray
-###
-
-"""
-A `ApplyQuasiArray` is a lazy realization of a function that
-creates a quasi-array.
-"""
-struct ApplyQuasiArray{T, N, F, Args<:Tuple} <: LazyQuasiArray{T,N}
-    f::F
-    args::Args
-end
-
-const ApplyQuasiVector{T, F, Args<:Tuple} = ApplyQuasiArray{T, 1, F, Args}
-const ApplyQuasiMatrix{T, F, Args<:Tuple} = ApplyQuasiArray{T, 2, F, Args}
-
-QuasiLazyArray(A::Applied) = ApplyQuasiArray(A)
-
-ApplyQuasiArray{T,N,F,Args}(M::Applied) where {T,N,F,Args} = ApplyQuasiArray{T,N,F,Args}(M.f, M.args)
-ApplyQuasiArray{T,N}(M::Applied{Style,F,Args}) where {T,N,Style,F,Args} = ApplyQuasiArray{T,N,F,Args}(instantiate(M))
-ApplyQuasiArray{T}(M::Applied) where {T} = ApplyQuasiArray{T,ndims(M)}(M)
-ApplyQuasiArray(M::Applied) = ApplyQuasiArray{eltype(M)}(M)
-ApplyQuasiVector(M::Applied) = ApplyQuasiVector{eltype(M)}(M)
-ApplyQuasiMatrix(M::Applied) = ApplyQuasiMatrix{eltype(M)}(M)
-
-ApplyQuasiArray(f, factors...) = ApplyQuasiArray(applied(f, factors...))
-ApplyQuasiArray{T}(f, factors...) where T = ApplyQuasiArray{T}(applied(f, factors...))
-ApplyQuasiArray{T,N}(f, factors...) where {T,N} = ApplyQuasiArray{T,N}(applied(f, factors...))
-
-ApplyQuasiVector(f, factors...) = ApplyQuasiVector(applied(f, factors...))
-ApplyQuasiMatrix(f, factors...) = ApplyQuasiMatrix(applied(f, factors...))
-
-Applied(A::ApplyQuasiArray) = applied(A.f, A.args...)
-
-axes(A::ApplyQuasiArray) = axes(Applied(A))
-size(A::ApplyQuasiArray) = map(length, axes(A))
-copy(A::ApplyQuasiArray) = copy(Applied(A))
-
-IndexStyle(::ApplyQuasiArray{<:Any,1}) = IndexLinear()
-
-@propagate_inbounds getindex(A::ApplyQuasiArray{T,N}, kj::Vararg{Number,N}) where {T,N} =
-    Applied(A)[kj...]
-
-MemoryLayout(M::Type{ApplyQuasiArray{T,N,F,Args}}) where {T,N,F,Args} = ApplyLayout{F,tuple_type_memorylayouts(Args)}()
-
-
-copy(A::Applied{<:AbstractQuasiArrayApplyStyle}) = QuasiArray(A)
-copy(A::Applied{LazyQuasiArrayApplyStyle}) = ApplyQuasiArray(A)
-QuasiArray(A::Applied) = QuasiArray(ApplyQuasiArray(A))
 
 
 ####
@@ -271,31 +186,6 @@ ApplyStyle(::typeof(*), ::Type{A}, ::Type{B}, ::Type{C}, ::Type{D}, E::Type...) 
     quasimulapplystyle(MemoryLayout(A), MemoryLayout(B), MemoryLayout(C), MemoryLayout(D), MemoryLayout.(E)...)
 ApplyStyle(::typeof(*), ::Type{A}, ::Type{B}, ::Type{C}, ::Type{D}, E::Type...) where {A<:AbstractArray,B<:AbstractArray,C<:AbstractArray,D<:AbstractQuasiArray} = 
     quasimulapplystyle(MemoryLayout(A), MemoryLayout(B), MemoryLayout(C), MemoryLayout(D), MemoryLayout.(E)...)    
-
-ApplyStyle(::typeof(\), ::Type{<:AbstractQuasiArray}, ::Type{<:AbstractQuasiArray}) = QuasiArrayApplyStyle()
-ApplyStyle(::typeof(\), ::Type{<:AbstractQuasiArray}, ::Type{<:AbstractArray}) = QuasiArrayApplyStyle()
-ApplyStyle(::typeof(\), ::Type{<:AbstractArray}, ::Type{<:AbstractQuasiArray}) = QuasiArrayApplyStyle()    
-
-for op in (:pinv, :inv)
-    @eval ApplyStyle(::typeof($op), args::Type{<:AbstractQuasiArray}) = QuasiArrayApplyStyle()
-end
-## PInvQuasiMatrix
-
-
-const PInvQuasiMatrix{T, ARGS} = ApplyQuasiMatrix{T,typeof(pinv),ARGS}
-const InvQuasiMatrix{T, ARGS} = ApplyQuasiMatrix{T,typeof(inv),ARGS}
-
-parent(A::PInvQuasiMatrix) = first(A.args)
-parent(A::InvQuasiMatrix) = first(A.args)
-axes(A::PInvQuasiMatrix) = axes(Applied(A))
-size(A::PInvQuasiMatrix) = map(length, axes(A))
-pinv(A::PInvQuasiMatrix) = first(A.args)
-
-@propagate_inbounds getindex(A::PInvQuasiMatrix{T}, k::Int, j::Int) where T =
-    (Applied(A)*[Zeros(j-1); one(T); Zeros(size(A,2) - j)])[k]
-
-*(A::PInvQuasiMatrix, B::AbstractQuasiMatrix, C...) = apply(*,Applied(A), B, C...)
-*(A::PInvQuasiMatrix, B::MulQuasiArray, C...) = apply(*,Applied(A), Applied(B), C...)
 
 
 ####

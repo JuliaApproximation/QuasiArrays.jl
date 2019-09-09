@@ -23,9 +23,9 @@ import Base: exp, log, sqrt,
           acosh, asinh, atanh, acsch, asech, acoth
 import Base: Array, Matrix, Vector
 
-import Base.Broadcast: materialize, BroadcastStyle, Style, broadcasted, Broadcasted, Unknown,
+import Base.Broadcast: materialize, materialize!, BroadcastStyle, AbstractArrayStyle, Style, broadcasted, Broadcasted, Unknown,
                         newindex, broadcastable, preprocess, _eachindex, _broadcast_getindex,
-                        DefaultArrayStyle, axistype, throwdm, instantiate
+                        DefaultArrayStyle, axistype, throwdm, instantiate, combine_eltypes, eltypes                   
 
 import LinearAlgebra: transpose, adjoint, checkeltype_adjoint, checkeltype_transpose, Diagonal,
                         AbstractTriangular, pinv, inv, promote_leaf_eltypes
@@ -41,7 +41,8 @@ import Base.IteratorsMD
 
 export AbstractQuasiArray, AbstractQuasiMatrix, AbstractQuasiVector, materialize,
        QuasiArray, QuasiMatrix, QuasiVector, QuasiDiagonal, Inclusion,
-       QuasiAdjoint, QuasiTranspose
+       QuasiAdjoint, QuasiTranspose, ApplyQuasiArray, ApplyQuasiMatrix, ApplyQuasiVector,
+       BroadcastQuasiArray, BroadcastQuasiMatrix, BroadcastQuasiVector
 
 if VERSION < v"1.3-"
     """
@@ -88,7 +89,10 @@ include("abstractquasiarraymath.jl")
 include("quasiarray.jl")
 include("quasiarraymath.jl")
 
+include("lazyquasiarrays.jl")
+
 include("matmul.jl")
+include("inv.jl")
 include("quasiadjtrans.jl")
 include("quasidiagonal.jl")
 
