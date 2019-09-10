@@ -136,5 +136,4 @@ getindex(B::BroadcastQuasiArray{<:Any,1}, kr::AbstractVector{<:Number}) =
 copy(bc::Broadcasted{<:LazyQuasiArrayStyle}) = BroadcastQuasiArray(bc)
 
 
-BroadcastStyle(::Type{<:BroadcastQuasiArray{<:Any,N}}) where N = LazyQuasiArrayStyle{N}()
-
+BroadcastStyle(::Type{<:LazyQuasiArray{<:Any,N}}) where N = LazyQuasiArrayStyle{N}()
