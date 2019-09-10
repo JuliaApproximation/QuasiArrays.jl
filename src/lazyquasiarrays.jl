@@ -131,33 +131,9 @@ IndexStyle(::BroadcastQuasiArray{<:Any,1}) = IndexLinear()
 @propagate_inbounds _broadcast_getindex_range(A, I) = A[I]
 
 getindex(B::BroadcastQuasiArray{<:Any,1}, kr::AbstractVector{<:Number}) =
-    BroadcastQuasiArray(Broadcasted(B).f, map(a -> _broadcast_getindex_range(a,kr), Broadcasted(B).args)...)
+    BroadcastArray(Broadcasted(B).f, map(a -> _broadcast_getindex_range(a,kr), Broadcasted(B).args)...)
 
 copy(bc::Broadcasted{<:LazyQuasiArrayStyle}) = BroadcastQuasiArray(bc)
-
-# Replacement for #18.
-# Could extend this to other similar reductions in Base... or apply at lower level? 
-# for (fname, op) in [(:sum, :add_sum), (:prod, :mul_prod),
-#                     (:maximum, :max), (:minimum, :min),
-#                     (:all, :&),       (:any, :|)]
-function Base._sum(f, A::BroadcastQuasiArray, ::Colon)
-    bc = Broadcasted(A)
-    T = Broadcast.combine_eltypes(f ∘ bc.f, bc.args) 
-    out = zero(T)
-    @simd for I in eachindex(bc)
-        @inbounds out += f(bc[I])
-    end
-    out
-end
-function Base._prod(f, A::BroadcastQuasiArray, ::Colon)
-    bc = Broadcasted(A)
-    T = Broadcast.combine_eltypes(f ∘ bc.f, bc.args) 
-    out = one(T)
-    @simd for I in eachindex(bc)
-        @inbounds out *= f(bc[I])
-    end
-    out
-end
 
 
 BroadcastStyle(::Type{<:BroadcastQuasiArray{<:Any,N}}) where N = LazyQuasiArrayStyle{N}()

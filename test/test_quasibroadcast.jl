@@ -117,8 +117,16 @@ import QuasiArrays: QuasiCartesianIndex, QuasiCartesianIndices, DefaultQuasiArra
     end
 
     @testset "BroadcastQuasiArray" begin
+        a = QuasiVector(randn(6), 0:0.5:2.5)
+        b = BroadcastQuasiArray(exp, a)
+        @test b[0.5] == exp(a[0.5])
+        @test b[0.5:0.5:1.0] isa QuasiArrays.BroadcastArray
+        @test b[0.5:0.5:1.0] == b[[0.5,1.0]] == exp.(a[0.5:0.5:1.0]) 
+
         A = QuasiArray(randn(6,6), (0:0.5:2.5,0:0.5:2.5))
         B = BroadcastQuasiArray(exp, A)
+        @test B[0.5,1.0] == exp(A[0.5,1.0])
+
         @test axes(exp.(A)) == axes(B)
         @test QuasiMatrix(B) == exp.(A)
 
