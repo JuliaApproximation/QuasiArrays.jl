@@ -15,7 +15,7 @@ import Base: ViewIndex, Slice, IdentityUnitRange, ScalarIndex, RangeIndex, view,
                 parentindices, reverse, ndims, checkbounds,
                 promote_shape, maybeview, checkindex, checkbounds_indices,
                 throw_boundserror, rdims, replace_in_print_matrix
-import Base: *, /, \, +, -, inv
+import Base: *, /, \, +, -, ^, inv
 import Base: exp, log, sqrt,
           cos, sin, tan, csc, sec, cot,
           cosh, sinh, tanh, csch, sech, coth,
@@ -28,7 +28,8 @@ import Base.Broadcast: materialize, materialize!, BroadcastStyle, AbstractArrayS
                         DefaultArrayStyle, axistype, throwdm, instantiate, combine_eltypes, eltypes                   
 
 import LinearAlgebra: transpose, adjoint, checkeltype_adjoint, checkeltype_transpose, Diagonal,
-                        AbstractTriangular, pinv, inv, promote_leaf_eltypes
+                        AbstractTriangular, pinv, inv, promote_leaf_eltypes, power_by_squaring,
+                        integerpow, schurpow, tr
 
 import LazyArrays: MemoryLayout, UnknownLayout, Mul, ApplyLayout, ⋆,
                     lmaterialize, _lmaterialize, InvOrPInv, ApplyStyle, LazyLayout, FlattenMulStyle,
@@ -95,6 +96,7 @@ include("matmul.jl")
 include("inv.jl")
 include("quasiadjtrans.jl")
 include("quasidiagonal.jl")
+include("dense.jl")
 
 promote_leaf_eltypes(x::AbstractQuasiArray{T}) where {T<:Number} = T
 promote_leaf_eltypes(x::AbstractQuasiArray) = mapreduce(promote_leaf_eltypes, promote_type, x; init=Bool)
