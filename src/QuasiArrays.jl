@@ -14,7 +14,7 @@ import Base: ViewIndex, Slice, IdentityUnitRange, ScalarIndex, RangeIndex, view,
                 _ind2sub, _sub2ind, _ind2sub_recurse, _lookup,
                 parentindices, reverse, ndims, checkbounds,
                 promote_shape, maybeview, checkindex, checkbounds_indices,
-                throw_boundserror, rdims, replace_in_print_matrix
+                throw_boundserror, rdims, replace_in_print_matrix, show
 import Base: *, /, \, +, -, ^, inv
 import Base: exp, log, sqrt,
           cos, sin, tan, csc, sec, cot,
