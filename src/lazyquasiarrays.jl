@@ -75,7 +75,8 @@ IndexStyle(::ApplyQuasiArray{<:Any,1}) = IndexLinear()
 @propagate_inbounds getindex(A::ApplyQuasiArray{T,N}, kj::Vararg{Number,N}) where {T,N} =
     Applied(A)[kj...]
 
-MemoryLayout(M::Type{ApplyQuasiArray{T,N,F,Args}}) where {T,N,F,Args} = ApplyLayout{F,tuple_type_memorylayouts(Args)}()
+MemoryLayout(M::Type{ApplyQuasiArray{T,N,F,Args}}) where {T,N,F,Args} = 
+    applylayout(F.instance,tuple_type_memorylayouts(Args).parameters...)
 
 copy(A::Applied{LazyQuasiArrayApplyStyle}) = ApplyQuasiArray(A)
 copy(A::Applied{<:AbstractQuasiArrayApplyStyle}) = QuasiArray(A)

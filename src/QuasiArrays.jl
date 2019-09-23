@@ -34,8 +34,8 @@ import LinearAlgebra: transpose, adjoint, checkeltype_adjoint, checkeltype_trans
 import LazyArrays: MemoryLayout, UnknownLayout, Mul, ApplyLayout, ⋆,
                     lmaterialize, _lmaterialize, InvOrPInv, ApplyStyle, LazyLayout, FlattenMulStyle,
                     Applied, flatten, _flatten,
-                    rowsupport, colsupport, tuple_type_memorylayouts,
-                    LdivApplyStyle, most,
+                    rowsupport, colsupport, tuple_type_memorylayouts, applylayout,
+                    LdivApplyStyle, most, InvLayout, PInvLayout,
                     _mul, rowsupport, DiagonalLayout, adjointlayout, transposelayout, conjlayout
 
 import Base.IteratorsMD
