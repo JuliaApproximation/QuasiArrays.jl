@@ -76,7 +76,7 @@ IndexStyle(::ApplyQuasiArray{<:Any,1}) = IndexLinear()
     Applied(A)[kj...]
 
 MemoryLayout(M::Type{ApplyQuasiArray{T,N,F,Args}}) where {T,N,F,Args} = 
-    applylayout(F.instance,tuple_type_memorylayouts(Args).parameters...)
+    applylayout(F, tuple_type_memorylayouts(Args)...)
 
 copy(A::Applied{LazyQuasiArrayApplyStyle}) = ApplyQuasiArray(A)
 copy(A::Applied{<:AbstractQuasiArrayApplyStyle}) = QuasiArray(A)
