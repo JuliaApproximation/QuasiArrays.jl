@@ -136,7 +136,7 @@ convert(::Type{AbstractArray}, d::Inclusion{<:Any,<:AbstractVector}) =
 Vector(d::Inclusion{<:Any,<:AbstractVector}) = Vector(d.domain)
 Array(d::Inclusion{<:Any,<:AbstractVector}) = Array(d.domain)
 
-copy(d::Inclusion) = Inclusion(copy(d.domain))
+copy(d::Inclusion) = d
 
 ==(A::Inclusion, B::Inclusion) = A.domain == B.domain
 domain(A::Inclusion) = A.domain

@@ -224,6 +224,7 @@ quasimulapplystyle(::PInvLayout, ::LazyLayout, _...) = LmaterializeApplyStyle()
 quasimulapplystyle(::ApplyLayout{typeof(*)}, ::ApplyLayout{typeof(*)}, _...) = FlattenMulStyle()
 quasimulapplystyle(::ApplyLayout{typeof(*)}, _...) = FlattenMulStyle()
 quasimulapplystyle(::ApplyLayout{typeof(*)}, ::LazyLayout, _...) = FlattenMulStyle()
+quasimulapplystyle(::ApplyLayout{typeof(*)}, _, ::LazyLayout, _...) = FlattenMulStyle()
 quasimulapplystyle(::ApplyLayout{typeof(*)}, ::LazyLayout, ::LazyLayout, _...) = FlattenMulStyle()
 
 
