@@ -108,7 +108,7 @@ BroadcastQuasiArray{T}(bc::Broadcasted{<:Union{Nothing,BroadcastStyle},<:Tuple{V
     BroadcastQuasiArray{T,N}(bc)
 
 _broadcast2broadcastarray(a, b...) = tuple(a, b...)
-_broadcast2broadcastarray(a::Broadcasted, b...) = tuple(BroadcastArray(a), b...)
+_broadcast2broadcastarray(a::Broadcasted{<:LazyQuasiArrayStyle}, b...) = tuple(BroadcastQuasiArray(a), b...)
 
 _BroadcastQuasiArray(bc::Broadcasted) = BroadcastQuasiArray{combine_eltypes(bc.f, bc.args)}(bc)
 BroadcastQuasiArray(bc::Broadcasted{S}) where S =
@@ -138,3 +138,6 @@ copy(bc::Broadcasted{<:LazyQuasiArrayStyle}) = BroadcastQuasiArray(bc)
 
 
 BroadcastStyle(::Type{<:LazyQuasiArray{<:Any,N}}) where N = LazyQuasiArrayStyle{N}()
+
+MemoryLayout(M::Type{BroadcastQuasiArray{T,N,F,Args}}) where {T,N,F,Args} = 
+    broadcastlayout(F, tuple_type_memorylayouts(Args)...)

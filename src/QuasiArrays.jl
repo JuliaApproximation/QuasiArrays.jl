@@ -31,10 +31,10 @@ import LinearAlgebra: transpose, adjoint, checkeltype_adjoint, checkeltype_trans
                         AbstractTriangular, pinv, inv, promote_leaf_eltypes, power_by_squaring,
                         integerpow, schurpow, tr
 
-import LazyArrays: MemoryLayout, UnknownLayout, Mul, ApplyLayout, ⋆,
+import LazyArrays: MemoryLayout, UnknownLayout, Mul, ApplyLayout, BroadcastLayout, ⋆,
                     lmaterialize, _lmaterialize, InvOrPInv, ApplyStyle, LazyLayout, FlattenMulStyle,
                     Applied, flatten, _flatten,
-                    rowsupport, colsupport, tuple_type_memorylayouts, applylayout,
+                    rowsupport, colsupport, tuple_type_memorylayouts, applylayout, broadcastlayout,
                     LdivApplyStyle, most, InvLayout, PInvLayout,
                     _mul, rowsupport, DiagonalLayout, adjointlayout, transposelayout, conjlayout
 
