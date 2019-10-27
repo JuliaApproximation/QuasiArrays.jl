@@ -141,3 +141,12 @@ BroadcastStyle(::Type{<:LazyQuasiArray{<:Any,N}}) where N = LazyQuasiArrayStyle{
 
 MemoryLayout(M::Type{BroadcastQuasiArray{T,N,F,Args}}) where {T,N,F,Args} = 
     broadcastlayout(F, tuple_type_memorylayouts(Args)...)
+
+
+###
+# sub of *
+###
+
+arguments(a::AbstractQuasiArray) = arguments(MemoryLayout(typeof(a)), a)
+arguments(::ApplyLayout{typeof(*)}, V::SubQuasiArray{<:Any,2}) = _mat_mul_arguments(V)
+arguments(::ApplyLayout{typeof(*)}, V::SubQuasiArray{<:Any,1}) = _vec_mul_arguments(V)

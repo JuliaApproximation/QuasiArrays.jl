@@ -33,10 +33,11 @@ import LinearAlgebra: transpose, adjoint, checkeltype_adjoint, checkeltype_trans
 
 import LazyArrays: MemoryLayout, UnknownLayout, Mul, ApplyLayout, BroadcastLayout, ⋆,
                     lmaterialize, _lmaterialize, InvOrPInv, ApplyStyle, LazyLayout, FlattenMulStyle,
-                    Applied, flatten, _flatten,
+                    Applied, flatten, _flatten, arguments, _mat_mul_arguments, _vec_mul_arguments,
                     rowsupport, colsupport, tuple_type_memorylayouts, applylayout, broadcastlayout,
                     LdivApplyStyle, most, InvLayout, PInvLayout,
-                    _mul, rowsupport, DiagonalLayout, adjointlayout, transposelayout, conjlayout
+                    _mul, rowsupport, DiagonalLayout, adjointlayout, transposelayout, conjlayout,
+                    subarraylayout
 
 import Base.IteratorsMD
 

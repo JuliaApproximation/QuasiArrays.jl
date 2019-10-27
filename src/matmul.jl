@@ -230,8 +230,17 @@ quasimulapplystyle(::ApplyLayout{typeof(*)}, ::LazyLayout, ::LazyLayout, _...) =
 
 ApplyStyle(::typeof(\), ::Type{<:AbstractQuasiArray}, ::Type{<:Applied}) = LdivApplyStyle()
 \(A::AbstractQuasiArray, B::Applied) = apply(\, A, B)
-copy(L::Ldiv{LazyLayout,ApplyLayout{typeof(*)}}) = *(L.A \  first(L.B.args),  tail(L.B.args)...)
-copy(L::Ldiv{LazyLayout,BroadcastLayout{typeof(*)}}) = broadcast(*, L.A \  first(L.B.args),  tail(L.B.args)...)
+function copy(L::Ldiv{LazyLayout,ApplyLayout{typeof(*)},<:AbstractQuasiMatrix}) 
+    args = arguments(L.B)
+    apply(*, L.A \  first(args),  tail(args)...)
+end
+function copy(L::Ldiv{LazyLayout,BroadcastLayout{typeof(*)},<:AbstractQuasiMatrix}) 
+    args = arguments(L.B)
+    # this is a temporary hack
+    @assert args[1] isa AbstractQuasiMatrix
+    @assert args[2] isa Number
+    broadcast(*, L.A \  first(args),  tail(args)...)
+end
 
 
 copy(A::Applied{LmaterializeApplyStyle,typeof(*)}) = lmaterialize(A)

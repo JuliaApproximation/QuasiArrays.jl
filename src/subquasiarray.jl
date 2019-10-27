@@ -312,3 +312,11 @@ end
 @propagate_inbounds maybeview(A::AbstractQuasiArray, args...) = view(A, args...)
 @propagate_inbounds maybeview(A::AbstractQuasiArray, args::Number...) = getindex(A, args...)
 @propagate_inbounds maybeview(A::AbstractQuasiArray) = getindex(A)
+
+
+##
+# MemoryLayout
+##
+
+@inline MemoryLayout(A::Type{<:SubQuasiArray{T,N,P,I}}) where {T,N,P,I} = 
+    subarraylayout(MemoryLayout(P), I)
