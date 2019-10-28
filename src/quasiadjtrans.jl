@@ -223,6 +223,9 @@ end
 ==(A::QuasiAdjoint, B::QuasiAdjoint) = parent(A) == parent(B)
 
 
+adjointlayout(::Type, ::QuasiArrayLayout) = QuasiArrayLayout()
+transposelayout(::QuasiArrayLayout) = QuasiArrayLayout()
+
 MemoryLayout(::Type{QuasiTranspose{T,P}}) where {T,P} = transposelayout(MemoryLayout(P))
 MemoryLayout(::Type{QuasiAdjoint{T,P}}) where {T,P} = adjointlayout(T, MemoryLayout(P))
 

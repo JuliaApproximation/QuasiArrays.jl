@@ -190,8 +190,14 @@ ApplyStyle(::typeof(*), ::Type{A}, ::Type{B}, ::Type{C}, ::Type{D}, E::Type...) 
 ApplyStyle(::typeof(*), ::Type{A}, ::Type{B}, ::Type{C}, ::Type{D}, E::Type...) where {A<:AbstractArray,B<:AbstractArray,C<:AbstractArray,D<:AbstractQuasiArray} = 
     quasimulapplystyle(MemoryLayout(A), MemoryLayout(B), MemoryLayout(C), MemoryLayout(D), MemoryLayout.(E)...)    
 
-# MemoryLayout(::Type{<:QuasiArray}) =     
-# combine_mul_styles(_) = IdentityMulStyle()
+
+struct QuasiArrayLayout <: MemoryLayout end    
+MemoryLayout(::Type{<:AbstractQuasiArray}) = QuasiArrayLayout()
+combine_mul_styles(::QuasiArrayLayout) = QuasiArrayApplyStyle()
+
+result_mul_style(::QuasiArrayApplyStyle, ::QuasiArrayApplyStyle) = QuasiArrayApplyStyle()
+result_mul_style(::QuasiArrayApplyStyle, ::IdentityMulStyle) = QuasiArrayApplyStyle()
+result_mul_style(::IdentityMulStyle, ::QuasiArrayApplyStyle) = QuasiArrayApplyStyle()
 
 ####
 # Matrix * Array
