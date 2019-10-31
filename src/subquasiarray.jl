@@ -71,6 +71,16 @@ end
 
 const QViewIndex = Union{ViewIndex,AbstractQuasiArray}
 
+function SubArray(parent::AbstractQuasiArray, indices::Tuple)
+    @_inline_meta
+    SubArray(IndexStyle(viewindexing(indices), IndexStyle(parent)), parent, ensure_indexable(indices), index_dimsum(indices...))
+end
+
+function unsafe_view(A::AbstractQuasiArray, I::Vararg{ViewIndex,N}) where {N}
+    @_inline_meta
+    SubArray(A, I)
+end
+
 function unsafe_view(A::AbstractQuasiArray, I::Vararg{QViewIndex,N}) where {N}
     @_inline_meta
     SubQuasiArray(A, I)
@@ -320,3 +330,4 @@ end
 
 @inline MemoryLayout(A::Type{<:SubQuasiArray{T,N,P,I}}) where {T,N,P,I} = 
     subarraylayout(MemoryLayout(P), I)
+

@@ -24,6 +24,9 @@ function getindex(M::Mul{<:AbstractQuasiArrayApplyStyle}, k::Number)
     ret
 end
 
+getindex(M::Mul{<:AbstractQuasiArrayApplyStyle}, k::Int) = 
+    Base.invoke(getindex, Tuple{Mul{<:AbstractQuasiArrayApplyStyle},Number}, M, k)
+
 function _mul_quasi_getindex(M::Mul, k::Number, j::Number)
     A,Bs = first(M.args), tail(M.args)
     B = _mul(Bs...)

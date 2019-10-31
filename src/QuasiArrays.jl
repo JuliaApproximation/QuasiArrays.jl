@@ -11,7 +11,7 @@ import Base: @_inline_meta, DimOrInd, OneTo, @_propagate_inbounds_meta, @_noinli
                 to_index, to_indices, _to_subscript_indices, _splatmap, dataids
 import Base: ViewIndex, Slice, IdentityUnitRange, ScalarIndex, RangeIndex, view, viewindexing, ensure_indexable, index_dimsum,
                 check_parent_index_match, reindex, _isdisjoint, unsafe_indices, _unsafe_ind2sub,
-                _ind2sub, _sub2ind, _ind2sub_recurse, _lookup,
+                _ind2sub, _sub2ind, _ind2sub_recurse, _lookup, SubArray,
                 parentindices, reverse, ndims, checkbounds,
                 promote_shape, maybeview, checkindex, checkbounds_indices,
                 throw_boundserror, rdims, replace_in_print_matrix, show
@@ -38,7 +38,7 @@ import LazyArrays: MemoryLayout, UnknownLayout, Mul, ApplyLayout, BroadcastLayou
                     rowsupport, colsupport, tuple_type_memorylayouts, applylayout, broadcastlayout,
                     LdivApplyStyle, most, InvLayout, PInvLayout,
                     _mul, rowsupport, DiagonalLayout, adjointlayout, transposelayout, conjlayout,
-                    subarraylayout, call, combine_mul_styles, result_mul_style
+                    subarraylayout, call, combine_mul_styles, result_mul_style, LazyArrayStyle
 
 import Base.IteratorsMD
 

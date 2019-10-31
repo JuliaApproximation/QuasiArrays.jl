@@ -262,4 +262,11 @@ using QuasiArrays, Test
     #
     # # issue #29608 - views of single values can be considered contiguous
     # @test Base.iscontiguous(view(ones(1), 1))
+
+    @testset "array subviews" begin
+        A = QuasiArray(reshape(1:60, 5,4,3), (range(0;stop=1,length=5), Base.OneTo(4), [2,3,6]))   
+        @test A[0.0,:,3] isa Array
+        @test view(A,0.0,:,3) isa SubArray
+        @test A[0.0,:,3] == view(A,0.0,:,3)
+    end
 end

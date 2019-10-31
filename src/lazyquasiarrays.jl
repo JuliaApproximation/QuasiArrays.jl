@@ -93,6 +93,8 @@ QuasiArray(A::Applied) = QuasiArray(ApplyQuasiArray(A))
 struct LazyQuasiArrayStyle{N} <: AbstractQuasiArrayStyle{N} end
 LazyQuasiArrayStyle(::Val{N}) where N = LazyQuasiArrayStyle{N}()
 LazyQuasiArrayStyle{M}(::Val{N}) where {N,M} = LazyQuasiArrayStyle{N}()
+quasisubbroadcaststyle(L::LazyQuasiArrayStyle{N}, _) where N = LazyQuasiArrayStyle{N}()
+subbroadcaststyle(L::LazyQuasiArrayStyle{N}, _) where N = LazyArrayStyle{N}()
 
 
 struct BroadcastQuasiArray{T, N, F, Args} <: LazyQuasiArray{T, N}
@@ -135,7 +137,7 @@ IndexStyle(::BroadcastQuasiArray{<:Any,1}) = IndexLinear()
 @propagate_inbounds _broadcast_getindex_range(A, I) = A[I]
 
 getindex(B::BroadcastQuasiArray{<:Any,1}, kr::AbstractVector{<:Number}) =
-    BroadcastArray(Broadcasted(B).f, map(a -> _broadcast_getindex_range(a,kr), Broadcasted(B).args)...)
+    BroadcastArray(B.f, map(a -> _broadcast_getindex_range(a,kr), B.args)...)
 
 copy(bc::Broadcasted{<:LazyQuasiArrayStyle}) = BroadcastQuasiArray(bc)
 
