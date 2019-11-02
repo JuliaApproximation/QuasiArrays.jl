@@ -158,3 +158,5 @@ arguments(a::AbstractQuasiArray) = arguments(MemoryLayout(typeof(a)), a)
 arguments(::ApplyLayout{typeof(*)}, V::SubQuasiArray{<:Any,2}) = _mat_mul_arguments(V)
 arguments(::ApplyLayout{typeof(*)}, V::SubQuasiArray{<:Any,1}) = _vec_mul_arguments(V)
 
+
+

@@ -14,7 +14,8 @@ import Base: ViewIndex, Slice, IdentityUnitRange, ScalarIndex, RangeIndex, view,
                 _ind2sub, _sub2ind, _ind2sub_recurse, _lookup, SubArray,
                 parentindices, reverse, ndims, checkbounds,
                 promote_shape, maybeview, checkindex, checkbounds_indices,
-                throw_boundserror, rdims, replace_in_print_matrix, show
+                throw_boundserror, rdims, replace_in_print_matrix, show,
+                hcat, vcat, hvcat
 import Base: *, /, \, +, -, ^, inv
 import Base: exp, log, sqrt,
           cos, sin, tan, csc, sec, cot,
@@ -93,6 +94,7 @@ include("quasiarray.jl")
 include("quasiarraymath.jl")
 
 include("lazyquasiarrays.jl")
+include("quasiconcat.jl")
 
 include("matmul.jl")
 include("inv.jl")
