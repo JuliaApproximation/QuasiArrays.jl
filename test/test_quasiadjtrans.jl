@@ -2,6 +2,9 @@
 
 
 using QuasiArrays, Test, LinearAlgebra
+import QuasiArrays: MemoryLayout
+
+
 @testset "QuasiAdjoint/Transpose" begin
     @testset "Adjoint and Transpose inner constructor basics" begin
         intvec, intmat = QuasiVector([1, 2],0:0.5:0.5), QuasiArray([1 2; 3 4],(0:0.5:0.5,0:0.5:0.5))
@@ -250,5 +253,11 @@ using QuasiArrays, Test, LinearAlgebra
         @test parent(QuasiAdjoint(intmat)) === intmat
         @test parent(QuasiTranspose(intvec)) === intvec
         @test parent(QuasiTranspose(intmat)) === intmat
+    end
+
+    @testset "Layout" begin
+        A = QuasiArray(randn(2,2),([0,0.5],Base.OneTo(2)))
+        @test MemoryLayout(typeof(A)) == MemoryLayout(typeof(A')) == MemoryLayout(typeof(transpose(A)))
+        @test QuasiArray(A') == QuasiArray(A.parent',(Base.OneTo(2),[0,0.5]))
     end
 end

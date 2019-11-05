@@ -2,8 +2,8 @@
 
 using QuasiArrays, Test
 import Base: OneTo, Slice
-import Base.Broadcast: check_broadcast_axes, newindex, broadcasted, broadcastable, Broadcasted
-import QuasiArrays: QuasiCartesianIndex, QuasiCartesianIndices, DefaultQuasiArrayStyle
+import Base.Broadcast: check_broadcast_axes, newindex, broadcasted, broadcastable, Broadcasted, DefaultArrayStyle, BroadcastStyle
+import QuasiArrays: QuasiCartesianIndex, QuasiCartesianIndices, DefaultQuasiArrayStyle, SubQuasiArray
 
 @testset "Broadcasting" begin
     Z = QuasiArray(zeros(3,4),(0:0.5:1,0:3))
@@ -139,4 +139,15 @@ import QuasiArrays: QuasiCartesianIndex, QuasiCartesianIndices, DefaultQuasiArra
         @test sum(C) ≈ sum(A .+ 2)
     end
 
+    @testset "SubQuasi Broadcast" begin
+        a = QuasiVector(randn(6), 0:0.5:2.5)
+        v = view(a,0:0.5:1)
+        @test v isa SubArray
+        @test BroadcastStyle(typeof(v)) isa DefaultArrayStyle{1}
+        @test exp.(v) == exp.(Array(v))
+        w = view(a,Inclusion(0:0.5:1))
+        @test w isa SubQuasiArray
+        @test BroadcastStyle(typeof(w)) isa DefaultQuasiArrayStyle{1}
+        @test exp.(w) == exp.(a)[Inclusion(0:0.5:1)]
+    end
 end

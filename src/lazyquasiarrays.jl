@@ -93,8 +93,9 @@ QuasiArray(A::Applied) = QuasiArray(ApplyQuasiArray(A))
 struct LazyQuasiArrayStyle{N} <: AbstractQuasiArrayStyle{N} end
 LazyQuasiArrayStyle(::Val{N}) where N = LazyQuasiArrayStyle{N}()
 LazyQuasiArrayStyle{M}(::Val{N}) where {N,M} = LazyQuasiArrayStyle{N}()
-quasisubbroadcaststyle(L::LazyQuasiArrayStyle{N}, _) where N = LazyQuasiArrayStyle{N}()
-subbroadcaststyle(L::LazyQuasiArrayStyle{N}, _) where N = LazyArrayStyle{N}()
+quasisubbroadcaststyle(::LazyQuasiArrayStyle{N}, _) where N = LazyQuasiArrayStyle{N}()
+subbroadcaststyle(::LazyQuasiArrayStyle{N}, _) where N = LazyArrayStyle{N}()
+subbroadcaststyle(::AbstractQuasiArrayStyle{N}, _) where N = DefaultArrayStyle{N}()
 
 
 struct BroadcastQuasiArray{T, N, F, Args} <: LazyQuasiArray{T, N}
