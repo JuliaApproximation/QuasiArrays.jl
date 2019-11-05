@@ -163,3 +163,10 @@ function broadcasted(::typeof(-), j::QuasiCartesianIndex{N}, I::QuasiCartesianIn
     diffrange(offset, rng) = range(offset-last(rng), length=length(rng))
     Iterators.reverse(QuasiCartesianIndices(map(diffrange, Tuple(j), I.indices)))
 end
+
+##
+# SubQuasiArray
+##
+quasisubbroadcaststyle(::AbstractQuasiArrayStyle{N}, _) where N = DefaultQuasiArrayStyle{N}()
+BroadcastStyle(::Type{<:SubQuasiArray{T,N,P,I}}) where {T,N,P,I} = quasisubbroadcaststyle(BroadcastStyle(P), I)
+BroadcastStyle(::Type{<:SubArray{T,N,P,I}}) where {T,N,P<:AbstractQuasiArray,I} = subbroadcaststyle(BroadcastStyle(P), I)

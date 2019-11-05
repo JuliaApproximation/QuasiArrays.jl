@@ -9,3 +9,5 @@ include("test_dense.jl")
 include("test_quasiadjtrans.jl")
 include("test_continuous.jl")
 include("test_matmul.jl")
+
+include("test_quasiconcat.jl")

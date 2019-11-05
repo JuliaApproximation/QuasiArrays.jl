@@ -10,11 +10,12 @@ IndexStyle(A::AbstractQuasiArray, B::AbstractArray) = IndexStyle(IndexStyle(A), 
 IndexStyle(A::AbstractQuasiArray, B::AbstractQuasiArray...) = IndexStyle(IndexStyle(A), IndexStyle(B...))
 IndexStyle(A::AbstractQuasiArray, B::AbstractArray...) = IndexStyle(IndexStyle(A), IndexStyle(B...))
 
+
 function promote_shape(a::AbstractQuasiArray, b::AbstractQuasiArray)
     promote_shape(axes(a), axes(b))
 end
 
-const QuasiIndices{N} = NTuple{N,AbstractQuasiVector{<:Number}}
+const QuasiIndices{N} = NTuple{N,Union{AbstractQuasiVector{<:Number},AbstractVector{<:Number}}}
 function promote_shape(a::QuasiIndices, b::QuasiIndices)
     if length(a) < length(b)
         return promote_shape(b, a)

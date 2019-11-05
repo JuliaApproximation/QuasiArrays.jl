@@ -32,10 +32,10 @@ QuasiVector(par::AbstractVector{T}, axes::AbstractArray) where {T} =
     QuasiVector(par, (axes,))
     
 
-QuasiArray(a::AbstractQuasiArray) = QuasiArray(Array(a), domain.(axes(a)))
-QuasiArray{T}(a::AbstractQuasiArray) where T = QuasiArray(Array{T}(a), domain.(axes(a)))
-QuasiArray{T,N}(a::AbstractQuasiArray{<:Any,N}) where {T,N} = QuasiArray(Array{T}(a), domain.(axes(a)))
-QuasiArray{T,N,AXES}(a::AbstractQuasiArray{<:Any,N}) where {T,N,AXES} = QuasiArray{T,N,AXES}(Array{T}(a), domain.(axes(a)))
+QuasiArray(a::AbstractQuasiArray) = QuasiArray(Array(a), map(domain,axes(a)))
+QuasiArray{T}(a::AbstractQuasiArray) where T = QuasiArray(Array{T}(a), map(domain,axes(a)))
+QuasiArray{T,N}(a::AbstractQuasiArray{<:Any,N}) where {T,N} = QuasiArray(Array{T}(a), map(domain,axes(a)))
+QuasiArray{T,N,AXES}(a::AbstractQuasiArray{<:Any,N}) where {T,N,AXES} = QuasiArray{T,N,AXES}(Array{T}(a), map(domain,axes(a)))
 QuasiMatrix(a::AbstractQuasiMatrix) = QuasiArray(a)
 QuasiVector(a::AbstractQuasiVector) = QuasiArray(a)
 
