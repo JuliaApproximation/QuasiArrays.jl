@@ -329,5 +329,5 @@ end
 ##
 
 @inline MemoryLayout(A::Type{<:SubQuasiArray{T,N,P,I}}) where {T,N,P,I} = 
-    subarraylayout(MemoryLayout(P), I)
+    sublayout(MemoryLayout(P), I)
 
