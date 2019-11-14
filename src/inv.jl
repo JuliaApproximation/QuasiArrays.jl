@@ -1,6 +1,12 @@
-ApplyStyle(::typeof(\), ::Type{<:AbstractQuasiArray}, ::Type{<:AbstractQuasiArray}) = QuasiArrayApplyStyle()
-ApplyStyle(::typeof(\), ::Type{<:AbstractQuasiArray}, ::Type{<:AbstractArray}) = QuasiArrayApplyStyle()
-ApplyStyle(::typeof(\), ::Type{<:AbstractArray}, ::Type{<:AbstractQuasiArray}) = QuasiArrayApplyStyle()    
+
+ApplyStyle(::typeof(\), ::Type{A}, ::Type{B}) where {A<:AbstractQuasiArray,B<:AbstractQuasiArray} = 
+    quasildivapplystyle(MemoryLayout(A), MemoryLayout(B))
+ApplyStyle(::typeof(\), ::Type{A}, ::Type{B}) where {A<:AbstractQuasiArray,B<:AbstractArray} = 
+    quasildivapplystyle(MemoryLayout(A), MemoryLayout(B))
+ApplyStyle(::typeof(\), ::Type{A}, ::Type{B}) where {A<:AbstractArray,B<:AbstractQuasiArray} = 
+    quasildivapplystyle(MemoryLayout(A), MemoryLayout(B))
+
+quasildivapplystyle(_, _) = QuasiArrayApplyStyle()
 
 for op in (:pinv, :inv)
     @eval ApplyStyle(::typeof($op), args::Type{<:AbstractQuasiArray}) = QuasiArrayApplyStyle()
