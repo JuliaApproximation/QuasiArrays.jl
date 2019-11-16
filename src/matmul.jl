@@ -62,12 +62,14 @@ for op in (:pinv, :inv)
     @eval $op(A::AbstractQuasiArray) = fullmaterialize(apply($op,A))
 end
 
-axes(L::Ldiv{<:Any,<:Any,<:AbstractQuasiMatrix}) =
+axes(L::Ldiv{<:Any,<:Any,<:Any,<:AbstractQuasiMatrix}) =
     (axes(L.A, 2),axes(L.B,2))
-axes(L::Ldiv{<:Any,<:Any,<:AbstractQuasiVector}) =
+axes(L::Ldiv{<:Any,<:Any,<:Any,<:AbstractQuasiVector}) =
     (axes(L.A, 2),)    
 
- \(A::AbstractQuasiArray, B::AbstractQuasiArray) = apply(\,A,B)
+\(A::AbstractQuasiArray, B::AbstractQuasiArray) = apply(\,A,B)
+\(A::AbstractQuasiArray, B::AbstractArray) = apply(\,A,B)
+\(A::AbstractArray, B::AbstractQuasiArray) = apply(\,A,B)
 
 
 *(A::AbstractQuasiArray, B::Mul, C...) = apply(*,A, B.args..., C...)
