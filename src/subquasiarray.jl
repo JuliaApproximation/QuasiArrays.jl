@@ -104,6 +104,8 @@ _maybe_reindex(V, I, A::Tuple{Any, Vararg{Any}}) = (@_inline_meta; _maybe_reinde
 
 _subarray(A::AbstractArray, idxs) = SubArray(A, idxs)
 _subarray(A::AbstractQuasiArray, idxs) = SubQuasiArray(A, idxs)
+_subarray(A::AbstractQuasiArray, idxs::NTuple{N,ViewIndex}) where {N} = SubArray(A, idxs)
+
 
 if VERSION < v"1.2-"
     function _maybe_reindex(V, I, ::Tuple{})
