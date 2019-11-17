@@ -159,6 +159,8 @@ getindex(S::Inclusion{T}, i::Number) where T =
     (@_inline_meta; @boundscheck checkbounds(S, i); convert(T,i))
 getindex(S::Inclusion{T}, i::AbstractVector{<:Number}) where T =
     (@_inline_meta; @boundscheck checkbounds(S, i); convert(AbstractVector{T},i))
+getindex(S::Inclusion, i::Inclusion) =
+    (@_inline_meta; @boundscheck checkbounds(S, i); copy(S))
 show(io::IO, r::Inclusion) = print(io, "Inclusion(", r.domain, ")")
 iterate(S::Inclusion, s...) = iterate(S.domain, s...)
 

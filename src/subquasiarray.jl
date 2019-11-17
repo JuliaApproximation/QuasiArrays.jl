@@ -93,6 +93,8 @@ end
 # `CartesianIndex`, and if so, we punt and keep two layers of indirection.
 unsafe_view(V::SubQuasiArray, I::Vararg{ViewIndex,N}) where {N} =
     (@_inline_meta; _maybe_reindex(V, I))
+unsafe_view(V::SubQuasiArray, I::Vararg{QViewIndex,N}) where {N} =
+    (@_inline_meta; _maybe_reindex(V, I))    
 
 _maybe_reindex(V, I) = (@_inline_meta; _maybe_reindex(V, I, I))
 # _maybe_reindex(V, I, ::Tuple{AbstractArray{<:AbstractCartesianIndex}, Vararg{Any}}) =
