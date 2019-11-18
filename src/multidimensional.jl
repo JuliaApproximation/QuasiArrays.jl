@@ -450,15 +450,9 @@ _maybe_reshape(::IndexCartesian, A::AbstractQuasiVector, I...) = A
 @inline __maybe_reshape(A::AbstractQuasiArray{T,N}, ::NTuple{N,Any}) where {T,N} = A
 @inline __maybe_reshape(A::AbstractQuasiArray, ::NTuple{N,Any}) where {N} = reshape(A, Val(N))
 
-function _unsafe_getindex(::IndexStyle, A::AbstractQuasiArray, I::Vararg{Union{Number, AbstractArray}, N}) where N
-    # This is specifically not inlined to prevent excessive allocations in type unstable code
-    shape = index_shape(I...)
-    dest = similar(Array{eltype(A)}, shape)
-    map(unsafe_length, axes(dest)) == map(unsafe_length, shape) || throw_checksize_error(dest, shape)
-    _unsafe_getindex!(dest, A, I...) # usually a generated function, don't allow it to impact inference result
-    return dest
-end
-
+_unsafe_getindex(::IndexStyle, A::AbstractQuasiArray, I::Vararg{Union{Number, AbstractArray}, N}) where N =
+    lazy_getindex(A, I...)
+    
 # Always index with the exactly indices provided.
 @generated function _unsafe_getindex!(dest::Union{AbstractArray,AbstractQuasiArray}, src::AbstractQuasiArray, I::Vararg{Union{Number, AbstractArray}, N}) where N
     quote

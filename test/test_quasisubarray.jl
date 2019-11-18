@@ -269,4 +269,13 @@ using QuasiArrays, Test
         @test view(A,0.0,:,3) isa SubArray
         @test A[0.0,:,3] == view(A,0.0,:,3)
     end
+
+    @testset "sub-of-sub" begin
+        A = QuasiArray(randn(3,3),(0:0.5:1,1:0.5:2))
+        V = view(A,0:0.5:0.5,:)
+        V2 = view(V,:,1:0.5:1.5)
+        @test V2 isa SubArray
+        @test parent(V2) isa QuasiArray
+        @test V2 == A[0:0.5:0.5,1:0.5:1.5]
+    end
 end

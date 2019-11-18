@@ -37,9 +37,9 @@ import LazyArrays: MemoryLayout, UnknownLayout, Mul, ApplyLayout, BroadcastLayou
                     FlattenMulStyle, IdentityMulStyle, MulAddStyle, LazyArrayApplyStyle,
                     Applied, flatten, _flatten, arguments, _mat_mul_arguments, _vec_mul_arguments,
                     rowsupport, colsupport, tuple_type_memorylayouts, applylayout, broadcastlayout,
-                    LdivApplyStyle, most, InvLayout, PInvLayout,
+                    LdivApplyStyle, most, InvLayout, PInvLayout, sub_materialize,
                     _mul, rowsupport, DiagonalLayout, adjointlayout, transposelayout, conjlayout,
-                    sublayout, call, combine_mul_styles, result_mul_style, LazyArrayStyle
+                    sublayout, call, combine_mul_styles, result_mul_style, LazyArrayStyle, lazy_getindex
 
 import Base.IteratorsMD
 

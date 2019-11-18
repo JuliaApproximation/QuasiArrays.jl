@@ -93,6 +93,8 @@ end
 # `CartesianIndex`, and if so, we punt and keep two layers of indirection.
 unsafe_view(V::SubQuasiArray, I::Vararg{ViewIndex,N}) where {N} =
     (@_inline_meta; _maybe_reindex(V, I))
+unsafe_view(V::SubQuasiArray, I::Vararg{QViewIndex,N}) where {N} =
+    (@_inline_meta; _maybe_reindex(V, I))    
 
 _maybe_reindex(V, I) = (@_inline_meta; _maybe_reindex(V, I, I))
 # _maybe_reindex(V, I, ::Tuple{AbstractArray{<:AbstractCartesianIndex}, Vararg{Any}}) =
@@ -104,6 +106,8 @@ _maybe_reindex(V, I, A::Tuple{Any, Vararg{Any}}) = (@_inline_meta; _maybe_reinde
 
 _subarray(A::AbstractArray, idxs) = SubArray(A, idxs)
 _subarray(A::AbstractQuasiArray, idxs) = SubQuasiArray(A, idxs)
+_subarray(A::AbstractQuasiArray, idxs::NTuple{N,ViewIndex}) where {N} = SubArray(A, idxs)
+
 
 if VERSION < v"1.2-"
     function _maybe_reindex(V, I, ::Tuple{})
@@ -331,3 +335,7 @@ end
 @inline MemoryLayout(A::Type{<:SubQuasiArray{T,N,P,I}}) where {T,N,P,I} = 
     sublayout(MemoryLayout(P), I)
 
+
+
+@inline sub_materialize(_, V::AbstractQuasiArray, _) = QuasiArray(V)
+@inline sub_materialize(V::SubQuasiArray) = sub_materialize(MemoryLayout(typeof(V)), V)
