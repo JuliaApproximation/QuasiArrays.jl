@@ -451,7 +451,7 @@ _maybe_reshape(::IndexCartesian, A::AbstractQuasiVector, I...) = A
 @inline __maybe_reshape(A::AbstractQuasiArray, ::NTuple{N,Any}) where {N} = reshape(A, Val(N))
 
 _unsafe_getindex(::IndexStyle, A::AbstractQuasiArray, I::Vararg{Union{Number, AbstractArray}, N}) where N =
-    sub_materialize(view(A, I...))
+    lazy_getindex(A, I...)
     
 # Always index with the exactly indices provided.
 @generated function _unsafe_getindex!(dest::Union{AbstractArray,AbstractQuasiArray}, src::AbstractQuasiArray, I::Vararg{Union{Number, AbstractArray}, N}) where N

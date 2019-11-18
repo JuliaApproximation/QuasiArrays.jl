@@ -385,7 +385,7 @@ error_if_canonical_getindex(::IndexCartesian, A::AbstractQuasiArray{T,N}, ::Vara
 error_if_canonical_getindex(::IndexStyle, ::AbstractQuasiArray, ::Any...) = nothing
 
 ## Internal definitions
-_getindex(::IndexStyle, A::AbstractQuasiArray, I...) = materialize(view(A, I...))
+_getindex(::IndexStyle, A::AbstractQuasiArray, I...) = lazy_getindex(A, I...)
 
 ## IndexLinear Scalar indexing: canonical method is one Int
 _getindex(::IndexLinear, A::AbstractQuasiArray, i::Number) = (@_propagate_inbounds_meta; getindex(A, i))

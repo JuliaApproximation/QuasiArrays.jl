@@ -335,3 +335,7 @@ end
 @inline MemoryLayout(A::Type{<:SubQuasiArray{T,N,P,I}}) where {T,N,P,I} = 
     sublayout(MemoryLayout(P), I)
 
+
+
+@inline sub_materialize(_, V::AbstractQuasiArray) = QuasiArray(V)
+@inline sub_materialize(V::SubQuasiArray) = sub_materialize(MemoryLayout(typeof(V)), V)
