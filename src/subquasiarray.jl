@@ -337,5 +337,5 @@ end
 
 
 
-@inline sub_materialize(_, V::AbstractQuasiArray) = QuasiArray(V)
+@inline sub_materialize(_, V::AbstractQuasiArray, _) = QuasiArray(V)
 @inline sub_materialize(V::SubQuasiArray) = sub_materialize(MemoryLayout(typeof(V)), V)
