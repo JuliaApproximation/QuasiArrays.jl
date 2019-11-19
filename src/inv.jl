@@ -1,3 +1,18 @@
+for op in (:pinv, :inv)
+    @eval $op(A::AbstractQuasiArray) = fullmaterialize(apply($op,A))
+end
+
+axes(L::Ldiv{<:Any,<:Any,<:Any,<:AbstractQuasiMatrix}) =
+    (axes(L.A, 2),axes(L.B,2))
+axes(L::Ldiv{<:Any,<:Any,<:Any,<:AbstractQuasiVector}) =
+    (axes(L.A, 2),)    
+
+@inline ldiv(A,B) = materialize(Ldiv(A,B))
+
+@inline \(A::AbstractQuasiArray, B::AbstractQuasiArray) = ldiv(A,B)
+@inline \(A::AbstractQuasiArray, B::AbstractArray) = ldiv(A,B)
+@inline \(A::AbstractArray, B::AbstractQuasiArray) = ldiv(A,B)
+
 
 ApplyStyle(::typeof(\), ::Type{A}, ::Type{B}) where {A<:AbstractQuasiArray,B<:AbstractQuasiArray} = 
     quasildivapplystyle(MemoryLayout(A), MemoryLayout(B))
