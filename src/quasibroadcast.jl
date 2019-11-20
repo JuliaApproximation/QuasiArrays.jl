@@ -2,7 +2,6 @@ axistype(a::AbstractQuasiVector{<:Number}, b::AbstractQuasiVector{<:Number}) = a
 axistype(a::AbstractQuasiVector{<:Number}, b::AbstractVector{<:Number}) = a
 axistype(a::AbstractVector{<:Number}, b::AbstractQuasiVector{<:Number}) = b
 
-
 """
 `Broadcast.AbstractQuasiArrayStyle{N} <: BroadcastStyle` is the abstract supertype for any style
 associated with an `AbstractQuasiArray` type.

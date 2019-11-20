@@ -58,8 +58,9 @@ end
 *(A::AbstractQuasiArray, B::AbstractQuasiArray, C...) = fullmaterialize(apply(*,A,B,C...))
 *(A::AbstractArray, B::AbstractQuasiArray, C...) = fullmaterialize(apply(*,A,B,C...))
 
-*(A::AbstractQuasiArray, B::Mul, C...) = apply(*,A, B.args..., C...)
-*(A::Mul, B::AbstractQuasiArray, C...) = apply(*,A.args..., B, C...)
+@inline *(A::AbstractQuasiArray, B::Mul, C...) = apply(*,A, B.args..., C...)
+@inline *(A::Mul, B::AbstractQuasiArray, C...) = apply(*,A.args..., B, C...)
+
 
 
 ####
