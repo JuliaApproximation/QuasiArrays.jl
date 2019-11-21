@@ -12,7 +12,7 @@ import QuasiArrays: QuasiCartesianIndex, QuasiCartesianIndices, DefaultQuasiArra
     @test @inferred(Broadcast.combine_axes(Z,Z)) == ax
     @test @inferred(Broadcast.combine_axes(Z,z)) == ax
     @test @inferred(Broadcast.combine_axes(z,Z)) == ax
-    @test_broken @inferred(Broadcast.combine_axes(z,Z, zeros(1))) == ax
+    @test @inferred(Broadcast.combine_axes(z,Z, zeros(1))) == ax
 
     check_broadcast_axes(ax, Z)
     check_broadcast_axes(ax, z)
