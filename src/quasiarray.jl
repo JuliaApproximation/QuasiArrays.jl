@@ -16,6 +16,10 @@ QuasiArray{T,N}(::UndefInitializer, axes::NTuple{N,AbstractVector{<:Number}}) wh
     QuasiArray(Array{T}(undef, map(length,axes)), axes)
 QuasiArray{T,N}(::UndefInitializer, axes::Vararg{AbstractVector{<:Number},N}) where {T,N} =
     QuasiArray{T,N}(undef, axes)
+QuasiArray{T}(::UndefInitializer, axes::NTuple{N,AbstractVector{<:Number}}) where {T,N} =
+    QuasiArray{T,N}(undef, axes)
+QuasiArray{T}(::UndefInitializer, axes::Vararg{AbstractVector{<:Number},N}) where {T,N} =
+    QuasiArray{T,N}(undef, axes)    
 QuasiVector(::UndefInitializer, axes::AbstractVector{<:Number}) where T =
     QuasiArray(Vector(undef,length(axes)), (axes,))
 QuasiMatrix(::UndefInitializer, ax1::AbstractVector{<:Number}, ax2::AbstractVector{<:Number}) where T =
@@ -61,3 +65,8 @@ end
 end
 
 convert(::Type{T}, a::AbstractQuasiArray) where {T<:QuasiArray} = a isa T ? a : T(a)
+Array{T}(a::QuasiArray) where T = Array{T}(parent(a))
+Array{T,N}(a::QuasiArray{<:Any,N}) where {T,N} = Array{T}(a)
+Array(a::QuasiArray{T}) where T = Array{T}(a)
+Matrix(a::QuasiMatrix{T}) where T = Array{T}(a)
+Vector(a::QuasiVector{T}) where T = Array{T}(a)

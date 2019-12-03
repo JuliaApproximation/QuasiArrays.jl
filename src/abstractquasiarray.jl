@@ -302,6 +302,11 @@ similar(a::AbstractQuasiArray, ::Type{T}, dims::NTuple{N,AbstractQuasiOrVector{<
 similar(a::AbstractQuasiArray, ::Type{T}, dims::Vararg{AbstractQuasiOrVector{<:Number},N}) where {T,N} =
     QuasiArray{T,N}(undef, convert.(AbstractVector, dims))
 
+similar(a::Type{<:AbstractArray}, ::Type{T}, dims::Tuple{AbstractQuasiVector{<:Number},Vararg{QuasiDimOrInd}}) where T =
+    QuasiArray{T}(undef, convert.(AbstractVector, dims))    
+similar(a::Type{<:AbstractArray{T}}, dims::Tuple{AbstractQuasiVector{<:Number},Vararg{QuasiDimOrInd}}) where T =
+    similar(a, T, dims)
+
 similar(a::AbstractQuasiArray{T}, m::Int) where {T}              = Vector{T}(undef, m)
 similar(a::AbstractQuasiArray, T::Type, dims::Dims{N}) where {N} = Array{T,N}(undef, dims)
 similar(a::AbstractQuasiArray{T}, dims::Dims{N}) where {T,N}     = Array{T,N}(undef, dims)

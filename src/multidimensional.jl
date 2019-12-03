@@ -243,7 +243,7 @@ module QuasiIteratorsMD
     For cartesian to linear index conversion, see [`LinearIndices`](@ref).
     """
 
-    struct QuasiCartesianIndices{N,R<:NTuple{N,AbstractQuasiOrVector{<:Number}},RR<:NTuple{N,Number}} <: AbstractArray{QuasiCartesianIndex{N,RR},N}
+    struct QuasiCartesianIndices{N,R<:NTuple{N,AbstractQuasiOrVector{<:Number}},RR<:NTuple{N,Number}} <: AbstractQuasiArray{QuasiCartesianIndex{N,RR},N}
         indices::R
     end
 
@@ -328,6 +328,32 @@ module QuasiIteratorsMD
     eltype(::Type{QuasiCartesianIndices{N,TT}}) where {N,TT} = QuasiCartesianIndex{N}
     eltype(::Type{QuasiCartesianIndices{N,TT,RR}}) where {N,TT,RR} = QuasiCartesianIndex{N,RR}
     IteratorSize(::Type{<:QuasiCartesianIndices{N}}) where {N} = Base.HasShape{N}()
+
+    @inline function iterate(iter::QuasiCartesianIndices)
+        iters = map(iterate,iter.indices)
+        if any(isnothing, iters)
+            return nothing
+        end
+        QuasiCartesianIndex(map(first,iters)...), iters
+    end
+    @inline _quasicartesian_iterate(::Tuple{}, ::Tuple{}) = return nothing
+    @inline function _quasicartesian_iterate(inds, state)
+        itst = iterate(inds[1], state[1][2])
+        if isnothing(itst)
+            tailiters = _quasicartesian_iterate(tail(inds), tail(state))
+            isnothing(tailiters) && return nothing
+            iters = tuple(iterate(inds[1]),tailiters...)
+        else
+            iters = tuple(itst, tail(state)...)
+        end
+        iters
+    end
+
+    @inline function iterate(iter::QuasiCartesianIndices, state)
+        itst = _quasicartesian_iterate(iter.indices, state)
+        isnothing(itst) && return nothing
+        QuasiCartesianIndex(map(first,itst)...), itst
+    end
 
     size(iter::QuasiCartesianIndices) = map(length, iter.indices)
     length(iter::QuasiCartesianIndices) = prod(size(iter))
