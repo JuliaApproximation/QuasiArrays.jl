@@ -247,7 +247,7 @@ substrides(parent, strds, I::Tuple{Any, Vararg{Any}}) = throw(ArgumentError("str
 stride(V::SubQuasiArray, d::Integer) = d <= ndims(V) ? strides(V)[d] : strides(V)[end] * size(V)[end]
 
 compute_stride1(parent::AbstractQuasiArray, I::NTuple{N,Any}) where {N} =
-    (@_inline_meta; compute_stride1(1, fill_to_length(axes(parent), OneTo(1), Val(N)), I))
+    1
 
 elsize(::Type{<:SubQuasiArray{<:Any,<:Any,P}}) where {P} = elsize(P)
 
@@ -266,17 +266,10 @@ end
 # sum of index each multiplied by the parent's stride.
 # The running sum is `f`; the cumulative stride product is `s`.
 # If the parent is a vector, then we offset the parent's own indices with parameters of I
-compute_offset1(parent::AbstractQuasiVector, stride1::Integer, I::Tuple{AbstractRange}) =
-    (@_inline_meta; first(I[1]) - first(axes1(I[1]))*stride1)
+compute_offset1(parent::AbstractQuasiVector, stride1::Integer, I::Tuple{AbstractRange}) = 0
 # If the result is one-dimensional and it's a Colon, then linear
 # indexing uses the indices along the given dimension. Otherwise
 # linear indexing always starts with 1.
-compute_offset1(parent, stride1::Integer, I::Tuple) =
-    (@_inline_meta; compute_offset1(parent, stride1, find_extended_dims(1, I...), find_extended_inds(I...), I))
-compute_offset1(parent, stride1::Integer, dims::Tuple{Int}, inds::Tuple{Slice}, I::Tuple) =
-    (@_inline_meta; compute_linindex(parent, I) - stride1*first(axes(parent, dims[1])))  # index-preserving case
-compute_offset1(parent, stride1::Integer, dims, inds, I::Tuple) =
-    (@_inline_meta; compute_linindex(parent, I) - stride1)  # linear indexing starts with 1
 
 function compute_linindex(parent, I::NTuple{N,Any}) where N
     @_inline_meta

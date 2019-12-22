@@ -73,8 +73,6 @@ axes(A::ApplyQuasiArray) = axes(Applied(A))
 size(A::ApplyQuasiArray) = map(length, axes(A))
 copy(A::ApplyQuasiArray) = copy(Applied(A))
 
-IndexStyle(::ApplyQuasiArray{<:Any,1}) = IndexLinear()
-
 @propagate_inbounds getindex(A::ApplyQuasiArray{T,N}, kj::Vararg{Number,N}) where {T,N} =
     Applied(A)[kj...]
 
