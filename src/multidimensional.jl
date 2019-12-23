@@ -82,6 +82,9 @@ module QuasiIteratorsMD
     QuasiCartesianIndex(index::Tuple{Vararg{Union{Number, QuasiCartesianIndex}}}) = QuasiCartesianIndex(index...)
     show(io::IO, i::QuasiCartesianIndex) = (print(io, "QuasiCartesianIndex"); show(io, i.I))
 
+    Base.convert(::Type{QuasiCartesianIndex{N,II}}, Q::QuasiCartesianIndex) where {N,II<:Tuple} = 
+        QuasiCartesianIndex{N,II}(convert(II, Q.I))
+
     # length
     length(::QuasiCartesianIndex{N}) where {N} = N
     length(::Type{QuasiCartesianIndex{N}}) where {N} = N
@@ -246,9 +249,10 @@ module QuasiIteratorsMD
     struct QuasiCartesianIndices{N,R<:NTuple{N,AbstractQuasiOrVector{<:Number}},RR<:NTuple{N,Number}} <: AbstractArray{QuasiCartesianIndex{N,RR},N}
         indices::R
     end
-
-    QuasiCartesianIndices(nd::NTuple{N,AbstractQuasiOrVector{<:Number}}) where N = 
+    QuasiCartesianIndices(nd::NTuple{N,AbstractVector{<:Number}}) where N = 
         QuasiCartesianIndices{N,typeof(nd),Tuple{map(eltype,nd)...}}(nd)
+    QuasiCartesianIndices(nd::NTuple{N,AbstractQuasiOrVector{<:Number}}) where N = 
+        QuasiCartesianIndices(convert.(AbstractArray,nd))
 
     QuasiCartesianIndices(::Tuple{}) = QuasiCartesianIndices{0,typeof(())}(())
 
@@ -309,7 +313,7 @@ module QuasiIteratorsMD
     Base.IndexStyle(::Type{QuasiCartesianIndices{N,R}}) where {N,R} = IndexCartesian()
     @inline function Base.getindex(iter::QuasiCartesianIndices{N,R}, I::Vararg{Int, N}) where {N,R}
         @boundscheck checkbounds(iter, I...)
-        QuasiCartesianIndex(getindex.(domain.(iter.indices), I))
+        QuasiCartesianIndex(getindex.(iter.indices, I))
     end
 
     ndims(R::QuasiCartesianIndices) = ndims(typeof(R))
@@ -345,6 +349,11 @@ module QuasiIteratorsMD
     end
 
     Base.LinearIndices(inds::QuasiCartesianIndices{N,R}) where {N,R} = LinearIndices{N,R}(inds.indices)
+
+    function Base._collect_indices(indsA::Tuple{AbstractQuasiVector,Vararg{Any}}, A)
+        B = Array{eltype(A)}(undef, length.(indsA))
+        copyto!(B, QuasiCartesianIndices(axes(B)))
+    end
 end  # IteratorsMD
 
 

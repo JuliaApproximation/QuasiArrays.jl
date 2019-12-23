@@ -134,8 +134,17 @@ convert(::Type{AbstractVector}, d::Inclusion{<:Any,<:AbstractVector}) =
     convert(AbstractVector, d.domain)
 convert(::Type{AbstractArray}, d::Inclusion{<:Any,<:AbstractVector}) =
     convert(AbstractArray, d.domain)
+
+
 Vector(d::Inclusion{<:Any,<:AbstractVector}) = Vector(d.domain)
 Array(d::Inclusion{<:Any,<:AbstractVector}) = Array(d.domain)
+Vector{T}(d::Inclusion{<:Any,<:AbstractVector}) where T = Vector{T}(d.domain)
+Array{T}(d::Inclusion{<:Any,<:AbstractVector}) where T = Array{T}(d.domain)
+AbstractVector(d::Inclusion{<:Any,<:AbstractVector}) = d.domain
+AbstractArray(d::Inclusion{<:Any,<:AbstractVector}) = d.domain
+AbstractVector{T}(d::Inclusion{<:Any,<:AbstractVector}) where T = convert(AbstractVector{T},d.domain)
+AbstractArray{T}(d::Inclusion{<:Any,<:AbstractVector}) where T =  convert(AbstractArray{T},d.domain)
+
 
 copy(d::Inclusion) = d
 
