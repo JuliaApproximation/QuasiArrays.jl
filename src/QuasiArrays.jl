@@ -1,6 +1,6 @@
 module QuasiArrays
 using Base, LinearAlgebra, LazyArrays
-import Base: getindex, size, axes, length, ==, isequal, iterate, CartesianIndices, LinearIndices,
+import Base: getindex, size, axes, axes1, length, ==, isequal, iterate, CartesianIndices, LinearIndices,
                 Indices, IndexStyle, getindex, setindex!, parent, vec, convert, similar, copy, copyto!, zero,
                 map, eachindex, eltype, first, last, firstindex, lastindex, in, reshape, all,
                 isreal, iszero, isempty, empty, isapprox, fill!, getproperty
@@ -8,7 +8,8 @@ import Base: @_inline_meta, DimOrInd, OneTo, @_propagate_inbounds_meta, @_noinli
                 DimsInteger, error_if_canonical_getindex, @propagate_inbounds, _return_type,
                 _maybetail, tail, _getindex, _maybe_reshape, index_ndims, _unsafe_getindex,
                 index_shape, to_shape, unsafe_length, @nloops, @ncall, unalias, _unaliascopy,
-                to_index, to_indices, _to_subscript_indices, _splatmap, dataids
+                to_index, to_indices, _to_subscript_indices, _splatmap, dataids, 
+                compute_stride1, compute_offset1, fill_to_length
 import Base: ViewIndex, Slice, IdentityUnitRange, ScalarIndex, RangeIndex, view, viewindexing, ensure_indexable, index_dimsum,
                 check_parent_index_match, reindex, _isdisjoint, unsafe_indices, _unsafe_ind2sub,
                 _ind2sub, _sub2ind, _ind2sub_recurse, _lookup, SubArray,

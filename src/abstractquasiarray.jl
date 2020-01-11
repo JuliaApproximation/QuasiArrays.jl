@@ -22,6 +22,13 @@ Array{T,N}(a::AbstractQuasiArray{<:Any,N}) where {T,N} = Array{T}(a)
 Array(a::AbstractQuasiArray{T}) where T = Array{T}(a)
 Matrix(a::AbstractQuasiMatrix{T}) where T = Array{T}(a)
 Vector(a::AbstractQuasiVector{T}) where T = Array{T}(a)
+AbstractArray(a::AbstractQuasiArray) = Array(a)
+AbstractMatrix(a::AbstractQuasiMatrix) = Matrix(a)
+AbstractVector(a::AbstractQuasiVector) = Vector(a)
+AbstractArray{T}(a::AbstractQuasiArray) where T = Array{T}(a)
+AbstractMatrix{T}(a::AbstractQuasiMatrix) where T = Matrix{T}(a)
+AbstractVector{T}(a::AbstractQuasiVector) where T = Vector{T}(a)
+
 
 convert(::Type{Array{T}}, a::AbstractQuasiArray) where T = Array{T}(a)
 convert(::Type{Array{T,N}}, a::AbstractQuasiArray{<:Any,N}) where {T,N} = Array{T}(a)
@@ -308,6 +315,8 @@ similar(a::AbstractQuasiArray{T}, dims::Dims{N}) where {T,N}     = Array{T,N}(un
 
 
 similar(::Type{T}, dims::QuasiDimOrInd...) where {T<:AbstractQuasiArray} = similar(T, dims)
+similar(::Type{T}, shape::Tuple{AbstractQuasiVector,Vararg{QuasiDimOrInd}}) where {N,T<:AbstractArray{<:Any,N}} = 
+    QuasiArray{T,N}(undef, convert.(AbstractVector, shape))
 
 empty(a::AbstractQuasiVector{T}, ::Type{U}=T) where {T,U} = Vector{U}()
 
