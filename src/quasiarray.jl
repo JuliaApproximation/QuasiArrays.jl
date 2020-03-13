@@ -1,31 +1,31 @@
-struct QuasiArray{T,N,AXES<:NTuple{N,AbstractVector{<:Number}}} <: AbstractQuasiArray{T,N}
+struct QuasiArray{T,N,AXES<:NTuple{N,AbstractVector}} <: AbstractQuasiArray{T,N}
     parent::Array{T,N}
     axes::AXES
 
-    function QuasiArray{T,N,AXES}(par::AbstractArray{T,N}, axes::AXES) where {T,N,AXES<:NTuple{N,AbstractVector{<:Number}}} 
+    function QuasiArray{T,N,AXES}(par::AbstractArray{T,N}, axes::AXES) where {T,N,AXES<:NTuple{N,AbstractVector}} 
         size(par) == length.(axes) || throw(ArgumentError("Axes must be compatible with parent dimensions"))
         new{T,N,AXES}(convert(Array{T,N},par),axes)
     end
 end
 
-const QuasiMatrix{T,AXES<:NTuple{2,AbstractVector{<:Number}}} = QuasiArray{T,2,AXES}
-const QuasiVector{T,AXES<:Tuple{AbstractVector{<:Number}}} = QuasiArray{T,1,AXES}
+const QuasiMatrix{T,AXES<:NTuple{2,AbstractVector}} = QuasiArray{T,2,AXES}
+const QuasiVector{T,AXES<:Tuple{AbstractVector}} = QuasiArray{T,1,AXES}
 
 
-QuasiArray{T,N}(::UndefInitializer, axes::NTuple{N,AbstractVector{<:Number}}) where {T,N} =
+QuasiArray{T,N}(::UndefInitializer, axes::NTuple{N,AbstractVector}) where {T,N} =
     QuasiArray(Array{T}(undef, map(length,axes)), axes)
-QuasiArray{T,N}(::UndefInitializer, axes::Vararg{AbstractVector{<:Number},N}) where {T,N} =
+QuasiArray{T,N}(::UndefInitializer, axes::Vararg{AbstractVector,N}) where {T,N} =
     QuasiArray{T,N}(undef, axes)
-QuasiVector(::UndefInitializer, axes::AbstractVector{<:Number}) where T =
+QuasiVector(::UndefInitializer, axes::AbstractVector) where T =
     QuasiArray(Vector(undef,length(axes)), (axes,))
-QuasiMatrix(::UndefInitializer, ax1::AbstractVector{<:Number}, ax2::AbstractVector{<:Number}) where T =
+QuasiMatrix(::UndefInitializer, ax1::AbstractVector, ax2::AbstractVector) where T =
     QuasiArray(Matrix(undef,length(ax1),length(ax2)), (ax1,ax2))
 
-QuasiArray(par::AbstractArray{T,N}, axes::NTuple{N,AbstractVector{<:Number}}) where {T,N} = 
+QuasiArray(par::AbstractArray{T,N}, axes::NTuple{N,AbstractVector}) where {T,N} = 
     QuasiArray{T,N,typeof(axes)}(par, axes)
-QuasiMatrix(par::AbstractMatrix{T}, axes::NTuple{2,AbstractVector{<:Number}}) where T = 
+QuasiMatrix(par::AbstractMatrix{T}, axes::NTuple{2,AbstractVector}) where T = 
     QuasiArray{T,2,typeof(axes)}(par, axes)
-QuasiVector(par::AbstractVector{T}, axes::Tuple{AbstractVector{<:Number}}) where T = 
+QuasiVector(par::AbstractVector{T}, axes::Tuple{AbstractVector}) where T = 
     QuasiArray{T,1,typeof(axes)}(par, axes)
 
 QuasiVector(par::AbstractVector{T}, axes::AbstractArray) where {T} = 
@@ -49,7 +49,7 @@ _inclusion(d) = Inclusion(d)
 axes(A::QuasiArray) = _inclusion.(A.axes)
 parent(A::QuasiArray) = A.parent
 
-@propagate_inbounds @inline function getindex(A::QuasiArray{<:Any,N}, I::Vararg{Number,N}) where N
+@propagate_inbounds @inline function _getindex(::Type{IND}, A::QuasiArray{<:Any,N}, I::IND) where {N,IND}
     @boundscheck checkbounds(A, I...)
     A.parent[findfirst.(isequal.(I), A.axes)...]
 end

@@ -176,10 +176,10 @@ iterate(S::Inclusion, s...) = iterate(S.domain, s...)
 
 in(x, S::Inclusion) = x in S.domain
 
-checkindex(::Type{Bool}, inds::Inclusion, i::Number) = i ∈ inds.domain
+checkindex(::Type{Bool}, inds::Inclusion{T}, i::T) where T = i ∈ inds.domain
 checkindex(::Type{Bool}, inds::Inclusion, ::Colon) = true
 checkindex(::Type{Bool}, inds::Inclusion, ::Inclusion) = true
-function checkindex(::Type{Bool}, inds::Inclusion, I::AbstractArray)
+function checkindex(::Type{Bool}, inds::Inclusion{T}, I::AbstractArray{T}) where T
     @_inline_meta
     b = true
     for i in I

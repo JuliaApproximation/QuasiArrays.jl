@@ -47,7 +47,7 @@ import Base.IteratorsMD
 export AbstractQuasiArray, AbstractQuasiMatrix, AbstractQuasiVector, materialize,
        QuasiArray, QuasiMatrix, QuasiVector, QuasiDiagonal, Inclusion,
        QuasiAdjoint, QuasiTranspose, ApplyQuasiArray, ApplyQuasiMatrix, ApplyQuasiVector,
-       BroadcastQuasiArray, BroadcastQuasiMatrix, BroadcastQuasiVector
+       BroadcastQuasiArray, BroadcastQuasiMatrix, BroadcastQuasiVector, indextype
 
 if VERSION < v"1.3-"
     """

@@ -42,7 +42,7 @@ convert(::Type{AbstractArray{T,N}}, a::AbstractQuasiArray{<:Any,N}) where {T,N} 
 convert(::Type{AbstractMatrix}, a::AbstractQuasiMatrix) = convert(AbstractArray, a)
 convert(::Type{AbstractVector}, a::AbstractQuasiVector) = convert(AbstractArray, a)
 
-
+indextype(A::AbstractQuasiArray) = Tuple{map(eltype, axes(A))...}
 
 
 """
@@ -218,8 +218,8 @@ end
 keys(s::IndexStyle, A::AbstractQuasiArray, B::AbstractQuasiArray...) = eachindex(s, A, B...)
 
 """
-    lastindex(collection) -> Number
-    lastindex(collection, d) -> Number
+    lastindex(collection) -> index
+    lastindex(collection, d) -> index
 
 Return the last index of `collection`. If `d` is given, return the last index of `collection` along dimension `d`.
 
@@ -239,8 +239,8 @@ lastindex(a::AbstractQuasiArray) = (@_inline_meta; last(eachindex(IndexLinear(),
 lastindex(a::AbstractQuasiArray, d) = (@_inline_meta; last(axes(a, d)))
 
 """
-    firstindex(collection) -> Number
-    firstindex(collection, d) -> Number
+    firstindex(collection) -> index
+    firstindex(collection, d) -> index
 
 Return the first index of `collection`. If `d` is given, return the first index of `collection` along dimension `d`.
 
@@ -259,7 +259,7 @@ firstindex(a::AbstractQuasiArray, d) = (@_inline_meta; first(axes(a, d)))
 first(a::AbstractQuasiArray) = a[first(eachindex(a))]
 stride(A::AbstractQuasiArray, k::Integer) = strides(A)[k]
 
-function isassigned(a::AbstractQuasiArray, i::Number...)
+function isassigned(a::AbstractQuasiArray, i...)
     try
         a[i...]
         true
@@ -277,11 +277,6 @@ function checkbounds(::Type{Bool}, A::AbstractQuasiArray, I...)
     checkbounds_indices(Bool, axes(A), I)
 end
 
-# Linear indexing is explicitly allowed when there is only one (non-cartesian) index
-function checkbounds(::Type{Bool}, A::AbstractQuasiArray, i)
-    @_inline_meta
-    checkindex(Bool, eachindex(IndexLinear(), A), i)
-end
 # As a special extension, allow using logical arrays that match the source array exactly
 function checkbounds(::Type{Bool}, A::AbstractQuasiArray{<:Any,N}, I::AbstractQuasiArray{Bool,N}) where N
     @_inline_meta
@@ -302,11 +297,11 @@ similar(a::AbstractQuasiArray, ::Type{T}) where {T}                     = simila
 similar(a::AbstractQuasiArray{T}, dims::Tuple) where {T}                = similar(a, T, dims)
 similar(a::AbstractQuasiArray{T}, dims::QuasiDimOrInd...) where {T}          = similar(a, T, dims)
 similar(a::AbstractQuasiArray, ::Type{T}, dims::QuasiDimOrInd...) where {T}  = similar(a, T, dims)
-similar(::Type{<:AbstractQuasiArray{T}}, shape::NTuple{N,AbstractQuasiOrVector{<:Number}}) where {N,T} =
+similar(::Type{<:AbstractQuasiArray{T}}, shape::NTuple{N,AbstractQuasiOrVector}) where {N,T} =
     QuasiArray{T,N}(undef, convert.(AbstractVector, shape))
-similar(a::AbstractQuasiArray, ::Type{T}, dims::NTuple{N,AbstractQuasiOrVector{<:Number}}) where {T,N} =
+similar(a::AbstractQuasiArray, ::Type{T}, dims::NTuple{N,AbstractQuasiOrVector}) where {T,N} =
     QuasiArray{T,N}(undef, convert.(AbstractVector, dims))
-similar(a::AbstractQuasiArray, ::Type{T}, dims::Vararg{AbstractQuasiOrVector{<:Number},N}) where {T,N} =
+similar(a::AbstractQuasiArray, ::Type{T}, dims::Vararg{AbstractQuasiOrVector,N}) where {T,N} =
     QuasiArray{T,N}(undef, convert.(AbstractVector, dims))
 
 similar(a::AbstractQuasiArray{T}, m::Int) where {T}              = Vector{T}(undef, m)
@@ -376,10 +371,12 @@ end
 
 isempty(a::AbstractQuasiArray) = (length(a) == 0)
 
-function getindex(A::AbstractQuasiArray, I...)
+getindex(A::AbstractQuasiArray, I...) = _getindex(indextype(A), A, I)
+
+function _getindex(::Type{IND}, A::AbstractQuasiArray, I) where IND
     @_propagate_inbounds_meta
-    error_if_canonical_getindex(IndexStyle(A), A, I...)
-    _getindex(IndexStyle(A), A, to_indices(A, I)...)
+    error_if_canonical_getindex(IndexStyle(A), A, I)
+    _getindex(IND, IndexStyle(A), A, to_indices(A, I))
 end
 function unsafe_getindex(A::AbstractQuasiArray, I...)
     @_inline_meta
@@ -387,57 +384,23 @@ function unsafe_getindex(A::AbstractQuasiArray, I...)
     r
 end
 
-error_if_canonical_getindex(::IndexLinear, A::AbstractQuasiArray, ::Number) =
-    error("getindex not defined for ", typeof(A))
-error_if_canonical_getindex(::IndexCartesian, A::AbstractQuasiArray{T,N}, ::Vararg{Number,N}) where {T,N} =
-    error("getindex not defined for ", typeof(A))
-error_if_canonical_getindex(::IndexStyle, ::AbstractQuasiArray, ::Any...) = nothing
-
 ## Internal definitions
-_getindex(::IndexStyle, A::AbstractQuasiArray, I...) = lazy_getindex(A, I...)
+_getindex(_, ::IndexStyle, A::AbstractQuasiArray, I) = lazy_getindex(A, I...)
 
-## IndexLinear Scalar indexing: canonical method is one Int
-_getindex(::IndexLinear, A::AbstractQuasiArray, i::Number) = (@_propagate_inbounds_meta; getindex(A, i))
-function _getindex(::IndexLinear, A::AbstractQuasiArray, I::Vararg{Number,M}) where M
-    @_inline_meta
-    @boundscheck checkbounds(A, I...) # generally _to_linear_index requires bounds checking
-    @inbounds r = getindex(A, _to_linear_index(A, I...))
-    r
-end
-_to_linear_index(A::AbstractQuasiArray, i::Number) = i
-_to_linear_index(A::AbstractQuasiVector, i::Number, I::Number...) = i
-_to_linear_index(A::AbstractQuasiArray) = 1
-_to_linear_index(A::AbstractQuasiArray, I::Number...) = (@_inline_meta; _sub2ind(A, I...))
 
-## IndexCartesian Scalar indexing: Canonical method is full dimensionality of Numbers
-function _getindex(::IndexCartesian, A::AbstractQuasiArray, I::Vararg{Number,M}) where M
+## IndexCartesian Scalar indexing: Canonical method is full dimensionality of indices
+function _getindex(::Type{IND}, ::IndexCartesian, A::AbstractQuasiArray, I::IND) where {M,IND}
     @_inline_meta
     @boundscheck checkbounds(A, I...) # generally _to_subscript_indices requires bounds checking
-    @inbounds r = getindex(A, _to_subscript_indices(A, I...)...)
+    @inbounds r = getindex(A, _to_subscript_indices(IND, A, I...)...)
     r
 end
-function _getindex(::IndexCartesian, A::AbstractQuasiArray{T,N}, I::Vararg{Number, N}) where {T,N}
-    @_propagate_inbounds_meta
-    getindex(A, I...)
-end
-_to_subscript_indices(A::AbstractQuasiArray, i::Number) = (@_inline_meta; _unsafe_ind2sub(A, i))
-_to_subscript_indices(A::AbstractQuasiArray{T,N}) where {T,N} = (@_inline_meta; fill_to_length((), 1, Val(N)))
-_to_subscript_indices(A::AbstractQuasiArray{T,0}) where {T} = ()
-_to_subscript_indices(A::AbstractQuasiArray{T,0}, i::Number) where {T} = ()
-_to_subscript_indices(A::AbstractQuasiArray{T,0}, I::Number...) where {T} = ()
-function _to_subscript_indices(A::AbstractQuasiArray{T,N}, I::Number...) where {T,N}
-    @_inline_meta
-    J, Jrem = IteratorsMD.split(I, Val(N))
-    _to_subscript_indices(A, J, Jrem)
-end
-_to_subscript_indices(A::AbstractQuasiArray, J::Tuple, Jrem::Tuple{}) =
-    __to_subscript_indices(A, axes(A), J, Jrem)
-function __to_subscript_indices(A::AbstractQuasiArray,
-        ::Tuple{AbstractUnitRange,Vararg{AbstractUnitRange}}, J::Tuple, Jrem::Tuple{})
-    @_inline_meta
-    (J..., map(first, tail(_remaining_size(J, axes(A))))...)
-end
-_to_subscript_indices(A::AbstractQuasiArray{T,N}, I::Vararg{Number,N}) where {T,N} = I
+
+error_if_canonical_getindex(::IndexCartesian, A::AbstractQuasiArray{T,N}, I::Tuple) where {T,N} =
+    _error_if_canonical_getindex(indextype(A), A, I)
+
+_error_if_canonical_getindex(::Type{IND}, A::AbstractQuasiArray{T,N}, I::IND) where {T,N,IND} =
+    error("getindex not defined for ", typeof(A))
 
 ## Setindex! is defined similarly. We first dispatch to an internal _setindex!
 # function that allows dispatch on array storage
@@ -445,8 +408,8 @@ _to_subscript_indices(A::AbstractQuasiArray{T,N}, I::Vararg{Number,N}) where {T,
 
 function setindex!(A::AbstractQuasiArray, v, I...)
     @_propagate_inbounds_meta
-    error_if_canonical_setindex(IndexStyle(A), A, I...)
-    _setindex!(IndexStyle(A), A, v, to_indices(A, I)...)
+    error_if_canonical_setindex(IndexStyle(A), A, I)
+    _setindex!(indextype(A), IndexStyle(A), A, v, to_indices(A, I))
 end
 function unsafe_setindex!(A::AbstractQuasiArray, v, I...)
     @_inline_meta
@@ -454,34 +417,22 @@ function unsafe_setindex!(A::AbstractQuasiArray, v, I...)
     r
 end
 
-error_if_canonical_setindex(::IndexLinear, A::AbstractQuasiArray, ::Number) =
+error_if_canonical_setindex(::IndexLinear, A::AbstractQuasiArray, ::IND) where IND =
     error("setindex! not defined for ", typeof(A))
-error_if_canonical_setindex(::IndexCartesian, A::AbstractQuasiArray{T,N}, ::Vararg{Number,N}) where {T,N} =
-    error("setindex! not defined for ", typeof(A))
-error_if_canonical_setindex(::IndexStyle, ::AbstractQuasiArray, ::Any...) = nothing
 
 ## Internal definitions
-_setindex!(::IndexStyle, A::AbstractQuasiArray, v, I...) =
+_setindex!(::Type, ::IndexStyle, A::AbstractQuasiArray, v, I) =
     error("setindex! for $(typeof(A)) with types $(typeof(I)) is not supported")
 
-## IndexLinear Scalar indexing
-_setindex!(::IndexLinear, A::AbstractQuasiArray, v, i::Number) = (@_propagate_inbounds_meta; setindex!(A, v, i))
-function _setindex!(::IndexLinear, A::AbstractQuasiArray, v, I::Vararg{Number,M}) where M
-    @_inline_meta
-    @boundscheck checkbounds(A, I...)
-    @inbounds r = setindex!(A, v, _to_linear_index(A, I...))
-    r
-end
-
 # IndexCartesian Scalar indexing
-function _setindex!(::IndexCartesian, A::AbstractQuasiArray{T,N}, v, I::Vararg{Number, N}) where {T,N}
+function _setindex!(::Type{IND}, ::IndexCartesian, A::AbstractQuasiArray{T,N}, v, I::NTuple{N}) where {T,N,IND}
     @_propagate_inbounds_meta
     setindex!(A, v, I...)
 end
-function _setindex!(::IndexCartesian, A::AbstractQuasiArray, v, I::Vararg{Number,M}) where M
+function _setindex!(::Type{IND}, ::IndexCartesian, A::AbstractQuasiArray, v, I::NTuple{M}) where {M,IND}
     @_inline_meta
     @boundscheck checkbounds(A, I...)
-    @inbounds r = setindex!(A, v, _to_subscript_indices(A, I...)...)
+    @inbounds r = setindex!(A, v, _to_subscript_indices(IND, A, I...)...)
     r
 end
 
@@ -516,8 +467,8 @@ dataids(A::AbstractQuasiArray) = (UInt(objectid(A)),)
 
 
 ## structured matrix methods ##
-replace_in_print_matrix(A::AbstractQuasiMatrix,i::Number,j::Number,s::AbstractString) = s
-replace_in_print_matrix(A::AbstractQuasiVector,i::Number,j::Number,s::AbstractString) = s
+replace_in_print_matrix(A::AbstractQuasiMatrix,i,j,s::AbstractString) = s
+replace_in_print_matrix(A::AbstractQuasiVector,i,j,s::AbstractString) = s
 
 ## Concatenation ##
 eltypeof(x::AbstractQuasiArray) = eltype(x)
@@ -565,45 +516,14 @@ function (==)(A::AbstractQuasiArray, B::AbstractQuasiArray)
     return anymissing ? missing : true
 end
 
-# _sub2ind and _ind2sub
-# fallbacks
-function _sub2ind(A::AbstractQuasiArray, I...)
-    @_inline_meta
-    _sub2ind(axes(A), I...)
-end
-
-function _ind2sub(A::AbstractQuasiArray, ind)
-    @_inline_meta
-    _ind2sub(axes(A), ind)
-end
-
-# Vectorized forms
-function _sub2ind(inds::Indices{1}, I1::AbstractQuasiVector{T}, I::AbstractQuasiVector{T}...) where T<:Number
-    throw(ArgumentError("Linear indexing is not defined for one-dimensional arrays"))
-end
-_sub2ind(inds::Tuple{OneTo}, I1::AbstractQuasiVector{T}, I::AbstractQuasiVector{T}...) where {T<:Number} =
-    _sub2ind_vecs(inds, I1, I...)
-_sub2ind(inds::Union{DimsInteger,Indices}, I1::AbstractQuasiVector{T}, I::AbstractQuasiVector{T}...) where {T<:Number} =
-    _sub2ind_vecs(inds, I1, I...)
-function _sub2ind_vecs(inds, I::AbstractQuasiVector...)
-    I1 = I[1]
-    Iinds = axes1(I1)
-    for j = 2:length(I)
-        axes1(I[j]) == Iinds || throw(DimensionMismatch("indices of I[1] ($(Iinds)) does not match indices of I[$j] ($(axes1(I[j])))"))
-    end
-    Iout = similar(I1)
-    _sub2ind!(Iout, inds, Iinds, I)
-    Iout
-end
-
 _lookup(ind, r::Inclusion) = ind
 
-_ind2sub(dims::NTuple{N,Number}, ind::Number) where N = (@_inline_meta; _ind2sub_recurse(dims, ind-1))
-_ind2sub(inds::QuasiIndices, ind::Number)     = (@_inline_meta; _ind2sub_recurse(inds, ind-1))
-_ind2sub(inds::Tuple{Inclusion{<:Number},AbstractUnitRange{<:Integer}}, ind::Number)     = (@_inline_meta; _ind2sub_recurse(inds, ind-1))
-_ind2sub(inds::Tuple{AbstractUnitRange{<:Integer},Inclusion{<:Number}}, ind::Number)     = (@_inline_meta; _ind2sub_recurse(inds, ind-1))
+_ind2sub(dims::NTuple{N}, ind) where N = (@_inline_meta; _ind2sub_recurse(dims, ind-1))
+_ind2sub(inds::QuasiIndices, ind)     = (@_inline_meta; _ind2sub_recurse(inds, ind-1))
+_ind2sub(inds::Tuple{Inclusion{<:Any},AbstractUnitRange{<:Integer}}, ind)     = (@_inline_meta; _ind2sub_recurse(inds, ind-1))
+_ind2sub(inds::Tuple{AbstractUnitRange{<:Integer},Inclusion{<:Any}}, ind)     = (@_inline_meta; _ind2sub_recurse(inds, ind-1))
 
-function _ind2sub(inds::Union{NTuple{N,Number},QuasiIndices{N}}, ind::AbstractQuasiVector{<:Number}) where N
+function _ind2sub(inds::Union{NTuple{N,Any},QuasiIndices{N}}, ind::AbstractQuasiVector) where N
     M = length(ind)
     t = ntuple(n->similar(ind),Val(N))
     for (i,idx) in pairs(IndexLinear(), ind)

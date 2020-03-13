@@ -103,4 +103,11 @@ using QuasiArrays, Test
         @test axes(v) == axes(v[:]) == axes(v[Inclusion(0:0.5:1)]) == (Inclusion(0:0.5:1),)
         @test v[0.5] == v[:][0.5] == v[Inclusion(0:0.5:1)][0.5] == 2
     end
+
+    @testset "Vec indexing" begin
+        A = QuasiArray(rand(2), ([[1,2],[3,4]],))
+        @test @inferred(indextype(A)) == Tuple{Vector{Int}}
+        @test QuasiArrays.checkbounds(Bool, A, [1,2])
+        @test A[[1,2]] == parent(A)[1]
+    end
 end
