@@ -402,6 +402,8 @@ error_if_canonical_getindex(::IndexCartesian, A::AbstractQuasiArray{T,N}, I::Tup
 _error_if_canonical_getindex(::Type{IND}, A::AbstractQuasiArray{T,N}, I::IND) where {T,N,IND} =
     error("getindex not defined for ", typeof(A))
 
+_error_if_canonical_getindex(::Type, ::AbstractQuasiArray, ::Any...) = nothing    
+
 ## Setindex! is defined similarly. We first dispatch to an internal _setindex!
 # function that allows dispatch on array storage
 

@@ -109,5 +109,14 @@ using QuasiArrays, Test
         @test @inferred(indextype(A)) == Tuple{Vector{Int}}
         @test QuasiArrays.checkbounds(Bool, A, [1,2])
         @test A[[1,2]] == parent(A)[1]
+        @test_throws BoundsError A[[1,2,3]]
+        @test A[[[1,2],[3,4]]] == parent(A)
+
+        A = QuasiArray(rand(2,2), ([[1,2],[3,4]],[[5,6],[7,8]]))
+        @test A[[1,2], [5,6]] == parent(A)[1]
+        @test_throws BoundsError A[[1,2]]
+        @test A[[[1,2],[3,4]],[[5,6],[7,8]]] == parent(A)
+        A[[1,2], [[5,6],[7,8]]]
+        A[[1,2], :]
     end
 end
