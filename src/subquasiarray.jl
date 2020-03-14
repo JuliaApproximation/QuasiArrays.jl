@@ -185,9 +185,9 @@ end
 quasi_reindex(axs::Tuple{AbstractQuasiVector{IND}, Vararg{Any}}, idxs::Tuple{IND, Vararg{Any}}, subidxs::Tuple{Vararg{Any}}) where IND =
     (@_propagate_inbounds_meta; (idxs[1], quasi_reindex(tail(axs), tail(idxs), subidxs)...))
 quasi_reindex(axs::Tuple{AbstractQuasiVector{IND}, Vararg{Any}}, idxs::Tuple{AbstractVector{IND}, Vararg{Any}}, subidxs::Tuple{Any, Vararg{Any}}) where IND =
-    (@_propagate_inbounds_meta; (idxs[1][subidxs[1]], quasi_reindex(tail(idxs), tail(subidxs))...))    
+    (@_propagate_inbounds_meta; (idxs[1][subidxs[1]], quasi_reindex(tail(axs), tail(idxs), tail(subidxs))...))    
 
-quasi_reindex(::Tuple{}, ::Tuple{}) = ()    
+quasi_reindex(::Tuple{}, ::Tuple{}, ::Tuple{}) = ()    
 
 function getindex(V::SubArray{T,N,<:AbstractQuasiArray}, I::Vararg{Int,N}) where {T,N}
     @_inline_meta

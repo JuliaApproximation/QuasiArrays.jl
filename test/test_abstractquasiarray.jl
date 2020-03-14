@@ -1,5 +1,5 @@
 using QuasiArrays, Test
-
+import QuasiArrays: QuasiCartesianIndex
 @testset "AbstractQuasiArray" begin
     A = QuasiArray(rand(5,4,3), (range(0;stop=1,length=5), Base.OneTo(4), [2,3,6]))
 
@@ -111,6 +111,9 @@ using QuasiArrays, Test
         @test A[[1,2]] == parent(A)[1]
         @test_throws BoundsError A[[1,2,3]]
         @test A[[[1,2],[3,4]]] == parent(A)
+
+        @test Base.to_indices(A,(QuasiCartesianIndex([1,2]),)) == ([1,2],)
+        @test A[QuasiCartesianIndex([1,2])] == A[[1,2]]
 
         A = QuasiArray(rand(2,2), ([[1,2],[3,4]],[[5,6],[7,8]]))
         @test A[[1,2], [5,6]] == parent(A)[1]

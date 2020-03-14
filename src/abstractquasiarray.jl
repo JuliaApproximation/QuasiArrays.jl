@@ -392,7 +392,7 @@ _getindex(_, ::IndexStyle, A::AbstractQuasiArray, I) = lazy_getindex(A, I...)
 function _getindex(::Type{IND}, ::IndexCartesian, A::AbstractQuasiArray, I::IND) where {M,IND}
     @_inline_meta
     @boundscheck checkbounds(A, I...) # generally _to_subscript_indices requires bounds checking
-    @inbounds r = getindex(A, _to_subscript_indices(IND, A, I...)...)
+    @inbounds r = getindex(A, _to_subscript_indices(A, I...)...)
     r
 end
 
@@ -403,6 +403,25 @@ _error_if_canonical_getindex(::Type{IND}, A::AbstractQuasiArray{T,N}, I::IND) wh
     error("getindex not defined for ", typeof(A))
 
 _error_if_canonical_getindex(::Type, ::AbstractQuasiArray, ::Any...) = nothing    
+
+_to_subscript_indices(A::AbstractQuasiArray, i) = (@_inline_meta; _unsafe_ind2sub(A, i))
+_to_subscript_indices(A::AbstractQuasiArray{T,N}) where {T,N} = (@_inline_meta; fill_to_length((), 1, Val(N)))
+_to_subscript_indices(A::AbstractQuasiArray{T,0}) where {T} = ()
+_to_subscript_indices(A::AbstractQuasiArray{T,0}, i) where {T} = ()
+_to_subscript_indices(A::AbstractQuasiArray{T,0}, I...) where {T} = ()
+function _to_subscript_indices(A::AbstractQuasiArray{T,N}, I...) where {T,N}
+    @_inline_meta
+    J, Jrem = IteratorsMD.split(I, Val(N))
+    _to_subscript_indices(A, J, Jrem)
+end
+_to_subscript_indices(A::AbstractQuasiArray, J::Tuple, Jrem::Tuple{}) =
+    __to_subscript_indices(A, axes(A), J, Jrem)
+function __to_subscript_indices(A::AbstractQuasiArray,
+        ::Tuple{AbstractUnitRange,Vararg{AbstractUnitRange}}, J::Tuple, Jrem::Tuple{})
+    @_inline_meta
+    (J..., map(first, tail(_remaining_size(J, axes(A))))...)
+end
+_to_subscript_indices(A::AbstractQuasiArray{T,N}, I::Vararg{Any,N}) where {T,N} = I
 
 ## Setindex! is defined similarly. We first dispatch to an internal _setindex!
 # function that allows dispatch on array storage
