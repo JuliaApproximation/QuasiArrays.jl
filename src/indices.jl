@@ -100,9 +100,23 @@ to_index(I::AbstractQuasiArray) = I
 to_index(I::AbstractQuasiArray{<:Union{AbstractArray, Colon}}) =
     throw(ArgumentError("invalid index: $I of type $(typeof(I))"))
 
-to_quasi_index(i::Number) = i
-to_quasi_index(i) = Base.to_index(i)
-to_index(A::AbstractQuasiArray, i) = to_quasi_index(i)
+to_quasi_index(::Type{IND}, i) where IND = convert(IND, i)
+to_quasi_index(::Type{IND}, I::AbstractArray) where IND<:AbstractArray = convert(IND, I)
+to_quasi_index(::Type{IND}, I::AbstractQuasiArray) where IND<:AbstractQuasiArray = convert(IND, I)    
+to_quasi_index(::Type{IND}, I::AbstractArray) where IND = convert(AbstractArray{IND}, I)
+to_quasi_index(::Type{IND}, I::AbstractQuasiArray) where IND = convert(AbstractQuasiArray{IND}, I)    
+to_quasi_index(::Type{IND}, I::AbstractArray{<:AbstractArray}) where IND<:AbstractArray = convert(AbstractArray{IND}, I)
+to_quasi_index(::Type{IND}, I::AbstractQuasiArray{<:AbstractArray}) where IND<:AbstractArray = convert(AbstractQuasiArray{IND}, I)
+
+to_quasi_index(A, IND, i) = to_quasi_index(IND,i)
+
+to_indices(A::AbstractQuasiArray, inds, ::Tuple{}) = ()
+to_indices(A::AbstractQuasiArray, inds, I::Tuple{Any,Vararg{Any}}) =
+    (@_inline_meta; (to_quasi_index(A, eltype(inds[1]), I[1]), to_indices(A, _maybetail(inds), tail(I))...))
+@inline to_indices(A::AbstractQuasiArray, inds, I::Tuple{Colon, Vararg{Any}}) =
+    (uncolon(inds, I), to_indices(A, _maybetail(inds), tail(I))...)
+
+
 
 LinearIndices(A::AbstractQuasiArray) = LinearIndices(axes(A))
 
@@ -164,9 +178,9 @@ size(S::Inclusion) = (cardinality(S.domain),)
 length(S::Inclusion) = cardinality(S.domain)
 unsafe_length(S::Inclusion) = cardinality(S.domain)
 cardinality(S::Inclusion) = cardinality(S.domain)
-getindex(S::Inclusion{T}, i::Number) where T =
+getindex(S::Inclusion{T}, i::T) where T =
     (@_inline_meta; @boundscheck checkbounds(S, i); convert(T,i))
-getindex(S::Inclusion{T}, i::AbstractVector{<:Number}) where T =
+getindex(S::Inclusion{T}, i::AbstractVector{T}) where T =
     (@_inline_meta; @boundscheck checkbounds(S, i); convert(AbstractVector{T},i))
 getindex(S::Inclusion, i::Inclusion) =
     (@_inline_meta; @boundscheck checkbounds(S, i); copy(S))
@@ -176,10 +190,10 @@ iterate(S::Inclusion, s...) = iterate(S.domain, s...)
 
 in(x, S::Inclusion) = x in S.domain
 
-checkindex(::Type{Bool}, inds::Inclusion, i::Number) = i ∈ inds.domain
+checkindex(::Type{Bool}, inds::Inclusion, i) = i ∈ inds.domain
 checkindex(::Type{Bool}, inds::Inclusion, ::Colon) = true
 checkindex(::Type{Bool}, inds::Inclusion, ::Inclusion) = true
-function checkindex(::Type{Bool}, inds::Inclusion, I::AbstractArray)
+function __checkindex(::Type{Bool}, inds::Inclusion, I::AbstractArray)
     @_inline_meta
     b = true
     for i in I
@@ -188,9 +202,16 @@ function checkindex(::Type{Bool}, inds::Inclusion, I::AbstractArray)
     b
 end
 
-function checkindex(::Type{Bool}, inds::Inclusion, r::AbstractRange)
+checkindex(::Type{Bool}, inds::Inclusion{T}, I::AbstractArray{T}) where T = 
+    __checkindex(Bool, inds, I)
+checkindex(::Type{Bool}, inds::Inclusion{T}, I::AbstractArray{T}) where T<:AbstractArray = 
+    __checkindex(Bool, inds, I)
+checkindex(::Type{Bool}, inds::Inclusion{T}, I::AbstractArray{<:AbstractArray}) where T<:AbstractArray = 
+    __checkindex(Bool, inds, convert(AbstractArray{T}, I))
+
+function checkindex(::Type{Bool}, inds::Inclusion{T}, r::AbstractRange) where T
     @_propagate_inbounds_meta
-    isempty(r) | (checkindex(Bool, inds, first(r)) & checkindex(Bool, inds, last(r)))
+    isempty(r) | (checkindex(Bool, inds, convert(T, first(r))) & checkindex(Bool, inds, last(r)))
 end
 checkindex(::Type{Bool}, indx::Inclusion, I::AbstractVector{Bool}) = indx == axes1(I)
 checkindex(::Type{Bool}, indx::Inclusion, I::AbstractArray{Bool}) = false

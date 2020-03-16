@@ -1,4 +1,5 @@
 using QuasiArrays, Test
+import QuasiArrays: QuasiCartesianIndex
 
 @testset "AbstractQuasiArray" begin
     A = QuasiArray(rand(5,4,3), (range(0;stop=1,length=5), Base.OneTo(4), [2,3,6]))
@@ -57,7 +58,6 @@ using QuasiArrays, Test
         @test QuasiArrays.checkbounds(Bool, A, 1:6, 1:4, 1:3) == false
         @test QuasiArrays.checkbounds(Bool, A, 1:5, 1:5, 1:3) == false
         @test QuasiArrays.checkbounds(Bool, A, 1:5, 1:4, 1:4) == false
-        @test QuasiArrays.checkbounds(Bool, A, 1:60) == true
         @test QuasiArrays.checkbounds(Bool, A, 1:61) == false
         @test QuasiArrays.checkbounds(Bool, A, 0.25, 2, 2, 1:1) == true  # extra indices
         @test QuasiArrays.checkbounds(Bool, A, 2, 2, 2, 1:2) == false
@@ -102,5 +102,31 @@ using QuasiArrays, Test
         v = QuasiArray([1, 2, 3],(0:0.5:1,))
         @test axes(v) == axes(v[:]) == axes(v[Inclusion(0:0.5:1)]) == (Inclusion(0:0.5:1),)
         @test v[0.5] == v[:][0.5] == v[Inclusion(0:0.5:1)][0.5] == 2
+    end
+
+    @testset "Vec indexing" begin
+        A = QuasiArray(rand(2), ([[1,2],[3,4]],))
+        @test @inferred(indextype(A)) == Tuple{Vector{Int}}
+        @test QuasiArrays.checkbounds(Bool, A, [1,2])
+        @test A[[1,2]] == parent(A)[1]
+        @test_throws BoundsError A[[1,2,3]]
+        @test A[[[1,2],[3,4]]] == parent(A)
+
+        @test Base.to_indices(A,(QuasiCartesianIndex([1,2]),)) == ([1,2],)
+        @test A[QuasiCartesianIndex([1,2])] == A[[1,2]]
+
+        A = QuasiArray(rand(2,2), ([[1,2],[3,4]],[[5,6],[7,8]]))
+        @test A[[1,2], [5,6]] == parent(A)[1]
+        @test_throws BoundsError A[[1,2]]
+        V = view(A,[[1,2],[3,4]],[[5,6],[7,8]])
+        @test A[[[1,2],[3,4]],[[5,6],[7,8]]] == V == parent(A)
+        V = view(A,[1,2], [[5,6],[7,8]])
+        @test axes(V) == (Base.OneTo(2),)
+        @test V == parent(A)[1,:]
+
+        A = QuasiArray(rand(2), ([[1.0,2],[3.0,4]],))
+        @test Base.to_indices(A, axes(A), ([1,2],)) isa Tuple{Vector{Float64}}
+        @test parentindices(view(A,[1,2])) isa Tuple{Vector{Float64}}
+        @test A[[1,2]] == A[[1.0,2.0]] == parent(A)[1] 
     end
 end
