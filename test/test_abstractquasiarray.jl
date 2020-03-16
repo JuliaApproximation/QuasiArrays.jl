@@ -123,5 +123,10 @@ import QuasiArrays: QuasiCartesianIndex
         V = view(A,[1,2], [[5,6],[7,8]])
         @test axes(V) == (Base.OneTo(2),)
         @test V == parent(A)[1,:]
+
+        A = QuasiArray(rand(2), ([[1.0,2],[3.0,4]],))
+        @test Base.to_indices(A, axes(A), ([1,2],)) isa Tuple{Vector{Float64}}
+        @test parentindices(view(A,[1,2])) isa Tuple{Vector{Float64}}
+        @test A[[1,2]] == A[[1.0,2.0]] == parent(A)[1] 
     end
 end

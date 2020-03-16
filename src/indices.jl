@@ -100,9 +100,13 @@ to_index(I::AbstractQuasiArray) = I
 to_index(I::AbstractQuasiArray{<:Union{AbstractArray, Colon}}) =
     throw(ArgumentError("invalid index: $I of type $(typeof(I))"))
 
-to_quasi_index(::Type{IND}, i::IND) where IND = i
-to_quasi_index(_, i) = Base.to_index(i)
-to_quasi_index(::Type{IND}, I::AbstractArray{IND}) where IND = I
+to_quasi_index(::Type{IND}, i) where IND = convert(IND, i)
+to_quasi_index(::Type{IND}, I::AbstractArray) where IND<:AbstractArray = convert(IND, I)
+to_quasi_index(::Type{IND}, I::AbstractQuasiArray) where IND<:AbstractQuasiArray = convert(IND, I)    
+to_quasi_index(::Type{IND}, I::AbstractArray) where IND = convert(AbstractArray{IND}, I)
+to_quasi_index(::Type{IND}, I::AbstractQuasiArray) where IND = convert(AbstractQuasiArray{IND}, I)    
+to_quasi_index(::Type{IND}, I::AbstractArray{<:AbstractArray}) where IND<:AbstractArray = convert(AbstractArray{IND}, I)
+to_quasi_index(::Type{IND}, I::AbstractQuasiArray{<:AbstractArray}) where IND<:AbstractArray = convert(AbstractQuasiArray{IND}, I)
 
 to_quasi_index(A, IND, i) = to_quasi_index(IND,i)
 
@@ -113,7 +117,6 @@ to_indices(A::AbstractQuasiArray, inds, I::Tuple{Any,Vararg{Any}}) =
     (uncolon(inds, I), to_indices(A, _maybetail(inds), tail(I))...)
 
 
-to_index(A::AbstractQuasiArray, i) = to_quasi_index(indextype(A), i)
 
 LinearIndices(A::AbstractQuasiArray) = LinearIndices(axes(A))
 
