@@ -438,15 +438,19 @@ function unsafe_setindex!(A::AbstractQuasiArray, v, I...)
     r
 end
 
-error_if_canonical_setindex(::IndexLinear, A::AbstractQuasiArray, ::IND) where IND =
+error_if_canonical_setindex(::IndexCartesian, A::AbstractQuasiArray{T,N}, I::Tuple) where {T,N} =
+    _error_if_canonical_setindex(indextype(A), A, I)
+
+_error_if_canonical_setindex(::Type{IND}, A::AbstractQuasiArray{T,N}, I::IND) where {T,N,IND} =
     error("setindex! not defined for ", typeof(A))
 
+_error_if_canonical_setindex(::Type, ::AbstractQuasiArray, ::Any...) = nothing    
 ## Internal definitions
 _setindex!(::Type, ::IndexStyle, A::AbstractQuasiArray, v, I) =
     error("setindex! for $(typeof(A)) with types $(typeof(I)) is not supported")
 
 # IndexCartesian Scalar indexing
-function _setindex!(::Type{IND}, ::IndexCartesian, A::AbstractQuasiArray{T,N}, v, I::NTuple{N}) where {T,N,IND}
+function _setindex!(::Type{IND}, ::IndexCartesian, A::AbstractQuasiArray{T,N}, v, I::NTuple{N,Any}) where {T,N,IND}
     @_propagate_inbounds_meta
     setindex!(A, v, I...)
 end
@@ -539,7 +543,7 @@ end
 
 _lookup(ind, r::Inclusion) = ind
 
-_ind2sub(dims::NTuple{N}, ind) where N = (@_inline_meta; _ind2sub_recurse(dims, ind-1))
+_ind2sub(dims::NTuple{N,Any}, ind) where N = (@_inline_meta; _ind2sub_recurse(dims, ind-1))
 _ind2sub(inds::QuasiIndices, ind)     = (@_inline_meta; _ind2sub_recurse(inds, ind-1))
 _ind2sub(inds::Tuple{Inclusion{<:Any},AbstractUnitRange{<:Integer}}, ind)     = (@_inline_meta; _ind2sub_recurse(inds, ind-1))
 _ind2sub(inds::Tuple{AbstractUnitRange{<:Integer},Inclusion{<:Any}}, ind)     = (@_inline_meta; _ind2sub_recurse(inds, ind-1))

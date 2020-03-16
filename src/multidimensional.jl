@@ -61,7 +61,7 @@ module QuasiIteratorsMD
     function _QuasiCartesianIndex end
     struct QuasiCartesianIndex{N,II<:Tuple} <: AbstractCartesianIndex{N}
         I::II
-        global _QuasiCartesianIndex(index::NTuple{N}) where N = new{N,typeof(index)}(index)
+        global _QuasiCartesianIndex(index::NTuple{N,Any}) where N = new{N,typeof(index)}(index)
     end
     QuasiCartesianIndex(index...) = _QuasiCartesianIndex(flatten(index))
     QuasiCartesianIndex{N}(index::Vararg{Any,N}) where {N} = _QuasiCartesianIndex(index)
@@ -241,7 +241,7 @@ module QuasiIteratorsMD
     For cartesian to linear index conversion, see [`LinearIndices`](@ref).
     """
 
-    struct QuasiCartesianIndices{N,R<:NTuple{N,AbstractQuasiOrVector},RR<:NTuple{N}} <: AbstractArray{QuasiCartesianIndex{N,RR},N}
+    struct QuasiCartesianIndices{N,R<:NTuple{N,AbstractQuasiOrVector},RR<:NTuple{N,Any}} <: AbstractArray{QuasiCartesianIndex{N,RR},N}
         indices::R
     end
     QuasiCartesianIndices(nd::NTuple{N,AbstractVector}) where N = 
@@ -252,7 +252,7 @@ module QuasiIteratorsMD
     QuasiCartesianIndices(::Tuple{}) = QuasiCartesianIndices{0,typeof(())}(())
 
     QuasiCartesianIndices(index::QuasiCartesianIndex) = QuasiCartesianIndices(index.I)
-    QuasiCartesianIndices(sz::NTuple{N}) where {N} = QuasiCartesianIndices(map(Base.OneTo, sz))
+    QuasiCartesianIndices(sz::NTuple{N,Any}) where {N} = QuasiCartesianIndices(map(Base.OneTo, sz))
 
     QuasiCartesianIndices(A::AbstractQuasiArray) = QuasiCartesianIndices(axes(A))
 
@@ -308,7 +308,7 @@ module QuasiIteratorsMD
     Base.IndexStyle(::Type{QuasiCartesianIndices{N,R}}) where {N,R} = IndexCartesian()
     @inline function Base.getindex(iter::QuasiCartesianIndices{N,R}, I::Vararg{Int, N}) where {N,R}
         @boundscheck checkbounds(iter, I...)
-        QuasiCartesianIndex(getindex.(iter.indices, I))
+        _QuasiCartesianIndex(getindex.(iter.indices, I))
     end
 
     ndims(R::QuasiCartesianIndices) = ndims(typeof(R))
