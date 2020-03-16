@@ -416,6 +416,7 @@ to_indices(A::AbstractQuasiArray, I::Tuple{Any}) = (@_inline_meta; to_indices(A,
 # QuasiCartesianIndexes are simple; they just splat out
 @inline to_indices(A::AbstractQuasiArray, inds, I::Tuple{QuasiCartesianIndex, Vararg{Any}}) =
     to_indices(A, inds, (I[1].I..., tail(I)...))
+@inline to_indices(A::AbstractQuasiArray, I::Tuple{Vararg{Union{Integer, CartesianIndex}}}) = to_indices(A, axes(A), I)    
 # But for arrays of QuasiCartesianIndex, we just skip the appropriate number of inds
 @inline function to_indices(A::AbstractQuasiArray, inds, I::Tuple{AbstractArray{QuasiCartesianIndex{N}}, Vararg{Any}}) where N
     _, indstail = IteratorsMD.split(inds, Val(N))

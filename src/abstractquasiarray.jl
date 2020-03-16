@@ -286,7 +286,7 @@ end
 
 function checkbounds(A::AbstractQuasiArray, I...)
     @_inline_meta
-    checkbounds(Bool, A, I...) || throw_boundserror(A, I)
+    checkbounds(Bool, A, to_indices(A,I)...) || throw_boundserror(A, I)
     nothing
 end
 
