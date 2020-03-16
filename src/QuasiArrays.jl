@@ -13,7 +13,7 @@ import Base: @_inline_meta, DimOrInd, OneTo, @_propagate_inbounds_meta, @_noinli
 import Base: ViewIndex, Slice, IdentityUnitRange, ScalarIndex, RangeIndex, view, viewindexing, ensure_indexable, index_dimsum,
                 check_parent_index_match, reindex, _isdisjoint, unsafe_indices, _unsafe_ind2sub,
                 _ind2sub, _sub2ind, _ind2sub_recurse, _lookup, SubArray,
-                parentindices, reverse, ndims, checkbounds,
+                parentindices, reverse, ndims, checkbounds, uncolon,
                 promote_shape, maybeview, checkindex, checkbounds_indices,
                 throw_boundserror, rdims, replace_in_print_matrix, show,
                 hcat, vcat, hvcat

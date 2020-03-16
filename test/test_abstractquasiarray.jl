@@ -1,5 +1,6 @@
 using QuasiArrays, Test
 import QuasiArrays: QuasiCartesianIndex
+
 @testset "AbstractQuasiArray" begin
     A = QuasiArray(rand(5,4,3), (range(0;stop=1,length=5), Base.OneTo(4), [2,3,6]))
 
@@ -57,7 +58,6 @@ import QuasiArrays: QuasiCartesianIndex
         @test QuasiArrays.checkbounds(Bool, A, 1:6, 1:4, 1:3) == false
         @test QuasiArrays.checkbounds(Bool, A, 1:5, 1:5, 1:3) == false
         @test QuasiArrays.checkbounds(Bool, A, 1:5, 1:4, 1:4) == false
-        @test QuasiArrays.checkbounds(Bool, A, 1:60) == true
         @test QuasiArrays.checkbounds(Bool, A, 1:61) == false
         @test QuasiArrays.checkbounds(Bool, A, 0.25, 2, 2, 1:1) == true  # extra indices
         @test QuasiArrays.checkbounds(Bool, A, 2, 2, 2, 1:2) == false
