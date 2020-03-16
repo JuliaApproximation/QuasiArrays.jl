@@ -76,6 +76,9 @@ quasi_viewindexing(::Tuple{}, I::Tuple{}) = IndexLinear()
 # Leading scalar indices simply increase the stride
 quasi_viewindexing(axs::Tuple{AbstractQuasiVector{IND}, Vararg{Any}}, I::Tuple{IND, Vararg{Any}}) where IND = 
     (@_inline_meta; quasi_viewindexing(tail(axs), tail(I)))
+quasi_viewindexing(axs::Tuple{AbstractVector{IND}, Vararg{Any}}, I::Tuple{IND, Vararg{Any}}) where IND = 
+    (@_inline_meta; quasi_viewindexing(tail(axs), tail(I)))
+
 # Slices may begin a section which may be followed by any number of Slices
 # quasi_viewindexing(axs, I::Tuple{Slice, Slice, Vararg{Any}}) = (@_inline_meta; quasi_viewindexing(tail(I)))
 # # A UnitRange can follow Slices, but only if all other indices are scalar
@@ -87,14 +90,19 @@ quasi_viewindexing(axs::Tuple{AbstractQuasiVector{IND}, Vararg{Any}}, I::Tuple{I
 # quasi_viewindexing(I::Tuple{Vararg{Any}}) = IndexCartesian()
 # # Of course, all other array types are slow
 quasi_viewindexing(axs::Tuple{AbstractQuasiVector{IND}, Vararg{Any}}, I::Tuple{AbstractArray{IND}, Vararg{Any}}) where IND = IndexCartesian()
+quasi_viewindexing(axs::Tuple{AbstractVector{IND}, Vararg{Any}}, I::Tuple{AbstractArray{IND}, Vararg{Any}}) where IND = IndexCartesian()
 
 # combined dimensionality of all indices
 # rather than returning N, it returns an NTuple{N,Bool} so the result is inferrable
 @inline quasi_index_dimsum(axs::Tuple{AbstractQuasiVector{IND},Vararg{Any}}, inds::Tuple{IND,Vararg{Any}}) where IND = 
     (quasi_index_dimsum(tail(axs), tail(inds))...,)
+@inline quasi_index_dimsum(axs::Tuple{AbstractVector{IND},Vararg{Any}}, inds::Tuple{IND,Vararg{Any}}) where IND = 
+    (quasi_index_dimsum(tail(axs), tail(inds))...,)    
 @inline quasi_index_dimsum(axs, inds::Tuple{Colon,Vararg{Any}}) = (true, quasi_index_dimsum(tail(axs), tail(inds))...)
 @inline quasi_index_dimsum(axs::Tuple{AbstractQuasiVector{IND},Vararg{Any}}, inds::Tuple{AbstractArray{IND,N},Vararg{Any}}) where {N,IND} =
     (ntuple(x->true, Val(N))..., quasi_index_dimsum(tail(axs), tail(inds))...)
+@inline quasi_index_dimsum(axs::Tuple{AbstractVector{IND},Vararg{Any}}, inds::Tuple{AbstractArray{IND,N},Vararg{Any}}) where {N,IND} =
+    (ntuple(x->true, Val(N))..., quasi_index_dimsum(tail(axs), tail(inds))...)    
 quasi_index_dimsum(::Tuple{}, ::Tuple{}) = ()
 
 function SubArray(parent::AbstractQuasiArray, indices::Tuple)
@@ -176,16 +184,28 @@ axes(S::SubArray{T,N,<:AbstractQuasiArray}) where {T,N} =
     _quasi_indices_sub(axes(parent(S)), S.indices)
 _quasi_indices_sub(axs::Tuple{AbstractQuasiVector{IND},Vararg{Any}}, inds::Tuple{IND,Vararg{Any}}) where IND =
     (@_inline_meta; _quasi_indices_sub(tail(axs), tail(inds)))
+_quasi_indices_sub(axs::Tuple{AbstractVector{IND},Vararg{Any}}, inds::Tuple{IND,Vararg{Any}}) where IND =
+    (@_inline_meta; _quasi_indices_sub(tail(axs), tail(inds)))    
 _quasi_indices_sub(::Tuple{}, ::Tuple{}) = ()
 function _quasi_indices_sub(axs::Tuple{AbstractQuasiVector{IND},Vararg{Any}}, inds::Tuple{AbstractArray{IND},Vararg{Any}}) where IND
+    @_inline_meta
+    (unsafe_indices(inds[1])..., _quasi_indices_sub(tail(axs), tail(inds))...)
+end
+function _quasi_indices_sub(axs::Tuple{AbstractVector{IND},Vararg{Any}}, inds::Tuple{AbstractArray{IND},Vararg{Any}}) where IND
     @_inline_meta
     (unsafe_indices(inds[1])..., _quasi_indices_sub(tail(axs), tail(inds))...)
 end
 
 quasi_reindex(axs::Tuple{AbstractQuasiVector{IND}, Vararg{Any}}, idxs::Tuple{IND, Vararg{Any}}, subidxs::Tuple{Vararg{Any}}) where IND =
     (@_propagate_inbounds_meta; (idxs[1], quasi_reindex(tail(axs), tail(idxs), subidxs)...))
+quasi_reindex(axs::Tuple{AbstractVector{IND}, Vararg{Any}}, idxs::Tuple{IND, Vararg{Any}}, subidxs::Tuple{Vararg{Any}}) where IND =
+    (@_propagate_inbounds_meta; (idxs[1], quasi_reindex(tail(axs), tail(idxs), subidxs)...))
 quasi_reindex(axs::Tuple{AbstractQuasiVector{IND}, Vararg{Any}}, idxs::Tuple{AbstractVector{IND}, Vararg{Any}}, subidxs::Tuple{Any, Vararg{Any}}) where IND =
     (@_propagate_inbounds_meta; (idxs[1][subidxs[1]], quasi_reindex(tail(axs), tail(idxs), tail(subidxs))...))    
+quasi_reindex(axs::Tuple{AbstractVector{IND}, Vararg{Any}}, idxs::Tuple{AbstractVector{IND}, Vararg{Any}}, subidxs::Tuple{Any, Vararg{Any}}) where IND =
+    (@_propagate_inbounds_meta; (idxs[1][subidxs[1]], quasi_reindex(tail(axs), tail(idxs), tail(subidxs))...))    
+
+
 
 quasi_reindex(::Tuple{}, ::Tuple{}, ::Tuple{}) = ()    
 
