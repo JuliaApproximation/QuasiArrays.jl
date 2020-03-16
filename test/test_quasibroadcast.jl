@@ -24,7 +24,7 @@ import QuasiArrays: QuasiCartesianIndex, QuasiCartesianIndices, DefaultQuasiArra
     @test_throws DimensionMismatch check_broadcast_axes(ax, zeros(3,4,2))
     @test_throws DimensionMismatch check_broadcast_axes(ax, zeros(3,5), zeros(2))
 
-    ci(x) = QuasiCartesianIndex(x)
+    ci(x) = QuasiCartesianIndex(x...)
     @test @inferred(newindex(ci((2,2)), (true, true), (-1,-1)))   == ci((2,2))
     @test @inferred(newindex(ci((2,2)), (true, false), (-1,-1)))  == ci((2,-1))
     @test @inferred(newindex(ci((2,2)), (false, true), (-1,-1)))  == ci((-1,2))

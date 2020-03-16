@@ -108,16 +108,16 @@ Base.@propagate_inbounds _newindex(ax::Tuple{}, I::Tuple{}) = ()
     (ifelse(keep[1], I[1], Idefault[1]), _newindex(tail(I), tail(keep), tail(Idefault))...)
 @inline _newindex(I, keep::Tuple{}, Idefault) = ()  # truncate if keep is shorter than I
 # for now we assume indexing is simple
-Base.@propagate_inbounds newindex(arg, I::QuasiCartesianIndex) = QuasiCartesianIndex(_newindex(axes(arg), I.I))
-@inline newindex(I::QuasiCartesianIndex, keep, Idefault) = QuasiCartesianIndex(_newindex(I.I, keep, Idefault))
+Base.@propagate_inbounds newindex(arg, I::QuasiCartesianIndex) = QuasiCartesianIndex(_newindex(axes(arg), I.I)...)
+@inline newindex(I::QuasiCartesianIndex, keep, Idefault) = QuasiCartesianIndex(_newindex(I.I, keep, Idefault)...)
 
 @inline function Base.getindex(bc::Broadcasted, I::QuasiCartesianIndex)
     @boundscheck checkbounds(bc, I)
     @inbounds _broadcast_getindex(bc, I)
 end
 
-Base.@propagate_inbounds Base.getindex(bc::Broadcasted{<:AbstractQuasiArrayStyle}, i1::Number, I::Number...) = bc[QuasiCartesianIndex((i1, I...))]
-Base.@propagate_inbounds Base.getindex(bc::Broadcasted{<:AbstractQuasiArrayStyle}) = bc[QuasiCartesianIndex(())]
+Base.@propagate_inbounds Base.getindex(bc::Broadcasted{<:AbstractQuasiArrayStyle}, i1::Number, I::Number...) = bc[QuasiCartesianIndex(i1, I...)]
+Base.@propagate_inbounds Base.getindex(bc::Broadcasted{<:AbstractQuasiArrayStyle}) = bc[QuasiCartesianIndex()]
 
 @inline Base.checkbounds(bc::Broadcasted{<:AbstractQuasiArrayStyle}, I::Number) =
     Base.checkbounds_indices(Bool, axes(bc), (I,)) || Base.throw_boundserror(bc, (I,))

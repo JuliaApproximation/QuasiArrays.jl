@@ -68,6 +68,7 @@ module QuasiIteratorsMD
     # Allow passing tuples smaller than N
     QuasiCartesianIndex{N}(index...) where {N} = _QuasiCartesianIndex(fill_to_length(index, 1, Val(N)))
     QuasiCartesianIndex{N}() where {N} = _QuasiCartesianIndex(fill_to_length((), 1, Val(N)))
+    QuasiCartesianIndex{N,II}(index...) where {N,II<:NTuple{N,Any}} = _QuasiCartesianIndex(convert(II, index))
     flatten(I::Tuple{}) = I
     flatten(I::Tuple{Any}) = I
     flatten(I::Tuple{<:QuasiCartesianIndex}) = I[1].I
@@ -78,7 +79,7 @@ module QuasiIteratorsMD
     show(io::IO, i::QuasiCartesianIndex) = (print(io, "QuasiCartesianIndex"); show(io, i.I))
 
     Base.convert(::Type{QuasiCartesianIndex{N,II}}, Q::QuasiCartesianIndex) where {N,II<:Tuple} = 
-        QuasiCartesianIndex{N,II}(convert(II, Q.I))
+        QuasiCartesianIndex{N,II}(convert(II, Q.I)...)
 
     # length
     length(::QuasiCartesianIndex{N}) where {N} = N

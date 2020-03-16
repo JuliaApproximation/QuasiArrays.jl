@@ -454,7 +454,7 @@ function _setindex!(::Type{IND}, ::IndexCartesian, A::AbstractQuasiArray{T,N}, v
     @_propagate_inbounds_meta
     setindex!(A, v, I...)
 end
-function _setindex!(::Type{IND}, ::IndexCartesian, A::AbstractQuasiArray, v, I::NTuple{M}) where {M,IND}
+function _setindex!(::Type{IND}, ::IndexCartesian, A::AbstractQuasiArray, v, I::NTuple{M,Any}) where {M,IND}
     @_inline_meta
     @boundscheck checkbounds(A, I...)
     @inbounds r = setindex!(A, v, _to_subscript_indices(IND, A, I...)...)
