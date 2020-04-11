@@ -430,11 +430,6 @@ const CI0 = Union{QuasiCartesianIndex{0}, AbstractArray{QuasiCartesianIndex{0}}}
 getindex(x::Number, i::QuasiCartesianIndex{0}) = x
 getindex(t::Tuple,  i::QuasiCartesianIndex{1}) = getindex(t, i.I[1])
 
-@inline function _getindex(l::IndexStyle, A::AbstractQuasiArray, I::Union{Any, AbstractArray}...)
-    @boundscheck checkbounds(A, I...)
-    return _unsafe_getindex(l, _maybe_reshape(l, A, I...), I...)
-end
-
 @inline index_dimsum(::AbstractQuasiArray{Bool}, I...) = (true, index_dimsum(I...)...)
 @inline function index_dimsum(::AbstractQuasiArray{<:Any,N}, I...) where N
     (ntuple(x->true, Val(N))..., index_dimsum(I...)...)
@@ -449,8 +444,8 @@ _maybe_reshape(::IndexCartesian, A::AbstractQuasiVector, I...) = A
 @inline __maybe_reshape(A::AbstractQuasiArray{T,N}, ::NTuple{N,Any}) where {T,N} = A
 @inline __maybe_reshape(A::AbstractQuasiArray, ::NTuple{N,Any}) where {N} = reshape(A, Val(N))
 
-_unsafe_getindex(::IndexStyle, A::AbstractQuasiArray, I::Vararg{Union{Any, AbstractArray}, N}) where N =
-layout_getindex(A, I...)
+_unsafe_getindex(::Type{IND}, ::IndexStyle, A::AbstractQuasiArray, I::Vararg{Union{Any, AbstractArray}, N}) where {IND,N} =
+    layout_getindex(A, I...)
     
 # Always index with the exactly indices provided.
 @generated function _unsafe_getindex!(dest::Union{AbstractArray,AbstractQuasiArray}, src::AbstractQuasiArray, I::Vararg{Union{Any, AbstractArray}, N}) where N

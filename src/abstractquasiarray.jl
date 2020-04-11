@@ -385,7 +385,8 @@ function unsafe_getindex(A::AbstractQuasiArray, I...)
 end
 
 ## Internal definitions
-_getindex(_, ::IndexStyle, A::AbstractQuasiArray, I) = layout_getindex(A, I...)
+_getindex(_, ::IndexStyle, A::AbstractQuasiArray, I) = 
+    layout_getindex(A, I...)
 
 
 ## IndexCartesian Scalar indexing: Canonical method is full dimensionality of indices
