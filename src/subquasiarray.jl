@@ -248,8 +248,6 @@ compute_stride1(parent::AbstractQuasiArray, I::NTuple{N,Any}) where {N} =
 
 elsize(::Type{<:SubQuasiArray{<:Any,<:Any,P}}) where {P} = elsize(P)
 
-iscontiguous(A::SubQuasiArray) = iscontiguous(typeof(A))
-iscontiguous(::Type{<:SubQuasiArray}) = false
 function first_index(V::SubQuasiArray)
     P, I = parent(V), V.indices
     s1 = compute_stride1(P, I)

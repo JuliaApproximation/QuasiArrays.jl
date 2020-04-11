@@ -435,12 +435,6 @@ function _setindex!(::Type{IND}, A::AbstractQuasiArray, v, I) where IND
     _setindex!(IND, IndexStyle(A), A, v, to_indices(A, I))
 end
 
-function unsafe_setindex!(A::AbstractQuasiArray, v, I...)
-    @_inline_meta
-    @inbounds r = setindex!(A, v, I...)
-    r
-end
-
 error_if_canonical_setindex(::IndexCartesian, A::AbstractQuasiArray{T,N}, I::Tuple) where {T,N} =
     _error_if_canonical_setindex(indextype(A), A, I)
 
