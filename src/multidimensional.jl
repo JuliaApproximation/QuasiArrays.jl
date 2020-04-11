@@ -423,12 +423,7 @@ to_indices(A::AbstractQuasiArray, I::Tuple{Any}) = (@_inline_meta; to_indices(A,
     (to_index(A, I[1]), to_indices(A, indstail, tail(I))...)
 end
 
-# Colons get converted to slices by `uncolon`
-const CI0 = Union{QuasiCartesianIndex{0}, AbstractArray{QuasiCartesianIndex{0}}}
-
-### From abstractarray.jl: Internal multidimensional indexing definitions ###
-getindex(x::Number, i::QuasiCartesianIndex{0}) = x
-getindex(t::Tuple,  i::QuasiCartesianIndex{1}) = getindex(t, i.I[1])
+### From abstractarray.jl: Internal multidimensional indexing definitions ###   
 
 @inline index_dimsum(::AbstractQuasiArray{Bool}, I...) = (true, index_dimsum(I...)...)
 @inline function index_dimsum(::AbstractQuasiArray{<:Any,N}, I...) where N
