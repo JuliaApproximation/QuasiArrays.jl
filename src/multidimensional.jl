@@ -437,35 +437,6 @@ end
 
 Slice(d::AbstractQuasiVector) = Inclusion(d)
 
-
-_maybe_reshape(::IndexLinear, A::AbstractQuasiArray, I...) = A
-_maybe_reshape(::IndexCartesian, A::AbstractQuasiVector, I...) = A
-@inline _maybe_reshape(::IndexCartesian, A::AbstractQuasiArray, I...) = __maybe_reshape(A, index_ndims(I...))
-@inline __maybe_reshape(A::AbstractQuasiArray{T,N}, ::NTuple{N,Any}) where {T,N} = A
-@inline __maybe_reshape(A::AbstractQuasiArray, ::NTuple{N,Any}) where {N} = reshape(A, Val(N))
-
-_unsafe_getindex(::Type{IND}, ::IndexStyle, A::AbstractQuasiArray, I::Vararg{Union{Any, AbstractArray}, N}) where {IND,N} =
-    layout_getindex(A, I...)
-    
-# Always index with the exactly indices provided.
-@generated function _unsafe_getindex!(dest::Union{AbstractArray,AbstractQuasiArray}, src::AbstractQuasiArray, I::Vararg{Union{Any, AbstractArray}, N}) where N
-    quote
-        @_inline_meta
-        D = eachindex(dest)
-        Dy = iterate(D)
-        @inbounds @nloops $N j d->I[d] begin
-            # This condition is never hit, but at the moment
-            # the optimizer is not clever enough to split the union without it
-            Dy === nothing && return dest
-            (idx, state) = Dy
-            dest[idx] = @ncall $N getindex src j
-            Dy = iterate(D, state)
-        end
-        return dest
-    end
-end
-
-
 function fill!(A::AbstractQuasiArray{T}, x) where T
     xT = convert(T, x)
     for I in eachindex(A)
