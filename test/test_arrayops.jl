@@ -88,4 +88,9 @@ using QuasiArrays, Test
         @test X[Y[end],0.0] == 5
         @test X[end,Y[end]] == 11
     end
+
+    @testset "fill" begin
+        a = QuasiArray(fill(1.,2,2),(0:0.5:0.5,1:0.5:1.5))
+        @test fill!(similar(a), 1.0) == a
+    end
 end

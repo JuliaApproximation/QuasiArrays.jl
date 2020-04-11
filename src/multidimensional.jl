@@ -423,17 +423,7 @@ to_indices(A::AbstractQuasiArray, I::Tuple{Any}) = (@_inline_meta; to_indices(A,
     (to_index(A, I[1]), to_indices(A, indstail, tail(I))...)
 end
 
-# Colons get converted to slices by `uncolon`
-const CI0 = Union{QuasiCartesianIndex{0}, AbstractArray{QuasiCartesianIndex{0}}}
-
-### From abstractarray.jl: Internal multidimensional indexing definitions ###
-getindex(x::Number, i::QuasiCartesianIndex{0}) = x
-getindex(t::Tuple,  i::QuasiCartesianIndex{1}) = getindex(t, i.I[1])
-
-@inline function _getindex(l::IndexStyle, A::AbstractQuasiArray, I::Union{Any, AbstractArray}...)
-    @boundscheck checkbounds(A, I...)
-    return _unsafe_getindex(l, _maybe_reshape(l, A, I...), I...)
-end
+### From abstractarray.jl: Internal multidimensional indexing definitions ###   
 
 @inline index_dimsum(::AbstractQuasiArray{Bool}, I...) = (true, index_dimsum(I...)...)
 @inline function index_dimsum(::AbstractQuasiArray{<:Any,N}, I...) where N
@@ -441,35 +431,6 @@ end
 end
 
 Slice(d::AbstractQuasiVector) = Inclusion(d)
-
-
-_maybe_reshape(::IndexLinear, A::AbstractQuasiArray, I...) = A
-_maybe_reshape(::IndexCartesian, A::AbstractQuasiVector, I...) = A
-@inline _maybe_reshape(::IndexCartesian, A::AbstractQuasiArray, I...) = __maybe_reshape(A, index_ndims(I...))
-@inline __maybe_reshape(A::AbstractQuasiArray{T,N}, ::NTuple{N,Any}) where {T,N} = A
-@inline __maybe_reshape(A::AbstractQuasiArray, ::NTuple{N,Any}) where {N} = reshape(A, Val(N))
-
-_unsafe_getindex(::IndexStyle, A::AbstractQuasiArray, I::Vararg{Union{Any, AbstractArray}, N}) where N =
-    lazy_getindex(A, I...)
-    
-# Always index with the exactly indices provided.
-@generated function _unsafe_getindex!(dest::Union{AbstractArray,AbstractQuasiArray}, src::AbstractQuasiArray, I::Vararg{Union{Any, AbstractArray}, N}) where N
-    quote
-        @_inline_meta
-        D = eachindex(dest)
-        Dy = iterate(D)
-        @inbounds @nloops $N j d->I[d] begin
-            # This condition is never hit, but at the moment
-            # the optimizer is not clever enough to split the union without it
-            Dy === nothing && return dest
-            (idx, state) = Dy
-            dest[idx] = @ncall $N getindex src j
-            Dy = iterate(D, state)
-        end
-        return dest
-    end
-end
-
 
 function fill!(A::AbstractQuasiArray{T}, x) where T
     xT = convert(T, x)

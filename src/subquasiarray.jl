@@ -220,50 +220,20 @@ end
 
 # In general, we simply re-index the parent indices by the provided ones
 SlowSubQuasiArray{T,N,P,I} = SubQuasiArray{T,N,P,I,false}
-function getindex(V::SlowSubQuasiArray{T,N}, I::Vararg{Number,N}) where {T,N}
+function _getindex(::Type{IND}, V::SlowSubQuasiArray, I::IND) where IND
     @_inline_meta
     @boundscheck checkbounds(V, I...)
     @inbounds r = V.parent[reindex(V.indices, I)...]
     r
 end
 
-FastSubQuasiArray{T,N,P,I} = SubQuasiArray{T,N,P,I,true}
-function getindex(V::FastSubQuasiArray, i::Number)
-    @_inline_meta
-    @boundscheck checkbounds(V, i)
-    @inbounds r = V.parent[V.offset1 + V.stride1*i]
-    r
-end
-# We can avoid a multiplication if the first parent index is a Colon or AbstractUnitRange
-FastContiguousSubQuasiArray{T,N,P,I<:Tuple{Union{Slice, AbstractUnitRange}, Vararg{Any}}} = SubQuasiArray{T,N,P,I,true}
-function getindex(V::FastContiguousSubQuasiArray, i::Number)
-    @_inline_meta
-    @boundscheck checkbounds(V, i)
-    @inbounds r = V.parent[V.offset1 + i]
-    r
-end
-
-function setindex!(V::SlowSubQuasiArray{T,N}, x, I::Vararg{Number,N}) where {T,N}
+function _setindex!(::Type{IND}, V::SlowSubQuasiArray, x, I::IND) where IND
     @_inline_meta
     @boundscheck checkbounds(V, I...)
     @inbounds V.parent[reindex(V.indices, I)...] = x
     V
 end
 
-function setindex!(V::FastSubQuasiArray, x, i::Number)
-    @_inline_meta
-    @boundscheck checkbounds(V, i)
-    @inbounds V.parent[V.offset1 + V.stride1*i] = x
-    V
-end
-function setindex!(V::FastContiguousSubQuasiArray, x, i::Number)
-    @_inline_meta
-    @boundscheck checkbounds(V, i)
-    @inbounds V.parent[V.offset1 + i] = x
-    V
-end
-
-IndexStyle(::Type{<:FastSubQuasiArray}) = IndexLinear()
 IndexStyle(::Type{<:SubQuasiArray}) = IndexCartesian()
 
 # Strides are the distance in memory between adjacent elements in a given dimension
@@ -278,11 +248,6 @@ compute_stride1(parent::AbstractQuasiArray, I::NTuple{N,Any}) where {N} =
 
 elsize(::Type{<:SubQuasiArray{<:Any,<:Any,P}}) where {P} = elsize(P)
 
-iscontiguous(A::SubQuasiArray) = iscontiguous(typeof(A))
-iscontiguous(::Type{<:SubQuasiArray}) = false
-iscontiguous(::Type{<:FastContiguousSubQuasiArray}) = true
-
-first_index(V::FastSubQuasiArray) = V.offset1 + V.stride1 # cached for fast linear SubQuasiArrays
 function first_index(V::SubQuasiArray)
     P, I = parent(V), V.indices
     s1 = compute_stride1(P, I)
@@ -325,8 +290,6 @@ find_extended_inds() = ()
 unsafe_convert(::Type{Ptr{T}}, V::SubQuasiArray{T,N,P,<:Tuple{Vararg{RangeIndex}}}) where {T,N,P} =
     unsafe_convert(Ptr{T}, V.parent) + (first_index(V)-1)*sizeof(T)
 
-pointer(V::FastSubQuasiArray, i::Int) = pointer(V.parent, V.offset1 + V.stride1*i)
-pointer(V::FastContiguousSubQuasiArray, i::Int) = pointer(V.parent, V.offset1 + i)
 pointer(V::SubQuasiArray, i::Int) = _pointer(V, i)
 _pointer(V::SubQuasiArray{<:Any,1}, i::Int) = pointer(V, (i,))
 _pointer(V::SubQuasiArray, i::Int) = pointer(V, Base._ind2sub(axes(V), i))
