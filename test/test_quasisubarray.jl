@@ -33,6 +33,22 @@ using QuasiArrays, Test
         @test axes(sA) === (Base.OneTo(2), Base.OneTo(2), Base.OneTo(2))
     end
 
+    @testset "FastSubQuasiArray" begin
+        a = QuasiArray(randn(5), (1:0.5:3,))
+        v = view(a, Inclusion(1.5:0.5:2))
+        @test axes(v) == (Inclusion(1.5:0.5:2),)
+        @test v[1.5] == a[1.5]
+        @test_throws BoundsError v[1]
+        v[1.5] = 3
+        @test a[1.5] === 3.0
+
+        a = QuasiArray(randn(2), ([[1,2],[3,4]],))
+        v = view(a, Inclusion([[1,2],[3,4]]))
+        @test v[[1,2]] == a[[1,2]]
+        v[[1,2]] = 3
+        @test a[[1,2]] == 3.0
+    end
+
     # @testset "logical indexing #4763" begin
     #     A = view(QuasiVector(1:5,range(0,2;length=5)), 0.5:0.5:1.5)
     #     A[Inclusion(0.5:0.5:1.0)]

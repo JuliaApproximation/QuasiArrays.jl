@@ -427,12 +427,14 @@ _to_subscript_indices(A::AbstractQuasiArray{T,N}, I::Vararg{Any,N}) where {T,N} 
 ## Setindex! is defined similarly. We first dispatch to an internal _setindex!
 # function that allows dispatch on array storage
 
+setindex!(A::AbstractQuasiArray, v, I...) = _setindex!(indextype(A), A, v, I)
 
-function setindex!(A::AbstractQuasiArray, v, I...)
+function _setindex!(::Type{IND}, A::AbstractQuasiArray, v, I) where IND
     @_propagate_inbounds_meta
     error_if_canonical_setindex(IndexStyle(A), A, I)
-    _setindex!(indextype(A), IndexStyle(A), A, v, to_indices(A, I))
+    _setindex!(IND, IndexStyle(A), A, v, to_indices(A, I))
 end
+
 function unsafe_setindex!(A::AbstractQuasiArray, v, I...)
     @_inline_meta
     @inbounds r = setindex!(A, v, I...)

@@ -49,12 +49,12 @@ _inclusion(d) = Inclusion(d)
 axes(A::QuasiArray) = _inclusion.(A.axes)
 parent(A::QuasiArray) = A.parent
 
-@propagate_inbounds @inline function _getindex(::Type{IND}, A::QuasiArray{<:Any,N}, I::IND) where {N,IND}
+@propagate_inbounds @inline function _getindex(::Type{IND}, A::QuasiArray, I::IND) where IND
     @boundscheck checkbounds(A, I...)
     A.parent[findfirst.(isequal.(I), A.axes)...]
 end
 
-@propagate_inbounds @inline function setindex!(A::QuasiArray{<:Any,N}, v, I::Vararg{Number,N}) where N
+@propagate_inbounds @inline function _setindex!(::Type{IND}, A::QuasiArray, v, I::IND) where IND
     @boundscheck checkbounds(A, I...)
     @inbounds A.parent[findfirst.(isequal.(I), A.axes)...] = v
     A
