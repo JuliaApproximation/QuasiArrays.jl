@@ -76,6 +76,9 @@ copy(A::ApplyQuasiArray) = copy(Applied(A))
 @propagate_inbounds getindex(A::ApplyQuasiArray{T,N}, kj::Vararg{Number,N}) where {T,N} =
     Applied(A)[kj...]
 
+@propagate_inbounds getindex(A::ApplyQuasiArray{T,N}, kj::QuasiCartesianIndex{N}) where {T,N} =
+    A[kj.I...]
+
 MemoryLayout(M::Type{ApplyQuasiArray{T,N,F,Args}}) where {T,N,F,Args} = 
     applylayout(F, tuple_type_memorylayouts(Args)...)
 
@@ -129,6 +132,8 @@ size(A::BroadcastQuasiArray) = map(length, axes(A))
 IndexStyle(::BroadcastQuasiArray{<:Any,1}) = IndexLinear()
 
 @propagate_inbounds getindex(A::BroadcastQuasiArray, kj::Number...) = Broadcasted(A)[kj...]
+@propagate_inbounds getindex(A::BroadcastQuasiArray{T,N}, kj::QuasiCartesianIndex{N}) where {T,N} =
+    A[kj.I...]
 
 
 @propagate_inbounds _broadcast_getindex_range(A::Union{Ref,AbstractQuasiArray{<:Any,0},Number}, I) = A[] # Scalar-likes can just ignore all indices

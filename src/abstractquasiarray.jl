@@ -400,6 +400,9 @@ end
 error_if_canonical_getindex(::IndexCartesian, A::AbstractQuasiArray{T,N}, I::Tuple) where {T,N} =
     _error_if_canonical_getindex(indextype(A), A, I)
 
+error_if_canonical_getindex(::IndexLinear, A::AbstractQuasiArray{T,N}, I::Tuple) where {T,N} =
+    _error_if_canonical_getindex(indextype(A), A, I)
+
 _error_if_canonical_getindex(::Type{IND}, A::AbstractQuasiArray{T,N}, I::IND) where {T,N,IND} =
     error("getindex not defined for ", typeof(A))
 
@@ -437,6 +440,9 @@ end
 
 error_if_canonical_setindex(::IndexCartesian, A::AbstractQuasiArray{T,N}, I::Tuple) where {T,N} =
     _error_if_canonical_setindex(indextype(A), A, I)
+
+error_if_canonical_setindex(::IndexLinear, A::AbstractQuasiArray{T,N}, I::Tuple) where {T,N} =
+    _error_if_canonical_setindex(indextype(A), A, I)    
 
 _error_if_canonical_setindex(::Type{IND}, A::AbstractQuasiArray{T,N}, I::IND) where {T,N,IND} =
     error("setindex! not defined for ", typeof(A))

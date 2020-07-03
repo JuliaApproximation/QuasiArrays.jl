@@ -137,6 +137,11 @@ import QuasiArrays: QuasiCartesianIndex, QuasiCartesianIndices, DefaultQuasiArra
 
         @test sum(B) ≈ sum(exp, A)
         @test sum(C) ≈ sum(A .+ 2)
+
+        @testset "index bugs (ContinuumArrays #53)" begin
+            x = Inclusion([0.0,2.0])
+            @test BroadcastQuasiArray(exp,x)[QuasiCartesianIndex(2.0)] == exp(2.0)
+        end
     end
 
     @testset "SubQuasi Broadcast" begin
