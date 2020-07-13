@@ -121,6 +121,7 @@ to_indices(A::AbstractQuasiArray, inds, I::Tuple{Any,Vararg{Any}}) =
 LinearIndices(A::AbstractQuasiArray) = LinearIndices(axes(A))
 
 
+abstract type AbstractInclusion{T} <: AbstractQuasiVector{T} end
 
 """
    Inclusion(domain)
@@ -132,7 +133,7 @@ as an AbstractQuasiVector. That is, if `v = Inclusion(domain)`, then
 Inclusions are useful for turning domains into axes. They also serve the same
 role as `Slice` does for offset arrays.
 """
-struct Inclusion{T,AX} <: AbstractQuasiVector{T}
+struct Inclusion{T,AX} <: AbstractInclusion{T}
     domain::AX
 end
 Inclusion{T}(domain) where T = Inclusion{T,typeof(domain)}(domain)
@@ -160,14 +161,14 @@ AbstractVector{T}(d::Inclusion{<:Any,<:AbstractVector}) where T = convert(Abstra
 AbstractArray{T}(d::Inclusion{<:Any,<:AbstractVector}) where T =  convert(AbstractArray{T},d.domain)
 
 
-copy(d::Inclusion) = d
+copy(d::AbstractInclusion) = d
 
 ==(A::Inclusion, B::Inclusion) = A.domain == B.domain
 domain(A::Inclusion) = A.domain
 domain(A::AbstractUnitRange) = A
-axes(S::Inclusion) = (S,)
-unsafe_indices(S::Inclusion) = (S,)
-axes1(S::Inclusion) = S
+axes(S::AbstractInclusion) = (S,)
+unsafe_indices(S::AbstractInclusion) = (S,)
+axes1(S::AbstractInclusion) = S
 axes(S::Inclusion{<:Any,<:OneTo}) = (S.domain,)
 unsafe_indices(S::Inclusion{<:Any,<:OneTo}) = (S.domain,)
 axes1(S::Inclusion{<:Any,<:OneTo}) = S.domain
@@ -178,22 +179,22 @@ size(S::Inclusion) = (cardinality(S.domain),)
 length(S::Inclusion) = cardinality(S.domain)
 unsafe_length(S::Inclusion) = cardinality(S.domain)
 cardinality(S::Inclusion) = cardinality(S.domain)
-getindex(S::Inclusion{T}, i::T) where T =
+getindex(S::AbstractInclusion{T}, i::T) where T =
     (@_inline_meta; @boundscheck checkbounds(S, i); convert(T,i))
-getindex(S::Inclusion{T}, i::AbstractVector{T}) where T =
+getindex(S::AbstractInclusion{T}, i::AbstractVector{T}) where T =
     (@_inline_meta; @boundscheck checkbounds(S, i); convert(AbstractVector{T},i))
-getindex(S::Inclusion, i::Inclusion) =
+getindex(S::AbstractInclusion, i::AbstractInclusion) =
     (@_inline_meta; @boundscheck checkbounds(S, i); copy(S))
-getindex(S::Inclusion, ::Colon) = copy(S)
+getindex(S::AbstractInclusion, ::Colon) = copy(S)
 show(io::IO, r::Inclusion) = print(io, "Inclusion(", r.domain, ")")
 iterate(S::Inclusion, s...) = iterate(S.domain, s...)
 
 in(x, S::Inclusion) = x in S.domain
 
-checkindex(::Type{Bool}, inds::Inclusion, i) = i ∈ inds.domain
-checkindex(::Type{Bool}, inds::Inclusion, ::Colon) = true
-checkindex(::Type{Bool}, inds::Inclusion, ::Inclusion) = true
-function __checkindex(::Type{Bool}, inds::Inclusion, I::AbstractArray)
+checkindex(::Type{Bool}, inds::AbstractInclusion, i) = i ∈ inds
+checkindex(::Type{Bool}, inds::AbstractInclusion, ::Colon) = true
+checkindex(::Type{Bool}, inds::AbstractInclusion, ::AbstractInclusion) = true
+function __checkindex(::Type{Bool}, inds::AbstractInclusion, I::AbstractArray)
     @_inline_meta
     b = true
     for i in I
@@ -202,16 +203,9 @@ function __checkindex(::Type{Bool}, inds::Inclusion, I::AbstractArray)
     b
 end
 
-checkindex(::Type{Bool}, inds::Inclusion{T}, I::AbstractArray{T}) where T = 
+checkindex(::Type{Bool}, inds::AbstractInclusion{T}, I::AbstractArray{T}) where T = 
     __checkindex(Bool, inds, I)
-checkindex(::Type{Bool}, inds::Inclusion{T}, I::AbstractArray{T}) where T<:AbstractArray = 
+checkindex(::Type{Bool}, inds::AbstractInclusion{T}, I::AbstractArray{T}) where T<:AbstractArray = 
     __checkindex(Bool, inds, I)
-checkindex(::Type{Bool}, inds::Inclusion{T}, I::AbstractArray{<:AbstractArray}) where T<:AbstractArray = 
+checkindex(::Type{Bool}, inds::AbstractInclusion{T}, I::AbstractArray{<:AbstractArray}) where T<:AbstractArray = 
     __checkindex(Bool, inds, convert(AbstractArray{T}, I))
-
-function checkindex(::Type{Bool}, inds::Inclusion{T}, r::AbstractRange) where T
-    @_propagate_inbounds_meta
-    isempty(r) | (checkindex(Bool, inds, convert(T, first(r))) & checkindex(Bool, inds, last(r)))
-end
-checkindex(::Type{Bool}, indx::Inclusion, I::AbstractVector{Bool}) = indx == axes1(I)
-checkindex(::Type{Bool}, indx::Inclusion, I::AbstractArray{Bool}) = false

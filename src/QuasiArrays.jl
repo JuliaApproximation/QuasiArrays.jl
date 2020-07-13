@@ -24,6 +24,7 @@ import Base: exp, log, sqrt,
           acos, asin, atan, acsc, asec, acot,
           acosh, asinh, atanh, acsch, asech, acoth
 import Base: Array, Matrix, Vector
+import Base: union, intersect
 
 import Base.Broadcast: materialize, materialize!, BroadcastStyle, AbstractArrayStyle, Style, broadcasted, Broadcasted, Unknown,
                         newindex, broadcastable, preprocess, _eachindex, _broadcast_getindex,
@@ -48,7 +49,7 @@ export AbstractQuasiArray, AbstractQuasiMatrix, AbstractQuasiVector, materialize
        QuasiArray, QuasiMatrix, QuasiVector, QuasiDiagonal, Inclusion,
        QuasiAdjoint, QuasiTranspose, ApplyQuasiArray, ApplyQuasiMatrix, ApplyQuasiVector,
        BroadcastQuasiArray, BroadcastQuasiMatrix, BroadcastQuasiVector, indextype,
-       QuasiKron
+       QuasiKron, UnionVcat
 
 if VERSION < v"1.3-"
     """
