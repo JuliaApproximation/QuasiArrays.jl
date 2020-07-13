@@ -47,7 +47,8 @@ import Base.IteratorsMD
 export AbstractQuasiArray, AbstractQuasiMatrix, AbstractQuasiVector, materialize,
        QuasiArray, QuasiMatrix, QuasiVector, QuasiDiagonal, Inclusion,
        QuasiAdjoint, QuasiTranspose, ApplyQuasiArray, ApplyQuasiMatrix, ApplyQuasiVector,
-       BroadcastQuasiArray, BroadcastQuasiMatrix, BroadcastQuasiVector, indextype
+       BroadcastQuasiArray, BroadcastQuasiMatrix, BroadcastQuasiVector, indextype,
+       QuasiKron
 
 if VERSION < v"1.3-"
     """
@@ -102,6 +103,8 @@ include("inv.jl")
 include("quasiadjtrans.jl")
 include("quasidiagonal.jl")
 include("dense.jl")
+
+include("quasikron.jl")
 
 promote_leaf_eltypes(x::AbstractQuasiArray{T}) where {T<:Number} = T
 promote_leaf_eltypes(x::AbstractQuasiArray) = mapreduce(promote_leaf_eltypes, promote_type, x; init=Bool)
