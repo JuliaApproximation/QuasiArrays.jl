@@ -1,12 +1,8 @@
 
-ApplyStyle(::typeof(\), ::Type{A}, ::Type{B}) where {A<:AbstractQuasiArray,B<:AbstractQuasiArray} = 
-    quasildivapplystyle(MemoryLayout(A), MemoryLayout(B))
-ApplyStyle(::typeof(\), ::Type{A}, ::Type{B}) where {A<:AbstractQuasiArray,B<:AbstractArray} = 
-    quasildivapplystyle(MemoryLayout(A), MemoryLayout(B))
-ApplyStyle(::typeof(\), ::Type{A}, ::Type{B}) where {A<:AbstractArray,B<:AbstractQuasiArray} = 
-    quasildivapplystyle(MemoryLayout(A), MemoryLayout(B))
+ApplyStyle(::typeof(\), ::Type{<:AbstractQuasiArray}, ::Type{<:AbstractQuasiArray}) = LdivStyle()
+ApplyStyle(::typeof(\), ::Type{<:AbstractArray}, ::Type{<:AbstractQuasiArray}) = LdivStyle()
+ApplyStyle(::typeof(\), ::Type{<:AbstractQuasiArray}, ::Type{<:AbstractArray}) = LdivStyle()
 
-quasildivapplystyle(_, _) = LdivApplyStyle()
 
 similar(L::Ldiv, ::Type{T}, axes::Tuple{<:AbstractQuasiVector,<:AbstractQuasiVector}) where T = similar(QuasiArray{T}, axes)
 similar(L::Ldiv, ::Type{T}, axes::Tuple{<:AbstractQuasiVector,<:AbstractVector}) where T = similar(QuasiArray{T}, axes)

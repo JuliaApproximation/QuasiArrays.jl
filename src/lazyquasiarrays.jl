@@ -146,14 +146,6 @@ MemoryLayout(M::Type{BroadcastQuasiArray{T,N,F,Args}}) where {T,N,F,Args} =
 # *
 ###
 
-combine_mul_styles(::QuasiLazyLayout) = LazyQuasiArrayApplyStyle()
-result_mul_style(::LazyQuasiArrayApplyStyle, ::LazyQuasiArrayApplyStyle) = LazyQuasiArrayApplyStyle()
-result_mul_style(::LazyQuasiArrayApplyStyle, ::MulAddStyle) = LazyQuasiArrayApplyStyle()
-result_mul_style(::MulAddStyle, ::LazyQuasiArrayApplyStyle) = LazyQuasiArrayApplyStyle()
-result_mul_style(::LazyQuasiArrayApplyStyle, ::LazyArrayApplyStyle) = LazyQuasiArrayApplyStyle()
-result_mul_style(::LazyArrayApplyStyle, ::LazyQuasiArrayApplyStyle) = LazyQuasiArrayApplyStyle()
-result_mul_style(::LazyQuasiArrayApplyStyle, _) = LazyQuasiArrayApplyStyle()
-result_mul_style(_, ::LazyQuasiArrayApplyStyle) = LazyQuasiArrayApplyStyle()
 
 ndims(M::Applied{LazyQuasiArrayApplyStyle,typeof(*)}) = ndims(last(M.args))
 
@@ -163,6 +155,9 @@ call(::ApplyLayout{typeof(*)}, V::SubQuasiArray) = *
 arguments(a::AbstractQuasiArray) = arguments(MemoryLayout(typeof(a)), a)
 arguments(::ApplyLayout{typeof(*)}, V::SubQuasiArray{<:Any,2}) = _mat_mul_arguments(V)
 arguments(::ApplyLayout{typeof(*)}, V::SubQuasiArray{<:Any,1}) = _vec_mul_arguments(V)
+
+ApplyQuasiArray(M::Mul) = ApplyQuasiArray(*, M.A, M.B)
+QuasiArray(M::Mul) = QuasiArray(ApplyQuasiArray(M))
 
 
 ###
