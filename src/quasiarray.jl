@@ -61,3 +61,11 @@ end
 end
 
 convert(::Type{T}, a::AbstractQuasiArray) where {T<:QuasiArray} = a isa T ? a : T(a)
+
+function _quasimatrix_pow(A, p)
+    axes(A,1) == axes(A,2) || throw(DimensionMismatch("axes must match"))
+    QuasiArray(A.parent^p, A.axes)
+end
+
+^(A::QuasiMatrix, p::Number) = _quasimatrix_pow(A, p)
+^(A::QuasiMatrix, p::Integer) = _quasimatrix_pow(A, p)
