@@ -21,7 +21,7 @@ import QuasiArrays: apply
         @test A*B isa QuasiArray
         @test QuasiArray(A*B) == QuasiArray(A.parent*B,A.axes)
         @test B*A' isa QuasiArray
-        (A*B)[0.5,1]
+        @test (A*B)[0.5,1] ≈ (Array(A)*B)[2,1]
     end
 
     @testset "Triple" begin

@@ -13,23 +13,15 @@ ApplyStyle(::typeof(*), ::Type{<:AbstractArray}, ::Type{<:AbstractQuasiArray}) =
 ApplyStyle(::typeof(*), ::Type{<:AbstractQuasiArray}, ::Type{<:AbstractArray}) = MulStyle()
 ApplyStyle(::typeof(*), ::Type{<:AbstractQuasiArray}, ::Type{<:AbstractQuasiArray}) = MulStyle()
 
-function getindex(M::Mul{<:Any,<:Any,<:Any,<:AbstractQuasiVector}, k::Number)
-    A,B = M.A, M.B
-    ret = zero(eltype(M))
-    for j = rowsupport(A, k) ∩ colsupport(B,1)
-        ret += A[k,j] * B[j]
-    end
-    ret
-end
+getindex(M::Mul{<:Any,<:Any,<:Any,<:AbstractQuasiVector}, k::Number) = 
+    ArrayLayouts._mul_getindex(M, k)
+getindex(M::Mul{<:Any,<:Any,<:Any,<:AbstractQuasiMatrix}, k::Number, j::Number) =
+    ArrayLayouts._mul_getindex(M, k, j)
+getindex(M::Mul{<:Any,<:Any,<:AbstractQuasiMatrix,<:AbstractVector}, k::Number) = 
+    ArrayLayouts._mul_getindex(M, k)
+getindex(M::Mul{<:Any,<:Any,<:AbstractQuasiMatrix,<:AbstractMatrix}, k::Number, j::Integer) =
+    ArrayLayouts._mul_getindex(M, k, j)    
 
-function _mul_quasi_getindex(M::Mul{<:Any,<:Any,<:Any,<:AbstractQuasiMatrix}, k::Number, j::Number)
-    A,B = M.A, M.B
-    ret = zero(eltype(M))
-    @inbounds for ℓ in (rowsupport(A,k) ∩ colsupport(B,j))
-        ret += A[k,ℓ] * B[ℓ,j]
-    end
-    ret
-end
 
 function getindex(M::Applied{<:AbstractQuasiArrayApplyStyle,typeof(*)}, k::Number)
     A,Bs = first(M.args), tail(M.args)
@@ -43,7 +35,7 @@ getindex(M::Applied{<:AbstractQuasiArrayApplyStyle,typeof(*)}, k::Int) =
 function _mul_quasi_getindex(M::Applied{<:AbstractQuasiArrayApplyStyle,typeof(*)}, k::Number, j::Number)
     A,Bs = first(M.args), tail(M.args)
     B = _mul(Bs...)
-    _mul_quasi_getindex(Mul(A, B), k, j)
+    Mul(A, B)[k, j]
 end
 
 getindex(M::Applied{<:AbstractQuasiArrayApplyStyle,typeof(*)}, k::Number, j::Number) =
@@ -51,12 +43,6 @@ getindex(M::Applied{<:AbstractQuasiArrayApplyStyle,typeof(*)}, k::Number, j::Num
 
 getindex(M::Applied{<:AbstractQuasiArrayApplyStyle,typeof(*)}, k::Integer, j::Integer) =
     _mul_quasi_getindex(M, k, j)
-
-getindex(M::Mul{<:Any,<:Any,<:Any,<:AbstractQuasiMatrix}, k::Number, j::Number) =
-    _mul_quasi_getindex(M, k, j)
-
-getindex(M::Mul{<:Any,<:Any,<:Any,<:AbstractQuasiMatrix}, k::Integer, j::Integer) =
-    _mul_quasi_getindex(M, k, j)    
 
 
 function getindex(M::QuasiMatMulVec, k::AbstractArray)
@@ -194,6 +180,10 @@ getindex(A::MulQuasiMatrix, k::AbstractVector{<:Number}, j::AbstractVector{<:Num
 struct QuasiArrayLayout <: MemoryLayout end
 MemoryLayout(::Type{<:AbstractQuasiArray}) = QuasiArrayLayout()
 copy(M::Mul{QuasiArrayLayout,QuasiArrayLayout}) = QuasiArray(M)
+copy(M::Mul{QuasiArrayLayout}) = QuasiArray(M)
+copy(M::Mul{<:Any,QuasiArrayLayout}) = QuasiArray(M)
+copy(M::Mul{<:AbstractLazyLayout,QuasiArrayLayout}) = ApplyQuasiArray(M)
+copy(M::Mul{QuasiArrayLayout,<:AbstractLazyLayout}) = ApplyQuasiArray(M)
 
 
 ####
