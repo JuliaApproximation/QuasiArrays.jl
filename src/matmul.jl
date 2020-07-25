@@ -8,19 +8,24 @@ const QuasiMatMulVec{T, V} = QuasiArrayMulArray{2, 1, T, V}
 const QuasiMatMulMat{T, V} = QuasiArrayMulArray{2, 2, T, V}
 const QuasiMatMulQuasiMat{T, V} = QuasiArrayMulQuasiArray{2, 2, T, V}
 
+combine_mul_styles(::MulStyle, ::QuasiArrayApplyStyle) = QuasiArrayApplyStyle()
+combine_mul_styles(::QuasiArrayApplyStyle, ::MulStyle) = QuasiArrayApplyStyle()
+combine_mul_styles(::DefaultArrayApplyStyle, ::QuasiArrayApplyStyle) = QuasiArrayApplyStyle()
+combine_mul_styles(::QuasiArrayApplyStyle, ::DefaultArrayApplyStyle) = QuasiArrayApplyStyle()
 
+ApplyStyle(::typeof(*), ::Type{<:AbstractQuasiArray}) = QuasiArrayApplyStyle()
 ApplyStyle(::typeof(*), ::Type{<:AbstractArray}, ::Type{<:AbstractQuasiArray}) = MulStyle()
 ApplyStyle(::typeof(*), ::Type{<:AbstractQuasiArray}, ::Type{<:AbstractArray}) = MulStyle()
 ApplyStyle(::typeof(*), ::Type{<:AbstractQuasiArray}, ::Type{<:AbstractQuasiArray}) = MulStyle()
 
-getindex(M::Mul{<:Any,<:Any,<:Any,<:AbstractQuasiVector}, k::Number) = 
+getindex(M::Mul{<:Any,<:Any,<:Any,<:AbstractQuasiVector}, k::Number) =
     ArrayLayouts._mul_getindex(M, k)
 getindex(M::Mul{<:Any,<:Any,<:Any,<:AbstractQuasiMatrix}, k::Number, j::Number) =
     ArrayLayouts._mul_getindex(M, k, j)
-getindex(M::Mul{<:Any,<:Any,<:AbstractQuasiMatrix,<:AbstractVector}, k::Number) = 
+getindex(M::Mul{<:Any,<:Any,<:AbstractQuasiMatrix,<:AbstractVector}, k::Number) =
     ArrayLayouts._mul_getindex(M, k)
 getindex(M::Mul{<:Any,<:Any,<:AbstractQuasiMatrix,<:AbstractMatrix}, k::Number, j::Integer) =
-    ArrayLayouts._mul_getindex(M, k, j)    
+    ArrayLayouts._mul_getindex(M, k, j)
 
 
 function getindex(M::Applied{<:AbstractQuasiArrayApplyStyle,typeof(*)}, k::Number)
@@ -179,11 +184,17 @@ getindex(A::MulQuasiMatrix, k::AbstractVector{<:Number}, j::AbstractVector{<:Num
 
 struct QuasiArrayLayout <: MemoryLayout end
 MemoryLayout(::Type{<:AbstractQuasiArray}) = QuasiArrayLayout()
+
+copy(M::Mul{QuasiLazyLayout,QuasiLazyLayout}) = ApplyQuasiArray(M)
+copy(M::Mul{QuasiLazyLayout}) = ApplyQuasiArray(M)
+copy(M::Mul{<:Any,QuasiLazyLayout}) = ApplyQuasiArray(M)
 copy(M::Mul{QuasiArrayLayout,QuasiArrayLayout}) = QuasiArray(M)
 copy(M::Mul{QuasiArrayLayout}) = QuasiArray(M)
 copy(M::Mul{<:Any,QuasiArrayLayout}) = QuasiArray(M)
 copy(M::Mul{<:AbstractLazyLayout,QuasiArrayLayout}) = ApplyQuasiArray(M)
 copy(M::Mul{QuasiArrayLayout,<:AbstractLazyLayout}) = ApplyQuasiArray(M)
+copy(M::Mul{QuasiLazyLayout,QuasiArrayLayout}) = ApplyQuasiArray(M)
+copy(M::Mul{QuasiArrayLayout,QuasiLazyLayout}) = ApplyQuasiArray(M)
 
 
 ####

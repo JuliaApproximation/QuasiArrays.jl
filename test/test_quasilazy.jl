@@ -1,5 +1,6 @@
-using QuasiArrays, LazyArrays, Test
-import QuasiArrays: MemoryLayout, QuasiLazyLayout, ApplyStyle, LazyQuasiArrayApplyStyle, LazyQuasiMatrix
+using QuasiArrays, LazyArrays, ArrayLayouts, Test
+import QuasiArrays: QuasiLazyLayout, QuasiArrayApplyStyle, LazyQuasiMatrix
+import LazyArrays: MulStyle, ApplyStyle
 
 struct MyQuasiLazyMatrix <: LazyQuasiMatrix{Float64}
     A::QuasiArray
@@ -13,11 +14,12 @@ Base.getindex(A::MyQuasiLazyMatrix, x::Float64, y::Float64) = A.A[x,y]
         A = MyQuasiLazyMatrix(QuasiArray(rand(3,3),(0:0.5:1,0:0.5:1)))
         B = QuasiArray(rand(3,3),(0:0.5:1,0:0.5:1))
         C = BroadcastQuasiArray(exp, B)
+        
         @test MemoryLayout(A) isa QuasiLazyLayout
-        @test ApplyStyle(*, typeof(A), typeof(A)) isa LazyQuasiArrayApplyStyle
-        @test ApplyStyle(*, typeof(A), typeof(B)) isa LazyQuasiArrayApplyStyle
-        @test ApplyStyle(*, typeof(A), typeof(B), typeof(B)) isa LazyQuasiArrayApplyStyle
-        @test ApplyStyle(*, typeof(A), typeof(B), typeof(C)) isa LazyQuasiArrayApplyStyle
+        @test ApplyStyle(*, typeof(A), typeof(A)) isa MulStyle
+        @test ApplyStyle(*, typeof(A), typeof(B)) isa MulStyle
+        @test ApplyStyle(*, typeof(A), typeof(B), typeof(B)) isa QuasiArrayApplyStyle
+        @test ApplyStyle(*, typeof(A), typeof(B), typeof(C)) isa QuasiArrayApplyStyle
 
         @test A*A isa ApplyQuasiArray
         @test A*B isa ApplyQuasiArray
@@ -25,7 +27,7 @@ Base.getindex(A::MyQuasiLazyMatrix, x::Float64, y::Float64) = A.A[x,y]
 
         @test A*A == A.A*A
         @test A*B == A.A*B
-        @test A*B*C == A.A*B*C
+        @test A*B*C ≈ A.A*B*C
     end
     @testset "^" begin
         A = QuasiArray(rand(3,3),(0:0.5:1,0:0.5:1))

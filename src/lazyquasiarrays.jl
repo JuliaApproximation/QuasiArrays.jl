@@ -24,6 +24,7 @@ struct QuasiLazyLayout <: AbstractLazyLayout end
 MemoryLayout(::Type{<:LazyQuasiArray}) = QuasiLazyLayout()
 
 
+
 ###
 # ApplyQuasiArray
 ###
