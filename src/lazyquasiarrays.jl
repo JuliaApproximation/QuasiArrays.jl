@@ -19,10 +19,13 @@ const LazyQuasiMatrix{T} = LazyQuasiArray{T,2}
 
 struct LazyQuasiArrayApplyStyle <: AbstractQuasiArrayApplyStyle end
 
+abstract type AbstractQuasiLazyLayout <: AbstractLazyLayout end
 struct QuasiLazyLayout <: AbstractLazyLayout end
 
 MemoryLayout(::Type{<:LazyQuasiArray}) = QuasiLazyLayout()
-
+lazymaterialize(M::Mul{<:Any,<:Any,<:AbstractQuasiArray,<:AbstractQuasiArray}) = ApplyQuasiArray(M)
+lazymaterialize(M::Mul{<:Any,<:Any,<:AbstractArray,<:AbstractQuasiArray}) = ApplyQuasiArray(M)
+lazymaterialize(M::Mul{<:Any,<:Any,<:AbstractQuasiArray,<:AbstractArray}) = ApplyQuasiArray(M)
 
 
 ###
@@ -142,6 +145,7 @@ BroadcastStyle(::Type{<:LazyQuasiArray{<:Any,N}}) where N = LazyQuasiArrayStyle{
 MemoryLayout(M::Type{BroadcastQuasiArray{T,N,F,Args}}) where {T,N,F,Args} = 
     broadcastlayout(F, tuple_type_memorylayouts(Args)...)
 
+arguments(b::BroadcastLayout, V::SubQuasiArray) = LazyArrays._broadcast_sub_arguments(V)
 
 ###
 # *
@@ -160,6 +164,15 @@ arguments(::ApplyLayout{typeof(*)}, V::SubQuasiArray{<:Any,1}) = _vec_mul_argume
 ApplyQuasiArray(M::Mul) = ApplyQuasiArray(*, M.A, M.B)
 QuasiArray(M::Mul) = QuasiArray(ApplyQuasiArray(M))
 
+indextype(M::Mul{<:Any,<:Any,<:AbstractQuasiMatrix,<:AbstractVector}) = Tuple{eltype(axes(M.A,1))}
+indextype(M::Mul{<:Any,<:Any,<:AbstractQuasiMatrix,<:AbstractMatrix}) = Tuple{eltype(axes(M.A,1)),Int}
+indextype(M::Mul{<:Any,<:Any,<:AbstractQuasiVector,<:AbstractMatrix}) = Tuple{eltype(axes(M.A,1)),Int}
+indextype(M::Mul{<:Any,<:Any,<:AbstractQuasiMatrix,<:AbstractQuasiVector}) = Tuple{eltype(axes(M.A,1))}
+indextype(M::Mul{<:Any,<:Any,<:AbstractQuasiMatrix,<:AbstractQuasiMatrix}) = Tuple{eltype(axes(M.A,1)),eltype(axes(M.B,2))}
+indextype(M::Mul{<:Any,<:Any,<:AbstractQuasiVector,<:AbstractQuasiMatrix}) = Tuple{eltype(axes(M.A,1)),eltype(axes(M.B,2))}
+indextype(M::Mul{<:Any,<:Any,<:AbstractMatrix,<:AbstractQuasiVector}) = Tuple{Int}
+indextype(M::Mul{<:Any,<:Any,<:AbstractMatrix,<:AbstractQuasiMatrix}) = Tuple{Int,eltype(axes(M.B,2))}
+indextype(M::Mul{<:Any,<:Any,<:AbstractVector,<:AbstractQuasiMatrix}) = Tuple{Int,eltype(axes(M.B,2))}
 
 ###
 # ^
