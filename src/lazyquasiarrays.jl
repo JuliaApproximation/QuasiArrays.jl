@@ -23,9 +23,9 @@ abstract type AbstractQuasiLazyLayout <: AbstractLazyLayout end
 struct QuasiLazyLayout <: AbstractLazyLayout end
 
 MemoryLayout(::Type{<:LazyQuasiArray}) = QuasiLazyLayout()
-lazymaterialize(M::Mul{<:Any,<:Any,<:AbstractQuasiArray,<:AbstractQuasiArray}) = ApplyQuasiArray(M)
-lazymaterialize(M::Mul{<:Any,<:Any,<:AbstractArray,<:AbstractQuasiArray}) = ApplyQuasiArray(M)
-lazymaterialize(M::Mul{<:Any,<:Any,<:AbstractQuasiArray,<:AbstractArray}) = ApplyQuasiArray(M)
+lazymaterialize(M::Mul{<:Any,<:Any,<:AbstractQuasiArray,<:AbstractQuasiArray}) = copy(ApplyQuasiArray(M))
+lazymaterialize(M::Mul{<:Any,<:Any,<:AbstractArray,<:AbstractQuasiArray}) = copy(ApplyQuasiArray(M))
+lazymaterialize(M::Mul{<:Any,<:Any,<:AbstractQuasiArray,<:AbstractArray}) = copy(ApplyQuasiArray(M))
 
 
 ###
@@ -65,7 +65,7 @@ ApplyQuasiMatrix(f, factors...) = ApplyQuasiMatrix(applied(f, factors...))
 
 axes(A::ApplyQuasiArray) = axes(Applied(A))
 size(A::ApplyQuasiArray) = map(length, axes(A))
-copy(A::ApplyQuasiArray) = copy(Applied(A))
+copy(A::ApplyQuasiArray) = A # immutable arrays don't need to copy
 
 @propagate_inbounds getindex(A::ApplyQuasiArray{T,N}, kj::Vararg{Number,N}) where {T,N} =
     Applied(A)[kj...]

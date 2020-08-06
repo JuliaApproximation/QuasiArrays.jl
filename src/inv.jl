@@ -49,8 +49,6 @@ pinv(A::PInvQuasiMatrix) = first(A.args)
 @propagate_inbounds getindex(A::PInvQuasiMatrix{T}, k::Int, j::Int) where T =
     (Applied(A)*[Zeros(j-1); one(T); Zeros(size(A,2) - j)])[k]
 
-*(A::PInvQuasiMatrix, B::AbstractQuasiMatrix, C...) = apply(*,Applied(A), B, C...)
-*(A::PInvQuasiMatrix, B::MulQuasiArray, C...) = apply(*,Applied(A), Applied(B), C...)
 
 ## QuasiArray special case
 inv(A::QuasiMatrix) = QuasiArray(inv(A.parent), reverse(A.axes))

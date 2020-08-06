@@ -140,11 +140,6 @@ function similar(A::QuasiArrayMulArray)
     applied(*, B, similar(a))
 end
 
-function copy(a::MulQuasiArray)
-    @_propagate_inbounds_meta
-    copymutable(a)
-end
-
 function copyto!(dest::MulQuasiArray, src::MulQuasiArray)
     d = last(dest.args)
     s = last(src.args)
