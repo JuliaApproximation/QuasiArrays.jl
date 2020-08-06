@@ -1,8 +1,15 @@
 # This file is a part of Julia. License is MIT: https://julialang.org/license
 
 
+
+struct QuasiIndexCartesian <: IndexStyle end
+
+IndexStyle(::QuasiIndexCartesian, ::QuasiIndexCartesian) = QuasiIndexCartesian()
+IndexStyle(::IndexCartesian, ::QuasiIndexCartesian) = QuasiIndexCartesian()
+IndexStyle(::QuasiIndexCartesian, ::IndexCartesian) = QuasiIndexCartesian()
+
 IndexStyle(A::AbstractQuasiArray) = IndexStyle(typeof(A))
-IndexStyle(::Type{<:AbstractQuasiArray}) = IndexCartesian()
+IndexStyle(::Type{<:AbstractQuasiArray}) = QuasiIndexCartesian()
 
 IndexStyle(A::AbstractQuasiArray, B::AbstractQuasiArray) = IndexStyle(IndexStyle(A), IndexStyle(B))
 IndexStyle(A::AbstractArray, B::AbstractQuasiArray) = IndexStyle(IndexStyle(A), IndexStyle(B))

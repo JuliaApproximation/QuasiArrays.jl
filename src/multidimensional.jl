@@ -8,7 +8,7 @@ module QuasiIteratorsMD
     import Base: simd_outer_range, simd_inner_length, simd_index
     using Base: IndexLinear, IndexCartesian, AbstractCartesianIndex, fill_to_length, tail
     using Base.Iterators: Reverse
-    import QuasiArrays: AbstractQuasiArray, AbstractQuasiVector, domain, AbstractQuasiOrVector
+    import QuasiArrays: AbstractQuasiArray, AbstractQuasiVector, domain, AbstractQuasiOrVector, QuasiIndexCartesian
 
     export QuasiCartesianIndex, QuasiCartesianIndices
 
@@ -316,11 +316,11 @@ module QuasiIteratorsMD
     ndims(::Type{QuasiCartesianIndices{N}}) where {N} = N
     ndims(::Type{QuasiCartesianIndices{N,TT}}) where {N,TT} = N
 
-    eachindex(::IndexCartesian, A::AbstractQuasiArray) = QuasiCartesianIndices(axes(A))
+    eachindex(::QuasiIndexCartesian, A::AbstractQuasiArray) = QuasiCartesianIndices(axes(A))
 
-    @inline function eachindex(::IndexCartesian, A::AbstractQuasiArray, B::AbstractQuasiArray...)
+    @inline function eachindex(::QuasiIndexCartesian, A::AbstractQuasiArray, B::AbstractQuasiArray...)
         axsA = axes(A)
-        Base._all_match_first(axes, axsA, B...) || Base.throw_eachindex_mismatch(IndexCartesian(), A, B...)
+        Base._all_match_first(axes, axsA, B...) || Base.throw_eachindex_mismatch(QuasiIndexCartesian(), A, B...)
         QuasiCartesianIndices(axsA)
     end
 
@@ -343,8 +343,6 @@ module QuasiIteratorsMD
         i, j = split(R.indices, V)
         QuasiCartesianIndices(i), QuasiCartesianIndices(j)
     end
-
-    Base.LinearIndices(inds::QuasiCartesianIndices{N,R}) where {N,R} = LinearIndices{N,R}(inds.indices)
 
     function Base._collect_indices(indsA::Tuple{AbstractQuasiVector,Vararg{Any}}, A)
         B = Array{eltype(A)}(undef, length.(indsA))

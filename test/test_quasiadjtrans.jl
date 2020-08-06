@@ -2,7 +2,7 @@
 
 
 using QuasiArrays, Test, LinearAlgebra
-import QuasiArrays: MemoryLayout
+import QuasiArrays: MemoryLayout, QuasiIndexCartesian
 
 
 @testset "QuasiAdjoint/Transpose" begin
@@ -83,10 +83,10 @@ import QuasiArrays: MemoryLayout
             @test axes(QuasiTranspose(intmat)) == reverse(axes(intmat))
         end
         @testset "IndexStyle methods" begin
-            @test IndexStyle(QuasiAdjoint(intvec)) == IndexCartesian()
-            @test IndexStyle(QuasiAdjoint(intmat)) == IndexCartesian()
-            @test IndexStyle(QuasiTranspose(intvec)) == IndexCartesian()
-            @test IndexStyle(QuasiTranspose(intmat)) == IndexCartesian()
+            @test IndexStyle(QuasiAdjoint(intvec)) == QuasiIndexCartesian()
+            @test IndexStyle(QuasiAdjoint(intmat)) == QuasiIndexCartesian()
+            @test IndexStyle(QuasiTranspose(intvec)) == QuasiIndexCartesian()
+            @test IndexStyle(QuasiTranspose(intmat)) == QuasiIndexCartesian()
         end
         # vectors and matrices with complex scalar eltype, and their adjoints/transposes
         complexintvec, complexintmat = QuasiVector([1im, 2im],0:0.5:0.5), QuasiMatrix([1im 2im 3im; 4im 5im 6im],(0:0.5:0.5, Base.OneTo(3)))

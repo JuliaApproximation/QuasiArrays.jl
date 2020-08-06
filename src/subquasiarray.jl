@@ -18,19 +18,13 @@ function SubQuasiArray(parent::AbstractQuasiArray, indices::Tuple)
     @_inline_meta
     SubQuasiArray(IndexStyle(viewindexing(indices), IndexStyle(parent)), parent, ensure_indexable(indices), index_dimsum(indices...))
 end
-function SubQuasiArray(::IndexCartesian, parent::P, indices::I, ::NTuple{N,Any}) where {P,I,N}
+function SubQuasiArray(::QuasiIndexCartesian, parent::P, indices::I, ::NTuple{N,Any}) where {P,I,N}
     @_inline_meta
     SubQuasiArray{eltype(P), N, P, I, false}(parent, indices, 0, 0)
 end
-function SubQuasiArray(::IndexLinear, parent::P, indices::I, ::NTuple{N,Any}) where {P,I,N}
-    @_inline_meta
-    # Compute the stride and offset
-    stride1 = compute_stride1(parent, indices)
-    SubQuasiArray{eltype(P), N, P, I, true}(parent, indices, compute_offset1(parent, stride1, indices), stride1)
-end
 
 check_parent_index_match(parent::AbstractQuasiArray{T,N}, ::NTuple{N, Bool}) where {T,N} = nothing
-viewindexing(I::Tuple{AbstractQuasiArray, Vararg{Any}}) = IndexCartesian()
+viewindexing(I::Tuple{AbstractQuasiArray, Vararg{Any}}) = QuasiIndexCartesian()
 
 # Simple utilities
 size(V::SubQuasiArray) = (@_inline_meta; map(n->cardinality(n), axes(V)))
@@ -87,10 +81,10 @@ quasi_viewindexing(axs::Tuple{AbstractVector{IND}, Vararg{Any}}, I::Tuple{IND, V
 # # In general, ranges are only fast if all other indices are scalar
 # quasi_viewindexing(I::Tuple{AbstractRange, Vararg{ScalarIndex}}) = IndexLinear()
 # # All other index combinations are slow
-# quasi_viewindexing(I::Tuple{Vararg{Any}}) = IndexCartesian()
+# quasi_viewindexing(I::Tuple{Vararg{Any}}) = QuasiIndexCartesian()
 # # Of course, all other array types are slow
-quasi_viewindexing(axs::Tuple{AbstractQuasiVector{IND}, Vararg{Any}}, I::Tuple{AbstractArray{IND}, Vararg{Any}}) where IND = IndexCartesian()
-quasi_viewindexing(axs::Tuple{AbstractVector{IND}, Vararg{Any}}, I::Tuple{AbstractArray{IND}, Vararg{Any}}) where IND = IndexCartesian()
+quasi_viewindexing(axs::Tuple{AbstractQuasiVector{IND}, Vararg{Any}}, I::Tuple{AbstractArray{IND}, Vararg{Any}}) where IND = QuasiIndexCartesian()
+quasi_viewindexing(axs::Tuple{AbstractVector{IND}, Vararg{Any}}, I::Tuple{AbstractArray{IND}, Vararg{Any}}) where IND = QuasiIndexCartesian()
 
 # combined dimensionality of all indices
 # rather than returning N, it returns an NTuple{N,Bool} so the result is inferrable
@@ -104,6 +98,11 @@ quasi_viewindexing(axs::Tuple{AbstractVector{IND}, Vararg{Any}}, I::Tuple{Abstra
 @inline quasi_index_dimsum(axs::Tuple{AbstractVector{IND},Vararg{Any}}, inds::Tuple{AbstractArray{IND,N},Vararg{Any}}) where {N,IND} =
     (ntuple(x->true, Val(N))..., quasi_index_dimsum(tail(axs), tail(inds))...)    
 quasi_index_dimsum(::Tuple{}, ::Tuple{}) = ()
+
+function SubArray(::QuasiIndexCartesian, parent::P, indices::I, ::NTuple{N,Any}) where {P,I,N}
+    @_inline_meta
+    SubArray{eltype(P), N, P, I, false}(parent, indices, 0, 0)
+end
 
 function SubArray(parent::AbstractQuasiArray, indices::Tuple)
     @_inline_meta
@@ -234,7 +233,7 @@ function _setindex!(::Type{IND}, V::SlowSubQuasiArray, x, I::IND) where IND
     V
 end
 
-IndexStyle(::Type{<:SubQuasiArray}) = IndexCartesian()
+IndexStyle(::Type{<:SubQuasiArray}) = QuasiIndexCartesian()
 
 # Strides are the distance in memory between adjacent elements in a given dimension
 # which we determine from the strides of the parent

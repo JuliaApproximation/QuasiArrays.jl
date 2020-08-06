@@ -154,7 +154,7 @@ julia> length([1 2; 3 4])
 """
 length(t::AbstractQuasiArray) = (@_inline_meta; prod(size(t)))
 
-# eachindex iterates over all indices. IndexCartesian definitions are later.
+# eachindex iterates over all indices. QuasiIndexCartesian definitions are later.
 eachindex(A::AbstractQuasiVector) = (@_inline_meta(); axes1(A))
 
 """
@@ -335,7 +335,7 @@ function copyto!(::IndexStyle, dest::AbstractQuasiArray, ::IndexStyle, src::Abst
     return dest
 end
 
-function copyto!(::IndexStyle, dest::AbstractQuasiArray, ::IndexCartesian, src::AbstractQuasiArray)
+function copyto!(::IndexStyle, dest::AbstractQuasiArray, ::QuasiIndexCartesian, src::AbstractQuasiArray)
     axes(dest) == axes(src) || throw(BoundsError(dest, axes(src)))
     i = 0
     @inbounds for i in eachindex(src)
@@ -390,14 +390,14 @@ _getindex(_, ::IndexStyle, A::AbstractQuasiArray, I) =
 
 
 ## IndexCartesian Scalar indexing: Canonical method is full dimensionality of indices
-function _getindex(::Type{IND}, ::IndexCartesian, A::AbstractQuasiArray, I::IND) where {M,IND}
+function _getindex(::Type{IND}, ::QuasiIndexCartesian, A::AbstractQuasiArray, I::IND) where {M,IND}
     @_inline_meta
     @boundscheck checkbounds(A, I...) # generally _to_subscript_indices requires bounds checking
     @inbounds r = getindex(A, _to_subscript_indices(A, I...)...)
     r
 end
 
-error_if_canonical_getindex(::IndexCartesian, A::AbstractQuasiArray{T,N}, I::Tuple) where {T,N} =
+error_if_canonical_getindex(::QuasiIndexCartesian, A::AbstractQuasiArray{T,N}, I::Tuple) where {T,N} =
     _error_if_canonical_getindex(indextype(A), A, I)
 
 error_if_canonical_getindex(::IndexLinear, A::AbstractQuasiArray{T,N}, I::Tuple) where {T,N} =
@@ -438,11 +438,8 @@ function _setindex!(::Type{IND}, A::AbstractQuasiArray, v, I) where IND
     _setindex!(IND, IndexStyle(A), A, v, to_indices(A, I))
 end
 
-error_if_canonical_setindex(::IndexCartesian, A::AbstractQuasiArray{T,N}, I::Tuple) where {T,N} =
+error_if_canonical_setindex(::QuasiIndexCartesian, A::AbstractQuasiArray{T,N}, I::Tuple) where {T,N} =
     _error_if_canonical_setindex(indextype(A), A, I)
-
-error_if_canonical_setindex(::IndexLinear, A::AbstractQuasiArray{T,N}, I::Tuple) where {T,N} =
-    _error_if_canonical_setindex(indextype(A), A, I)    
 
 _error_if_canonical_setindex(::Type{IND}, A::AbstractQuasiArray{T,N}, I::IND) where {T,N,IND} =
     error("setindex! not defined for ", typeof(A))
@@ -452,12 +449,12 @@ _error_if_canonical_setindex(::Type, ::AbstractQuasiArray, ::Any...) = nothing
 _setindex!(::Type, ::IndexStyle, A::AbstractQuasiArray, v, I) =
     error("setindex! for $(typeof(A)) with types $(typeof(I)) is not supported")
 
-# IndexCartesian Scalar indexing
-function _setindex!(::Type{IND}, ::IndexCartesian, A::AbstractQuasiArray{T,N}, v, I::NTuple{N,Any}) where {T,N,IND}
+# QuasiIndexCartesian Scalar indexing
+function _setindex!(::Type{IND}, ::QuasiIndexCartesian, A::AbstractQuasiArray{T,N}, v, I::NTuple{N,Any}) where {T,N,IND}
     @_propagate_inbounds_meta
     setindex!(A, v, I...)
 end
-function _setindex!(::Type{IND}, ::IndexCartesian, A::AbstractQuasiArray, v, I::NTuple{M,Any}) where {M,IND}
+function _setindex!(::Type{IND}, ::QuasiIndexCartesian, A::AbstractQuasiArray, v, I::NTuple{M,Any}) where {M,IND}
     @_inline_meta
     @boundscheck checkbounds(A, I...)
     @inbounds r = setindex!(A, v, _to_subscript_indices(IND, A, I...)...)

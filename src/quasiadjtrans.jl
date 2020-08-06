@@ -87,37 +87,35 @@ transpose(A::QuasiAdjoint{<:Real}) = A.parent
 
 
 # some aliases for internal convenience use
-const AdjOrTrans{T,S} = Union{QuasiAdjoint{T,S},QuasiTranspose{T,S}} where {T,S}
+const QuasiAdjOrTrans{T,S} = Union{QuasiAdjoint{T,S},QuasiTranspose{T,S}} where {T,S}
 const QuasiAdjointAbsVec{T} = QuasiAdjoint{T,<:AbstractQuasiVector}
 const QuasiTransposeAbsVec{T} = QuasiTranspose{T,<:AbstractQuasiVector}
-const AdjOrTransAbsVec{T} = AdjOrTrans{T,<:AbstractQuasiVector}
-const AdjOrTransAbsMat{T} = AdjOrTrans{T,<:AbstractQuasiMatrix}
+const QuasiAdjOrTransAbsVec{T} = QuasiAdjOrTrans{T,<:AbstractQuasiVector}
+const QuasiAdjOrTransAbsMat{T} = QuasiAdjOrTrans{T,<:AbstractQuasiMatrix}
 
 # for internal use below
 wrapperop(A::QuasiAdjoint) = adjoint
 wrapperop(A::QuasiTranspose) = transpose
 
 # AbstractQuasiArray interface, basic definitions
-length(A::AdjOrTrans) = length(A.parent)
-size(v::AdjOrTransAbsVec) = (1, length(v.parent))
-size(A::AdjOrTransAbsMat) = reverse(size(A.parent))
-axes(v::AdjOrTransAbsVec) = (Base.OneTo(1), axes(v.parent)...)
-axes(A::AdjOrTransAbsMat) = reverse(axes(A.parent))
-IndexStyle(::Type{<:AdjOrTransAbsVec}) = IndexCartesian()
-IndexStyle(::Type{<:AdjOrTransAbsMat}) = IndexCartesian()
-@propagate_inbounds function getindex(A::AdjOrTransAbsVec, i::Number, j::Number) 
+length(A::QuasiAdjOrTrans) = length(A.parent)
+size(v::QuasiAdjOrTransAbsVec) = (1, length(v.parent))
+size(A::QuasiAdjOrTransAbsMat) = reverse(size(A.parent))
+axes(v::QuasiAdjOrTransAbsVec) = (Base.OneTo(1), axes(v.parent)...)
+axes(A::QuasiAdjOrTransAbsMat) = reverse(axes(A.parent))
+@propagate_inbounds function getindex(A::QuasiAdjOrTransAbsVec, i::Number, j::Number) 
     @boundscheck i == 1 || throw(BoundsError(A,i,j))
     wrapperop(A)(A.parent[j])
 end
-@propagate_inbounds getindex(A::AdjOrTransAbsMat, i::Number, j::Number) = wrapperop(A)(A.parent[j, i])
-@propagate_inbounds function setindex!(A::AdjOrTransAbsVec, x, i::Number, j::Number) 
+@propagate_inbounds getindex(A::QuasiAdjOrTransAbsMat, i::Number, j::Number) = wrapperop(A)(A.parent[j, i])
+@propagate_inbounds function setindex!(A::QuasiAdjOrTransAbsVec, x, i::Number, j::Number) 
     @boundscheck i == 1 || throw(BoundsError(A,i,j))
     (setindex!(A.parent, wrapperop(A)(x), j); A)
 end
-@propagate_inbounds setindex!(A::AdjOrTransAbsMat, x, i::Number, j::Number) = (setindex!(A.parent, wrapperop(A)(x), j, i); A)
+@propagate_inbounds setindex!(A::QuasiAdjOrTransAbsMat, x, i::Number, j::Number) = (setindex!(A.parent, wrapperop(A)(x), j, i); A)
 # AbstractQuasiArray interface, additional definitions to retain wrapper over vectors where appropriate
-@propagate_inbounds getindex(v::AdjOrTransAbsVec, ::Colon, is::AbstractArray{<:Number}) = wrapperop(v)(v.parent[is])
-@propagate_inbounds getindex(v::AdjOrTransAbsVec, ::Colon, ::Colon) = wrapperop(v)(v.parent[:])
+@propagate_inbounds getindex(v::QuasiAdjOrTransAbsVec, ::Colon, is::AbstractArray{<:Number}) = wrapperop(v)(v.parent[is])
+@propagate_inbounds getindex(v::QuasiAdjOrTransAbsVec, ::Colon, ::Colon) = wrapperop(v)(v.parent[:])
 
 # conversion of underlying storage
 convert(::Type{QuasiAdjoint{T,S}}, A::QuasiAdjoint) where {T,S} = QuasiAdjoint{T,S}(convert(S, A.parent))
@@ -125,20 +123,20 @@ convert(::Type{QuasiTranspose{T,S}}, A::QuasiTranspose) where {T,S} = QuasiTrans
 
 # for vectors, the semantics of the wrapped and unwrapped types differ
 # so attempt to maintain both the parent and wrapper type insofar as possible
-similar(A::AdjOrTransAbsVec) = wrapperop(A)(similar(A.parent))
-similar(A::AdjOrTransAbsVec, ::Type{T}) where {T} = wrapperop(A)(similar(A.parent, Base.promote_op(wrapperop(A), T)))
+similar(A::QuasiAdjOrTransAbsVec) = wrapperop(A)(similar(A.parent))
+similar(A::QuasiAdjOrTransAbsVec, ::Type{T}) where {T} = wrapperop(A)(similar(A.parent, Base.promote_op(wrapperop(A), T)))
 # for matrices, the semantics of the wrapped and unwrapped types are generally the same
 # and as you are allocating with similar anyway, you might as well get something unwrapped
-similar(A::AdjOrTrans) = similar(A.parent, eltype(A), axes(A))
-similar(A::AdjOrTrans, ::Type{T}) where {T} = similar(A.parent, T, axes(A))
-similar(A::AdjOrTrans, ::Type{T}, dims::Dims{N}) where {T,N} = similar(A.parent, T, dims)
+similar(A::QuasiAdjOrTrans) = similar(A.parent, eltype(A), axes(A))
+similar(A::QuasiAdjOrTrans, ::Type{T}) where {T} = similar(A.parent, T, axes(A))
+similar(A::QuasiAdjOrTrans, ::Type{T}, dims::Dims{N}) where {T,N} = similar(A.parent, T, dims)
 
 # sundry basic definitions
-parent(A::AdjOrTrans) = A.parent
-vec(v::AdjOrTransAbsVec) = v.parent
+parent(A::QuasiAdjOrTrans) = A.parent
+vec(v::QuasiAdjOrTransAbsVec) = v.parent
 
-cmp(A::AdjOrTransAbsVec, B::AdjOrTransAbsVec) = cmp(parent(A), parent(B))
-isless(A::AdjOrTransAbsVec, B::AdjOrTransAbsVec) = isless(parent(A), parent(B))
+cmp(A::QuasiAdjOrTransAbsVec, B::QuasiAdjOrTransAbsVec) = cmp(parent(A), parent(B))
+isless(A::QuasiAdjOrTransAbsVec, B::QuasiAdjOrTransAbsVec) = isless(parent(A), parent(B))
 
 ### concatenation
 # preserve QuasiAdjoint/QuasiTranspose wrapper around vectors
@@ -183,13 +181,13 @@ function *(u::QuasiTransposeAbsVec, v::AbstractQuasiVector)
     return sum(@inbounds(u[k]*v[k]) for k in 1:length(u))
 end
 # vector * QuasiAdjoint/QuasiTranspose-vector
-*(u::AbstractQuasiVector, v::AdjOrTransAbsVec) = broadcast(*, u, v)
+*(u::AbstractQuasiVector, v::QuasiAdjOrTransAbsVec) = broadcast(*, u, v)
 # QuasiAdjoint/QuasiTranspose-vector * QuasiAdjoint/QuasiTranspose-vector
 # (necessary for disambiguation with fallback methods in linalg/matmul)
 *(u::QuasiAdjointAbsVec, v::QuasiAdjointAbsVec) = throw(MethodError(*, (u, v)))
 *(u::QuasiTransposeAbsVec, v::QuasiTransposeAbsVec) = throw(MethodError(*, (u, v)))
 
-# AdjOrTransAbsVec{<:Any,<:AdjOrTransAbsVec} is a lazy conj vectors
+# QuasiAdjOrTransAbsVec{<:Any,<:QuasiAdjOrTransAbsVec} is a lazy conj vectors
 # We need to expand the combinations to avoid ambiguities
 (*)(u::QuasiTransposeAbsVec, v::QuasiAdjointAbsVec{<:Any,<:QuasiTransposeAbsVec}) =
     sum(uu*vv for (uu, vv) in zip(u, v))
@@ -206,7 +204,7 @@ pinv(v::QuasiTransposeAbsVec, tol::Number = 0) = pinv(conj(v.parent)).parent
 
 
 ## left-division \
-\(u::AdjOrTransAbsVec, v::AdjOrTransAbsVec) = pinv(u) * v
+\(u::QuasiAdjOrTransAbsVec, v::QuasiAdjOrTransAbsVec) = pinv(u) * v
 
 
 ## right-division \
