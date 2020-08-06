@@ -18,8 +18,6 @@ Base.getindex(A::MyQuasiLazyMatrix, x::Float64, y::Float64) = A.A[x,y]
         @test MemoryLayout(A) isa QuasiLazyLayout
         @test ApplyStyle(*, typeof(A), typeof(A)) isa MulStyle
         @test ApplyStyle(*, typeof(A), typeof(B)) isa MulStyle
-        @test ApplyStyle(*, typeof(A), typeof(B), typeof(B)) isa QuasiArrayApplyStyle
-        @test ApplyStyle(*, typeof(A), typeof(B), typeof(C)) isa QuasiArrayApplyStyle
 
         @test A*A isa ApplyQuasiArray
         @test A*B isa ApplyQuasiArray
