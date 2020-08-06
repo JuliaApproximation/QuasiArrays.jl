@@ -50,11 +50,6 @@ function getindex(M::QuasiMatMulVec, k::AbstractArray)
     ret
 end
 
-@inline axes(M::Mul{<:Any,<:Any,<:Any,<:AbstractQuasiMatrix}) = (axes(M.A, 1),axes(M.B,2))
-@inline axes(M::Mul{<:Any,<:Any,<:Any,<:AbstractQuasiVector}) = (axes(M.A, 2),)
-@inline axes(M::Mul{<:Any,<:Any,<:AbstractQuasiMatrix,<:AbstractMatrix}) = (axes(M.A, 1),axes(M.B,2))
-@inline axes(M::Mul{<:Any,<:Any,<:AbstractQuasiMatrix,<:AbstractVector}) = (axes(M.A, 1),)
-
 *(A::AbstractQuasiMatrix) = A
 *(A::AbstractQuasiArray, B::AbstractQuasiArray) = mul(A, B)
 *(A::AbstractArray, B::AbstractQuasiArray) = mul(A, B)

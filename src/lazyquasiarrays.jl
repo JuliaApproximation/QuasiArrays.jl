@@ -162,16 +162,6 @@ arguments(::ApplyLayout{typeof(*)}, V::SubQuasiArray{<:Any,1}) = _vec_mul_argume
 ApplyQuasiArray(M::Mul) = ApplyQuasiArray(*, M.A, M.B)
 QuasiArray(M::Mul) = QuasiArray(ApplyQuasiArray(M))
 
-indextype(M::Mul{<:Any,<:Any,<:AbstractQuasiMatrix,<:AbstractVector}) = Tuple{eltype(axes(M.A,1))}
-indextype(M::Mul{<:Any,<:Any,<:AbstractQuasiMatrix,<:AbstractMatrix}) = Tuple{eltype(axes(M.A,1)),Int}
-indextype(M::Mul{<:Any,<:Any,<:AbstractQuasiVector,<:AbstractMatrix}) = Tuple{eltype(axes(M.A,1)),Int}
-indextype(M::Mul{<:Any,<:Any,<:AbstractQuasiMatrix,<:AbstractQuasiVector}) = Tuple{eltype(axes(M.A,1))}
-indextype(M::Mul{<:Any,<:Any,<:AbstractQuasiMatrix,<:AbstractQuasiMatrix}) = Tuple{eltype(axes(M.A,1)),eltype(axes(M.B,2))}
-indextype(M::Mul{<:Any,<:Any,<:AbstractQuasiVector,<:AbstractQuasiMatrix}) = Tuple{eltype(axes(M.A,1)),eltype(axes(M.B,2))}
-indextype(M::Mul{<:Any,<:Any,<:AbstractMatrix,<:AbstractQuasiVector}) = Tuple{Int}
-indextype(M::Mul{<:Any,<:Any,<:AbstractMatrix,<:AbstractQuasiMatrix}) = Tuple{Int,eltype(axes(M.B,2))}
-indextype(M::Mul{<:Any,<:Any,<:AbstractVector,<:AbstractQuasiMatrix}) = Tuple{Int,eltype(axes(M.B,2))}
-
 ###
 # ^
 ###
