@@ -23,9 +23,7 @@ abstract type AbstractQuasiLazyLayout <: AbstractLazyLayout end
 struct QuasiLazyLayout <: AbstractLazyLayout end
 
 MemoryLayout(::Type{<:LazyQuasiArray}) = QuasiLazyLayout()
-lazymaterialize(M::Mul{<:Any,<:Any,<:AbstractQuasiArray,<:AbstractQuasiArray}) = copy(ApplyQuasiArray(M))
-lazymaterialize(M::Mul{<:Any,<:Any,<:AbstractArray,<:AbstractQuasiArray}) = copy(ApplyQuasiArray(M))
-lazymaterialize(M::Mul{<:Any,<:Any,<:AbstractQuasiArray,<:AbstractArray}) = copy(ApplyQuasiArray(M))
+lazymaterialize(F, args::Union{AbstractQuasiArray,AbstractArray}...) = copy(ApplyQuasiArray(F, args...))
 
 
 ###

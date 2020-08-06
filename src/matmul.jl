@@ -213,3 +213,19 @@ end
 import LazyArrays: MulStyle, _αAB, scalarone
 _αAB(M::Applied{<:Any,typeof(*),<:Tuple{<:AbstractQuasiArray,<:AbstractQuasiArray}}, ::Type{T}) where T = tuple(scalarone(T), M.args...)
 _αAB(M::Applied{<:Any,typeof(*),<:Tuple{<:Number,<:AbstractQuasiArray,<:AbstractQuasiArray}}, ::Type{T}) where T = M.args
+
+
+###
+# Scalar special case, simplifies x * A and A * x
+# TODO: Find an AbstractArray to latch on to by commuting
+###
+
+function *(A::MulQuasiArray, x::Number)
+    args = arguments(A)
+    ApplyQuasiArray(*, most(args)..., args[end] * x)
+end
+
+function *(x::Number, A::MulQuasiArray)
+    args = arguments(A)
+    ApplyQuasiArray(*, x * args[1], tail(args)...)
+end
