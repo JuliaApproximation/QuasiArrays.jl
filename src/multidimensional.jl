@@ -344,8 +344,6 @@ module QuasiIteratorsMD
         QuasiCartesianIndices(i), QuasiCartesianIndices(j)
     end
 
-    Base.LinearIndices(inds::QuasiCartesianIndices{N,R}) where {N,R} = LinearIndices{N,R}(inds.indices)
-
     function Base._collect_indices(indsA::Tuple{AbstractQuasiVector,Vararg{Any}}, A)
         B = Array{eltype(A)}(undef, length.(indsA))
         copyto!(B, QuasiCartesianIndices(axes(B)))
