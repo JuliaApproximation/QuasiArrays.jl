@@ -65,11 +65,8 @@ axes(A::ApplyQuasiArray) = axes(Applied(A))
 size(A::ApplyQuasiArray) = map(length, axes(A))
 copy(A::ApplyQuasiArray) = A # immutable arrays don't need to copy
 
-@propagate_inbounds getindex(A::ApplyQuasiArray{T,N}, kj::Vararg{Number,N}) where {T,N} =
-    Applied(A)[kj...]
-
-@propagate_inbounds getindex(A::ApplyQuasiArray{T,N}, kj::QuasiCartesianIndex{N}) where {T,N} =
-    A[kj.I...]
+@propagate_inbounds _getindex(::Type{IND}, A::ApplyQuasiArray, I::IND) where {M,IND} =
+    Applied(A)[I...]
 
 MemoryLayout(M::Type{ApplyQuasiArray{T,N,F,Args}}) where {T,N,F,Args} = 
     applylayout(F, tuple_type_memorylayouts(Args)...)
