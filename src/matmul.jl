@@ -56,7 +56,7 @@ end
 *(A::AbstractQuasiArray, B::AbstractArray) = mul(A, B)
 
 for op in (:pinv, :inv)
-    @eval $op(A::AbstractQuasiArray) = fullmaterialize(apply($op,A))
+    @eval $op(A::AbstractQuasiArray) = apply($op,A)
 end
 
 @inline axes(L::Ldiv{<:Any,<:Any,<:Any,<:AbstractQuasiMatrix}) = (axes(L.A, 2),axes(L.B,2))
@@ -91,35 +91,10 @@ MulQuasiOrArray = Union{MulArray,MulQuasiArray}
 _factors(M::MulQuasiOrArray) = M.args
 _factors(M) = (M,)
 
-_flatten(A::MulQuasiArray, B...) = _flatten(Applied(A), B...)
-flatten(A::MulQuasiArray) = ApplyQuasiArray(flatten(Applied(A)))
-flatten(A::SubQuasiArray{<:Any,2,<:MulQuasiArray}) = materialize(flatten(Applied(A)))
+@inline _flatten(A::MulQuasiArray, B...) = _flatten(Applied(A), B...)
+@inline flatten(A::MulQuasiArray) = ApplyQuasiArray(flatten(Applied(A)))
+@inline flatten(A::SubQuasiArray{<:Any,2,<:MulQuasiArray}) = materialize(flatten(Applied(A)))
 
-
-function fullmaterialize(M::Applied{<:Any,typeof(*)})
-    M_mat = materialize(flatten(M))
-    typeof(M_mat) <: MulQuasiOrArray || return M_mat
-    typeof(Applied(M_mat)) == typeof(M) || return(fullmaterialize(M_mat))
-
-    ABC = M_mat.args
-    length(ABC) ≤ 2 && return flatten(M_mat)
-
-    AB = most(ABC)
-    Mhead = fullmaterialize(applied(*,AB...))
-
-    typeof(_factors(Mhead)) == typeof(AB) ||
-        return fullmaterialize(applied(*, _factors(Mhead)..., last(ABC)))
-
-    BC = tail(ABC)
-    Mtail =  fullmaterialize(applied(*, BC...))
-    typeof(_factors(Mtail)) == typeof(BC) ||
-        return fullmaterialize(applied(*, first(ABC), _factors(Mtail)...))
-
-    apply(*,first(ABC), Mtail.args...)
-end
-
-fullmaterialize(M::ApplyQuasiArray) = flatten(fullmaterialize(Applied(M)))
-fullmaterialize(M) = flatten(M)
 
 
 adjoint(A::MulQuasiArray) = ApplyQuasiArray(*, reverse(adjoint.(A.args))...)
@@ -172,24 +147,6 @@ copy(M::Mul{<:Any,QuasiArrayLayout}) = QuasiArray(M)
 copy(M::Mul{<:AbstractLazyLayout,QuasiArrayLayout}) = ApplyQuasiArray(M)
 copy(M::Mul{QuasiArrayLayout,<:AbstractLazyLayout}) = ApplyQuasiArray(M)
 
-####
-# Matrix * Array
-####
-
-
-
-function _lmaterialize(A::MulQuasiArray, B, C...)
-    As = A.args
-    flatten(_ApplyArray(*, reverse(tail(reverse(As)))..., _lmaterialize(last(As), B, C...)))
-end
-
-
-
-function _rmaterialize(Z::MulQuasiArray, Y, W...)
-    Zs = Z.args
-    flatten(_ApplyArray(*, _rmaterialize(first(Zs), Y, W...), tail(Zs)...))
-end
-
 
 ####
 # Lazy \ ApplyArray. This applies to first arg.
@@ -203,7 +160,6 @@ function copy(L::Ldiv{LazyLayout,ApplyLayout{typeof(*)},<:AbstractQuasiMatrix})
     apply(*, L.A \  first(args),  tail(args)...)
 end
 
-# copy(A::Applied{QuasiArrayApplyStyle,typeof(*)}) = lmaterialize(A)
 
 import LazyArrays: MulStyle, _αAB, scalarone
 _αAB(M::Applied{<:Any,typeof(*),<:Tuple{<:AbstractQuasiArray,<:AbstractQuasiArray}}, ::Type{T}) where T = tuple(scalarone(T), M.args...)
