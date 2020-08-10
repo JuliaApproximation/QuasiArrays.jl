@@ -212,15 +212,16 @@ _αAB(M::Applied{<:Any,typeof(*),<:Tuple{<:Number,<:AbstractQuasiArray,<:Abstrac
 
 ###
 # Scalar special case, simplifies x * A and A * x
-# TODO: Find an AbstractArray to latch on to by commuting
+# Find an AbstractArray to latch on to by commuting
 ###
 
-function *(A::MulQuasiArray, x::Number)
-    args = arguments(A)
-    ApplyQuasiArray(*, most(args)..., args[end] * x)
-end
+_lmul_scal_reduce(x::Number, A) = (x * A,)
+_lmul_scal_reduce(x::Number, A::AbstractArray, B...) = (x * A, B...)
+_lmul_scal_reduce(x::Number, A, B...) = (A, _lmul_scal_reduce(x, B...)...)
 
-function *(x::Number, A::MulQuasiArray)
-    args = arguments(A)
-    ApplyQuasiArray(*, x * args[1], tail(args)...)
-end
+_rmul_scal_reduce(x::Number, Z) = (x * Z,)
+_rmul_scal_reduce(x::Number, Z::AbstractArray, Y...) = (Y..., Z*x)
+_rmul_scal_reduce(x::Number, Z, Y...) = (_rmul_scal_reduce(x, Y...)..., Z)
+
+*(x::Number, A::MulQuasiArray) = ApplyQuasiArray(*, _lmul_scal_reduce(x, arguments(A)...)...)
+*(A::MulQuasiArray, x::Number) = ApplyQuasiArray(*, _rmul_scal_reduce(x, reverse(arguments(A))...)...)
