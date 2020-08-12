@@ -34,7 +34,7 @@ import LinearAlgebra: transpose, adjoint, checkeltype_adjoint, checkeltype_trans
                         integerpow, schurpow, tr, factorize
 
 import ArrayLayouts: indextype
-import LazyArrays: MemoryLayout, UnknownLayout, Mul, ApplyLayout, BroadcastLayout, ⋆,
+import LazyArrays: MemoryLayout, UnknownLayout, Mul, ApplyLayout, BroadcastLayout,
                     InvOrPInv, ApplyStyle, AbstractLazyLayout, LazyLayout, 
                     MulStyle, MulAddStyle, LazyArrayApplyStyle, combine_mul_styles, DefaultArrayApplyStyle,
                     Applied, flatten, _flatten, arguments, _mat_mul_arguments, _vec_mul_arguments,
