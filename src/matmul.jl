@@ -137,5 +137,16 @@ _rmul_scal_reduce(x::Number, Z) = (x * Z,)
 _rmul_scal_reduce(x::Number, Z::AbstractArray, Y...) = (Y..., Z*x)
 _rmul_scal_reduce(x::Number, Z, Y...) = (_rmul_scal_reduce(x, Y...)..., Z)
 
+_ldiv_scal_reduce(x::Number, A) = (x \ A,)
+_ldiv_scal_reduce(x::Number, A::AbstractArray, B...) = (x \ A, B...)
+_ldiv_scal_reduce(x::Number, A, B...) = (A, _ldiv_scal_reduce(x, B...)...)
+
+_rdiv_scal_reduce(x::Number, Z) = (x / Z,)
+_rdiv_scal_reduce(x::Number, Z::AbstractArray, Y...) = (Y..., Z/x)
+_rdiv_scal_reduce(x::Number, Z, Y...) = (_rdiv_scal_reduce(x, Y...)..., Z)
+
 *(x::Number, A::MulQuasiArray) = ApplyQuasiArray(*, _lmul_scal_reduce(x, arguments(A)...)...)
 *(A::MulQuasiArray, x::Number) = ApplyQuasiArray(*, _rmul_scal_reduce(x, reverse(arguments(A))...)...)
+
+\(x::Number, A::MulQuasiArray) = ApplyQuasiArray(*, _ldiv_scal_reduce(x, arguments(A)...)...)
+/(A::MulQuasiArray, x::Number) = ApplyQuasiArray(*, _rdiv_scal_reduce(x, reverse(arguments(A))...)...)

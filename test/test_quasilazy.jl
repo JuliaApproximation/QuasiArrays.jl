@@ -12,10 +12,32 @@ Base.getindex(A::MyQuasiLazyMatrix, x::Float64, y::Float64) = A.A[x,y]
 @testset "LazyQuasiArray" begin
     @testset "*" begin
         @testset "Apply" begin
-            A = QuasiArray(rand(3,3),(0:0.5:1,0:0.5:1))
-            M = ApplyQuasiArray(*, A, A)
-            @test M == A*A
-            @test M[[0,0.5], [0.5,1]] ≈ (A*A)[[0,0.5], [0.5,1]]
+            @testset "Quasi * Quasi" begin
+                A = QuasiArray(rand(3,3),(0:0.5:1,0:0.5:1))
+                M = ApplyQuasiArray(*, A, A)
+                @test M == A*A
+                @test M[[0,0.5], [0.5,1]] ≈ (A*A)[[0,0.5], [0.5,1]]
+            end
+            @testset "Quasi * Array" begin
+                A = QuasiArray(rand(3,3),(0:0.5:1,Base.OneTo(3)))
+                B = randn(3,3)
+                M = ApplyQuasiArray(*, A, B)
+                @test M ≈ A*B
+                @test M[[0,0.5], [1,3]] ≈ (A*B)[[0,0.5], [1,3]]
+                # Number * MulQuasiArray reduces array
+                @test 2M ≈ M*2 ≈ 2A*B
+                @test (2M).args[2] == (M*2).args[2] == 2B
+                @test M/2 ≈ 2\M ≈ A*B/2
+                @test (2\M).args[2] == (M/2).args[2] == B/2
+
+                M = ApplyQuasiArray(*, B', A')
+                @test M ≈ B'A'
+                @test M[[1,3], [0,0.5]] ≈ (B'A')[[1,3], [0,0.5]]
+                # Number * MulQuasiArray reduces array
+                @test 2M ≈ M*2 ≈ 2B'A'
+                @test (2M).args[1] == (M*2).args[1] == 2B'
+                @test M/2 ≈ 2\M ≈ B'A'/2
+                @test (2\M).args[1] == (M/2).args[1] == B'/2
         end
         @testset "MyQuasi" begin
             A = MyQuasiLazyMatrix(QuasiArray(rand(3,3),(0:0.5:1,0:0.5:1)))
