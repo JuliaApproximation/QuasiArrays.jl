@@ -12,6 +12,7 @@ import QuasiArrays: apply
     end
     @testset "Quasi * Quasi" begin
         A = QuasiArray(rand(3,3),(0:0.5:1,0:0.5:1))
+        @test *(A) == A
         @test A*A isa QuasiArray
         @test QuasiArray(A*A) == QuasiArray(A.parent*A.parent,A.axes)
     end

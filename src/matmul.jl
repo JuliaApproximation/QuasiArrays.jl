@@ -19,28 +19,6 @@ ApplyStyle(::typeof(*), ::Type{<:AbstractQuasiArray}, ::Type{<:AbstractArray}) =
 ApplyStyle(::typeof(*), ::Type{<:AbstractQuasiArray}, ::Type{<:AbstractQuasiArray}) = MulStyle()
 
 
-function getindex(M::Applied{<:AbstractQuasiArrayApplyStyle,typeof(*)}, k::Number)
-    A,Bs = first(M.args), tail(M.args)
-    B = _mul(Bs...)
-    Mul(A, B)[k]
-end
-
-getindex(M::Applied{<:AbstractQuasiArrayApplyStyle,typeof(*)}, k::Int) =
-    Base.invoke(getindex, Tuple{Applied{<:AbstractQuasiArrayApplyStyle,typeof(*)},Number}, M, k)
-
-function _mul_quasi_getindex(M::Applied{<:AbstractQuasiArrayApplyStyle,typeof(*)}, k::Number, j::Number)
-    A,Bs = first(M.args), tail(M.args)
-    B = _mul(Bs...)
-    Mul(A, B)[k, j]
-end
-
-getindex(M::Applied{<:AbstractQuasiArrayApplyStyle,typeof(*)}, k::Number, j::Number) =
-    _mul_quasi_getindex(M, k, j)
-
-getindex(M::Applied{<:AbstractQuasiArrayApplyStyle,typeof(*)}, k::Integer, j::Integer) =
-    _mul_quasi_getindex(M, k, j)
-
-
 function getindex(M::QuasiMatMulVec, k::AbstractArray)
     A,B = M.args
     ret = zeros(eltype(M),length(k))
@@ -50,7 +28,7 @@ function getindex(M::QuasiMatMulVec, k::AbstractArray)
     ret
 end
 
-*(A::AbstractQuasiMatrix) = A
+*(A::AbstractQuasiMatrix) = copy(A)
 *(A::AbstractQuasiArray, B::AbstractQuasiArray) = mul(A, B)
 *(A::AbstractArray, B::AbstractQuasiArray) = mul(A, B)
 *(A::AbstractQuasiArray, B::AbstractArray) = mul(A, B)
@@ -116,26 +94,6 @@ function copyto!(dest::MulQuasiArray, src::MulQuasiArray)
     copyto!(IndexStyle(d), d, IndexStyle(s), s)
     dest
 end
-
-
-
-
-_mul_tail_support(j, Z) = maximum(last.(colsupport.(Ref(Z),j)))
-_mul_tail_support(j, Z, Y, X...) = _mul_tail_support(OneTo(_mul_tail_support(j,Z)), Y, X...)
-
-function _mul_getindex(k, j, A, B)
-    M = min(_mul_tail_support(j,B), maximum(last.(rowsupport.(Ref(A),k))))
-    A[k,1:M]*B[1:M,j]
-end
-
-function _mul_getindex(k, j, A, B, C, D...)
-    N = _mul_tail_support(j, reverse(D)..., C, B)
-    M = min(maximum(last.(rowsupport.(Ref(A),k))), N)
-    _mul_getindex(OneTo(N), j, A[k,OneTo(M)]*B[OneTo(M),OneTo(N)], C, D...)
-end
-
-getindex(A::MulQuasiMatrix, k::AbstractVector{<:Number}, j::AbstractVector{<:Number}) =
-    _mul_getindex(k, j, A.args...)
 
 
 struct QuasiArrayLayout <: MemoryLayout end

@@ -11,21 +11,29 @@ Base.getindex(A::MyQuasiLazyMatrix, x::Float64, y::Float64) = A.A[x,y]
 
 @testset "LazyQuasiArray" begin
     @testset "*" begin
-        A = MyQuasiLazyMatrix(QuasiArray(rand(3,3),(0:0.5:1,0:0.5:1)))
-        B = QuasiArray(rand(3,3),(0:0.5:1,0:0.5:1))
-        C = BroadcastQuasiArray(exp, B)
-        
-        @test MemoryLayout(A) isa QuasiLazyLayout
-        @test ApplyStyle(*, typeof(A), typeof(A)) isa MulStyle
-        @test ApplyStyle(*, typeof(A), typeof(B)) isa MulStyle
+        @testset "Apply" begin
+            A = QuasiArray(rand(3,3),(0:0.5:1,0:0.5:1))
+            M = ApplyQuasiArray(*, A, A)
+            @test M == A*A
+            @test M[[0,0.5], [0.5,1]] ≈ (A*A)[[0,0.5], [0.5,1]]
+        end
+        @testset "MyQuasi" begin
+            A = MyQuasiLazyMatrix(QuasiArray(rand(3,3),(0:0.5:1,0:0.5:1)))
+            B = QuasiArray(rand(3,3),(0:0.5:1,0:0.5:1))
+            C = BroadcastQuasiArray(exp, B)
+            
+            @test MemoryLayout(A) isa QuasiLazyLayout
+            @test ApplyStyle(*, typeof(A), typeof(A)) isa MulStyle
+            @test ApplyStyle(*, typeof(A), typeof(B)) isa MulStyle
 
-        @test A*A isa ApplyQuasiArray
-        @test A*B isa ApplyQuasiArray
-        @test A*B*C isa ApplyQuasiArray
+            @test A*A isa ApplyQuasiArray
+            @test A*B isa ApplyQuasiArray
+            @test A*B*C isa ApplyQuasiArray
 
-        @test A*A == A.A*A
-        @test A*B == A.A*B
-        @test A*B*C ≈ A.A*B*C
+            @test A*A == A.A*A
+            @test A*B == A.A*B
+            @test A*B*C ≈ A.A*B*C
+        end
     end
     @testset "^" begin
         A = QuasiArray(rand(3,3),(0:0.5:1,0:0.5:1))
