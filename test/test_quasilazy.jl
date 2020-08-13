@@ -38,6 +38,7 @@ Base.getindex(A::MyQuasiLazyMatrix, x::Float64, y::Float64) = A.A[x,y]
                 @test (2M).args[1] == (M*2).args[1] == 2B'
                 @test M/2 ≈ 2\M ≈ B'A'/2
                 @test (2\M).args[1] == (M/2).args[1] == B'/2
+            end
         end
         @testset "MyQuasi" begin
             A = MyQuasiLazyMatrix(QuasiArray(rand(3,3),(0:0.5:1,0:0.5:1)))
