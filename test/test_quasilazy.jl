@@ -17,6 +17,8 @@ Base.getindex(A::MyQuasiLazyMatrix, x::Float64, y::Float64) = A.A[x,y]
                 M = ApplyQuasiArray(*, A, A)
                 @test M == A*A
                 @test M[[0,0.5], [0.5,1]] ≈ (A*A)[[0,0.5], [0.5,1]]
+                @test 2M ≈ M*2 ≈ 2A*A
+                @test 2\M ≈ M/2 ≈ A*A/2
             end
             @testset "Quasi * Array" begin
                 A = QuasiArray(rand(3,3),(0:0.5:1,Base.OneTo(3)))
@@ -57,6 +59,16 @@ Base.getindex(A::MyQuasiLazyMatrix, x::Float64, y::Float64) = A.A[x,y]
             @test A*B == A.A*B
             @test A*B*C ≈ A.A*B*C
         end
+    end
+    @testset "\\" begin
+        A = QuasiArray(rand(3,3),(0:0.5:1,0:0.5:1))
+        b = QuasiArray(rand(3), (axes(A,1),))
+        l = MyQuasiLazyMatrix(A) \ b
+        @test l isa ApplyQuasiArray
+        @test l[0.] ≈ (A\b)[0.]
+        L = MyQuasiLazyMatrix(A) \ A
+        @test L[0.,0.] ≈ 1
+        MyQuasiLazyMatrix(A) \ ApplyArray(*, A, A)
     end
     @testset "^" begin
         A = QuasiArray(rand(3,3),(0:0.5:1,0:0.5:1))

@@ -106,24 +106,6 @@ copy(M::Mul{<:AbstractLazyLayout,QuasiArrayLayout}) = ApplyQuasiArray(M)
 copy(M::Mul{QuasiArrayLayout,<:AbstractLazyLayout}) = ApplyQuasiArray(M)
 
 
-####
-# Lazy \ ApplyArray. This applies to first arg.
-#####
-
-
-ApplyStyle(::typeof(\), ::Type{<:AbstractQuasiArray}, ::Type{<:Applied}) = LdivStyle()
-\(A::AbstractQuasiArray, B::Applied) = apply(\, A, B)
-function copy(L::Ldiv{LazyLayout,ApplyLayout{typeof(*)},<:AbstractQuasiMatrix})
-    args = arguments(L.B)
-    apply(*, L.A \  first(args),  tail(args)...)
-end
-
-
-import LazyArrays: MulStyle, _αAB, scalarone
-_αAB(M::Applied{<:Any,typeof(*),<:Tuple{<:AbstractQuasiArray,<:AbstractQuasiArray}}, ::Type{T}) where T = tuple(scalarone(T), M.args...)
-_αAB(M::Applied{<:Any,typeof(*),<:Tuple{<:Number,<:AbstractQuasiArray,<:AbstractQuasiArray}}, ::Type{T}) where T = M.args
-
-
 ###
 # Scalar special case, simplifies x * A and A * x
 # Find an AbstractArray to latch on to by commuting
@@ -133,7 +115,7 @@ _lmul_scal_reduce(x::Number, A) = (x * A,)
 _lmul_scal_reduce(x::Number, A::AbstractArray, B...) = (x * A, B...)
 _lmul_scal_reduce(x::Number, A, B...) = (A, _lmul_scal_reduce(x, B...)...)
 
-_rmul_scal_reduce(x::Number, Z) = (x * Z,)
+_rmul_scal_reduce(x::Number, Z) = (Z * x,)
 _rmul_scal_reduce(x::Number, Z::AbstractArray, Y...) = (Y..., Z*x)
 _rmul_scal_reduce(x::Number, Z, Y...) = (_rmul_scal_reduce(x, Y...)..., Z)
 
@@ -141,7 +123,7 @@ _ldiv_scal_reduce(x::Number, A) = (x \ A,)
 _ldiv_scal_reduce(x::Number, A::AbstractArray, B...) = (x \ A, B...)
 _ldiv_scal_reduce(x::Number, A, B...) = (A, _ldiv_scal_reduce(x, B...)...)
 
-_rdiv_scal_reduce(x::Number, Z) = (x / Z,)
+_rdiv_scal_reduce(x::Number, Z) = (Z / x,)
 _rdiv_scal_reduce(x::Number, Z::AbstractArray, Y...) = (Y..., Z/x)
 _rdiv_scal_reduce(x::Number, Z, Y...) = (_rdiv_scal_reduce(x, Y...)..., Z)
 

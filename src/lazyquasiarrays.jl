@@ -24,7 +24,7 @@ struct QuasiLazyLayout <: AbstractLazyLayout end
 
 MemoryLayout(::Type{<:LazyQuasiArray}) = QuasiLazyLayout()
 lazymaterialize(F, args::Union{AbstractQuasiArray,AbstractArray}...) = copy(ApplyQuasiArray(F, args...))
-
+concretize(A::AbstractQuasiArray) = convert(QuasiArray, A)
 
 ###
 # ApplyQuasiArray
@@ -112,15 +112,14 @@ BroadcastQuasiArray(bc::Broadcasted{S}) where S =
 BroadcastQuasiArray(b::BroadcastQuasiArray) = b
 BroadcastQuasiArray(f, A, As...) = BroadcastQuasiArray(broadcasted(f, A, As...))
 
-Broadcasted(A::BroadcastQuasiArray) = instantiate(broadcasted(A.f, A.args...))
+broadcasted(A::BroadcastQuasiArray) = instantiate(broadcasted(A.f, A.args...))
 
-
-axes(A::BroadcastQuasiArray) = axes(Broadcasted(A))
+axes(A::BroadcastQuasiArray) = axes(broadcasted(A))
 size(A::BroadcastQuasiArray) = map(length, axes(A))
 
 IndexStyle(::BroadcastQuasiArray{<:Any,1}) = IndexLinear()
 
-@propagate_inbounds getindex(A::BroadcastQuasiArray, kj::Number...) = Broadcasted(A)[kj...]
+@propagate_inbounds getindex(A::BroadcastQuasiArray, kj::Number...) = broadcasted(A)[kj...]
 @propagate_inbounds getindex(A::BroadcastQuasiArray{T,N}, kj::QuasiCartesianIndex{N}) where {T,N} =
     A[kj.I...]
 
