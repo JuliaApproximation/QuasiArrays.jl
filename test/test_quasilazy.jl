@@ -1,5 +1,6 @@
-using QuasiArrays, LazyArrays, Test
-import QuasiArrays: MemoryLayout, QuasiLazyLayout, ApplyStyle, LazyQuasiArrayApplyStyle, LazyQuasiMatrix
+using QuasiArrays, LazyArrays, ArrayLayouts, Test
+import QuasiArrays: QuasiLazyLayout, QuasiArrayApplyStyle, LazyQuasiMatrix
+import LazyArrays: MulStyle, ApplyStyle
 
 struct MyQuasiLazyMatrix <: LazyQuasiMatrix{Float64}
     A::QuasiArray
@@ -10,22 +11,64 @@ Base.getindex(A::MyQuasiLazyMatrix, x::Float64, y::Float64) = A.A[x,y]
 
 @testset "LazyQuasiArray" begin
     @testset "*" begin
-        A = MyQuasiLazyMatrix(QuasiArray(rand(3,3),(0:0.5:1,0:0.5:1)))
-        B = QuasiArray(rand(3,3),(0:0.5:1,0:0.5:1))
-        C = BroadcastQuasiArray(exp, B)
-        @test MemoryLayout(A) isa QuasiLazyLayout
-        @test ApplyStyle(*, typeof(A), typeof(A)) isa LazyQuasiArrayApplyStyle
-        @test ApplyStyle(*, typeof(A), typeof(B)) isa LazyQuasiArrayApplyStyle
-        @test ApplyStyle(*, typeof(A), typeof(B), typeof(B)) isa LazyQuasiArrayApplyStyle
-        @test ApplyStyle(*, typeof(A), typeof(B), typeof(C)) isa LazyQuasiArrayApplyStyle
+        @testset "Apply" begin
+            @testset "Quasi * Quasi" begin
+                A = QuasiArray(rand(3,3),(0:0.5:1,0:0.5:1))
+                M = ApplyQuasiArray(*, A, A)
+                @test M == A*A
+                @test M[[0,0.5], [0.5,1]] ≈ (A*A)[[0,0.5], [0.5,1]]
+                @test 2M ≈ M*2 ≈ 2A*A
+                @test 2\M ≈ M/2 ≈ A*A/2
+            end
+            @testset "Quasi * Array" begin
+                A = QuasiArray(rand(3,3),(0:0.5:1,Base.OneTo(3)))
+                B = randn(3,3)
+                M = ApplyQuasiArray(*, A, B)
+                @test M ≈ A*B
+                @test M[[0,0.5], [1,3]] ≈ (A*B)[[0,0.5], [1,3]]
+                # Number * MulQuasiArray reduces array
+                @test 2M ≈ M*2 ≈ 2A*B
+                @test (2M).args[2] == (M*2).args[2] == 2B
+                @test M/2 ≈ 2\M ≈ A*B/2
+                @test (2\M).args[2] == (M/2).args[2] == B/2
 
-        @test A*A isa ApplyQuasiArray
-        @test A*B isa ApplyQuasiArray
-        @test A*B*C isa ApplyQuasiArray
+                M = ApplyQuasiArray(*, B', A')
+                @test M ≈ B'A'
+                @test M[[1,3], [0,0.5]] ≈ (B'A')[[1,3], [0,0.5]]
+                # Number * MulQuasiArray reduces array
+                @test 2M ≈ M*2 ≈ 2B'A'
+                @test (2M).args[1] == (M*2).args[1] == 2B'
+                @test M/2 ≈ 2\M ≈ B'A'/2
+                @test (2\M).args[1] == (M/2).args[1] == B'/2
+            end
+        end
+        @testset "MyQuasi" begin
+            A = MyQuasiLazyMatrix(QuasiArray(rand(3,3),(0:0.5:1,0:0.5:1)))
+            B = QuasiArray(rand(3,3),(0:0.5:1,0:0.5:1))
+            C = BroadcastQuasiArray(exp, B)
+            
+            @test MemoryLayout(A) isa QuasiLazyLayout
+            @test ApplyStyle(*, typeof(A), typeof(A)) isa MulStyle
+            @test ApplyStyle(*, typeof(A), typeof(B)) isa MulStyle
 
-        @test A*A == A.A*A
-        @test A*B == A.A*B
-        @test A*B*C == A.A*B*C
+            @test A*A isa ApplyQuasiArray
+            @test A*B isa ApplyQuasiArray
+            @test A*B*C isa ApplyQuasiArray
+
+            @test A*A == A.A*A
+            @test A*B == A.A*B
+            @test A*B*C ≈ A.A*B*C
+        end
+    end
+    @testset "\\" begin
+        A = QuasiArray(rand(3,3),(0:0.5:1,0:0.5:1))
+        b = QuasiArray(rand(3), (axes(A,1),))
+        l = MyQuasiLazyMatrix(A) \ b
+        @test l isa ApplyQuasiArray
+        @test l[0.] ≈ (A\b)[0.]
+        L = MyQuasiLazyMatrix(A) \ A
+        @test L[0.,0.] ≈ 1
+        MyQuasiLazyMatrix(A) \ ApplyArray(*, A, A)
     end
     @testset "^" begin
         A = QuasiArray(rand(3,3),(0:0.5:1,0:0.5:1))

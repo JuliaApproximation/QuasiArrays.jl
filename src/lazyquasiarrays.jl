@@ -19,10 +19,12 @@ const LazyQuasiMatrix{T} = LazyQuasiArray{T,2}
 
 struct LazyQuasiArrayApplyStyle <: AbstractQuasiArrayApplyStyle end
 
+abstract type AbstractQuasiLazyLayout <: AbstractLazyLayout end
 struct QuasiLazyLayout <: AbstractLazyLayout end
 
 MemoryLayout(::Type{<:LazyQuasiArray}) = QuasiLazyLayout()
-
+lazymaterialize(F, args::Union{AbstractQuasiArray,AbstractArray}...) = copy(ApplyQuasiArray(F, args...))
+concretize(A::AbstractQuasiArray) = convert(QuasiArray, A)
 
 ###
 # ApplyQuasiArray
@@ -61,13 +63,10 @@ ApplyQuasiMatrix(f, factors...) = ApplyQuasiMatrix(applied(f, factors...))
 
 axes(A::ApplyQuasiArray) = axes(Applied(A))
 size(A::ApplyQuasiArray) = map(length, axes(A))
-copy(A::ApplyQuasiArray) = copy(Applied(A))
+copy(A::ApplyQuasiArray) = A # immutable arrays don't need to copy
 
-@propagate_inbounds getindex(A::ApplyQuasiArray{T,N}, kj::Vararg{Number,N}) where {T,N} =
-    Applied(A)[kj...]
-
-@propagate_inbounds getindex(A::ApplyQuasiArray{T,N}, kj::QuasiCartesianIndex{N}) where {T,N} =
-    A[kj.I...]
+@propagate_inbounds _getindex(::Type{IND}, A::ApplyQuasiArray, I::IND) where {M,IND} =
+    Applied(A)[I...]
 
 MemoryLayout(M::Type{ApplyQuasiArray{T,N,F,Args}}) where {T,N,F,Args} = 
     applylayout(F, tuple_type_memorylayouts(Args)...)
@@ -104,7 +103,6 @@ BroadcastQuasiArray{T,N}(bc::Broadcasted{Style,Axes,F,Args}) where {T,N,Style,Ax
 BroadcastQuasiArray{T}(bc::Broadcasted{<:Union{Nothing,BroadcastStyle},<:Tuple{Vararg{Any,N}},<:Any,<:Tuple}) where {T,N} =
     BroadcastQuasiArray{T,N}(bc)
 
-_broadcast2broadcastarray(a, b...) = tuple(a, b...)
 _broadcast2broadcastarray(a::Broadcasted{<:LazyQuasiArrayStyle}, b...) = tuple(BroadcastQuasiArray(a), b...)
 
 _BroadcastQuasiArray(bc::Broadcasted) = BroadcastQuasiArray{combine_eltypes(bc.f, bc.args)}(bc)
@@ -113,15 +111,14 @@ BroadcastQuasiArray(bc::Broadcasted{S}) where S =
 BroadcastQuasiArray(b::BroadcastQuasiArray) = b
 BroadcastQuasiArray(f, A, As...) = BroadcastQuasiArray(broadcasted(f, A, As...))
 
-Broadcasted(A::BroadcastQuasiArray) = instantiate(broadcasted(A.f, A.args...))
+broadcasted(A::BroadcastQuasiArray) = instantiate(broadcasted(A.f, A.args...))
 
-
-axes(A::BroadcastQuasiArray) = axes(Broadcasted(A))
+axes(A::BroadcastQuasiArray) = axes(broadcasted(A))
 size(A::BroadcastQuasiArray) = map(length, axes(A))
 
 IndexStyle(::BroadcastQuasiArray{<:Any,1}) = IndexLinear()
 
-@propagate_inbounds getindex(A::BroadcastQuasiArray, kj::Number...) = Broadcasted(A)[kj...]
+@propagate_inbounds getindex(A::BroadcastQuasiArray, kj::Number...) = broadcasted(A)[kj...]
 @propagate_inbounds getindex(A::BroadcastQuasiArray{T,N}, kj::QuasiCartesianIndex{N}) where {T,N} =
     A[kj.I...]
 
@@ -141,19 +138,12 @@ BroadcastStyle(::Type{<:LazyQuasiArray{<:Any,N}}) where N = LazyQuasiArrayStyle{
 MemoryLayout(M::Type{BroadcastQuasiArray{T,N,F,Args}}) where {T,N,F,Args} = 
     broadcastlayout(F, tuple_type_memorylayouts(Args)...)
 
+arguments(b::BroadcastLayout, V::SubQuasiArray) = LazyArrays._broadcast_sub_arguments(V)
 
 ###
 # *
 ###
 
-combine_mul_styles(::QuasiLazyLayout) = LazyQuasiArrayApplyStyle()
-result_mul_style(::LazyQuasiArrayApplyStyle, ::LazyQuasiArrayApplyStyle) = LazyQuasiArrayApplyStyle()
-result_mul_style(::LazyQuasiArrayApplyStyle, ::MulAddStyle) = LazyQuasiArrayApplyStyle()
-result_mul_style(::MulAddStyle, ::LazyQuasiArrayApplyStyle) = LazyQuasiArrayApplyStyle()
-result_mul_style(::LazyQuasiArrayApplyStyle, ::LazyArrayApplyStyle) = LazyQuasiArrayApplyStyle()
-result_mul_style(::LazyArrayApplyStyle, ::LazyQuasiArrayApplyStyle) = LazyQuasiArrayApplyStyle()
-result_mul_style(::LazyQuasiArrayApplyStyle, _) = LazyQuasiArrayApplyStyle()
-result_mul_style(_, ::LazyQuasiArrayApplyStyle) = LazyQuasiArrayApplyStyle()
 
 ndims(M::Applied{LazyQuasiArrayApplyStyle,typeof(*)}) = ndims(last(M.args))
 
@@ -164,6 +154,8 @@ arguments(a::AbstractQuasiArray) = arguments(MemoryLayout(typeof(a)), a)
 arguments(::ApplyLayout{typeof(*)}, V::SubQuasiArray{<:Any,2}) = _mat_mul_arguments(V)
 arguments(::ApplyLayout{typeof(*)}, V::SubQuasiArray{<:Any,1}) = _vec_mul_arguments(V)
 
+ApplyQuasiArray(M::Mul) = ApplyQuasiArray(*, M.A, M.B)
+QuasiArray(M::Mul) = QuasiArray(ApplyQuasiArray(M))
 
 ###
 # ^
