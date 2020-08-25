@@ -37,7 +37,7 @@ import ArrayLayouts: indextype, concretize
 import LazyArrays: MemoryLayout, UnknownLayout, Mul, ApplyLayout, BroadcastLayout,
                     InvOrPInv, ApplyStyle, AbstractLazyLayout, LazyLayout, 
                     MulStyle, MulAddStyle, LazyArrayApplyStyle, combine_mul_styles, DefaultArrayApplyStyle,
-                    Applied, flatten, _flatten, arguments, _mat_mul_arguments, _vec_mul_arguments,
+                    Applied, flatten, _flatten, arguments, _mat_mul_arguments, _vec_mul_arguments, _mul_arguments,
                     rowsupport, colsupport, tuple_type_memorylayouts, applylayout, broadcastlayout,
                     LdivStyle, most, InvLayout, PInvLayout, sub_materialize, lazymaterialize,
                     _mul, rowsupport, DiagonalLayout, adjointlayout, transposelayout, conjlayout,
