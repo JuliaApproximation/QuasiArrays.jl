@@ -140,10 +140,17 @@ MemoryLayout(M::Type{BroadcastQuasiArray{T,N,F,Args}}) where {T,N,F,Args} =
 
 arguments(b::BroadcastLayout, V::SubQuasiArray) = LazyArrays._broadcast_sub_arguments(V)
 
+
+
 ###
 # *
 ###
 
+# a .* (B * C) flattens to (a .* B) * C
+__broadcast_mul_arguments(a, B, C...) = (a .* B, C...)
+_broadcast_mul_arguments(a, B) = __broadcast_mul_arguments(a, _mul_arguments(B)...)
+_mul_arguments(A::BroadcastQuasiMatrix{<:Any,typeof(*),<:Tuple{AbstractQuasiVector,AbstractQuasiMatrix}}) = 
+    _broadcast_mul_arguments(A.args...)
 
 ndims(M::Applied{LazyQuasiArrayApplyStyle,typeof(*)}) = ndims(last(M.args))
 

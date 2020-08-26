@@ -155,4 +155,11 @@ import QuasiArrays: QuasiCartesianIndex, QuasiCartesianIndices, DefaultQuasiArra
         @test BroadcastStyle(typeof(w)) isa DefaultQuasiArrayStyle{1}
         @test exp.(w) == exp.(a)[Inclusion(0:0.5:1)]
     end
+
+    @testset "flatten Broadcast" begin
+        a = QuasiVector(randn(6), 0:0.5:2.5)
+        B = QuasiMatrix(randn(6,6), (0:0.5:2.5, 0:0.5:2.5))
+        aB = BroadcastQuasiArray(*, a, ApplyQuasiArray(*, B, B))
+        @test QuasiArrays.flatten(aB).args == (a .* B, B)
+    end
 end
