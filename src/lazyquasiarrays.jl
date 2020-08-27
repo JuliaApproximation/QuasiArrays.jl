@@ -118,6 +118,12 @@ size(A::BroadcastQuasiArray) = map(length, axes(A))
 
 IndexStyle(::BroadcastQuasiArray{<:Any,1}) = IndexLinear()
 
+function ==(A::BroadcastQuasiArray, B::BroadcastQuasiArray)
+    A.f == B.f && all(A.args .== B.args) && return true
+    error("Not implemented")
+end
+copy(A::BroadcastQuasiArray) = A # BroadcastQuasiArray are immutable
+
 @propagate_inbounds getindex(A::BroadcastQuasiArray, kj::Number...) = broadcasted(A)[kj...]
 @propagate_inbounds getindex(A::BroadcastQuasiArray{T,N}, kj::QuasiCartesianIndex{N}) where {T,N} =
     A[kj.I...]
