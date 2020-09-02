@@ -68,7 +68,7 @@ copy(A::ApplyQuasiArray) = A # immutable arrays don't need to copy
 @propagate_inbounds _getindex(::Type{IND}, A::ApplyQuasiArray, I::IND) where {M,IND} =
     Applied(A)[I...]
 
-MemoryLayout(M::Type{ApplyQuasiArray{T,N,F,Args}}) where {T,N,F,Args} = 
+MemoryLayout(M::Type{ApplyQuasiArray{T,N,F,Args}}) where {T,N,F,Args} =
     applylayout(F, tuple_type_memorylayouts(Args)...)
 
 copy(A::Applied{LazyQuasiArrayApplyStyle}) = ApplyQuasiArray(A)
@@ -118,6 +118,10 @@ size(A::BroadcastQuasiArray) = map(length, axes(A))
 
 IndexStyle(::BroadcastQuasiArray{<:Any,1}) = IndexLinear()
 
+function ==(A::BroadcastQuasiArray, B::BroadcastQuasiArray)
+    A.f == B.f && all(A.args .== B.args) && return true
+    error("Not implemented")
+end
 copy(A::BroadcastQuasiArray) = A # BroadcastQuasiArray are immutable
 
 @propagate_inbounds getindex(A::BroadcastQuasiArray, kj::Number...) = broadcasted(A)[kj...]
@@ -137,7 +141,7 @@ copy(bc::Broadcasted{<:LazyQuasiArrayStyle}) = BroadcastQuasiArray(bc)
 
 BroadcastStyle(::Type{<:LazyQuasiArray{<:Any,N}}) where N = LazyQuasiArrayStyle{N}()
 
-MemoryLayout(M::Type{BroadcastQuasiArray{T,N,F,Args}}) where {T,N,F,Args} = 
+MemoryLayout(M::Type{BroadcastQuasiArray{T,N,F,Args}}) where {T,N,F,Args} =
     broadcastlayout(F, tuple_type_memorylayouts(Args)...)
 
 arguments(b::BroadcastLayout, V::SubQuasiArray) = LazyArrays._broadcast_sub_arguments(V)
@@ -151,7 +155,7 @@ arguments(b::BroadcastLayout, V::SubQuasiArray) = LazyArrays._broadcast_sub_argu
 # a .* (B * C) flattens to (a .* B) * C
 __broadcast_mul_arguments(a, B, C...) = (a .* B, C...)
 _broadcast_mul_arguments(a, B) = __broadcast_mul_arguments(a, _mul_arguments(B)...)
-_mul_arguments(A::BroadcastQuasiMatrix{<:Any,typeof(*),<:Tuple{AbstractQuasiVector,AbstractQuasiMatrix}}) = 
+_mul_arguments(A::BroadcastQuasiMatrix{<:Any,typeof(*),<:Tuple{AbstractQuasiVector,AbstractQuasiMatrix}}) =
     _broadcast_mul_arguments(A.args...)
 
 ndims(M::Applied{LazyQuasiArrayApplyStyle,typeof(*)}) = ndims(last(M.args))

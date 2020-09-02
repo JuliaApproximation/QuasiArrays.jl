@@ -129,6 +129,7 @@ import QuasiArrays: QuasiCartesianIndex, QuasiCartesianIndices, DefaultQuasiArra
 
         @test axes(exp.(A)) == axes(B)
         @test QuasiMatrix(B) == exp.(A)
+        @test copy(B) ≡ B
 
         C = BroadcastQuasiArray(+, A, 2)
         @test C == A .+ 2
