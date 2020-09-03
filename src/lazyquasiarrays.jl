@@ -129,13 +129,6 @@ copy(A::BroadcastQuasiArray) = A # BroadcastQuasiArray are immutable
     A[kj.I...]
 
 
-@propagate_inbounds _broadcast_getindex_range(A::Union{Ref,AbstractQuasiArray{<:Any,0},Number}, I) = A # Scalar-likes can just ignore all indices
-# Everything else falls back to dynamically dropping broadcasted indices based upon its axes
-@propagate_inbounds _broadcast_getindex_range(A, I) = A[I]
-
-getindex(B::BroadcastQuasiArray{<:Any,1}, kr::AbstractVector{<:Number}) =
-    BroadcastArray(B.f, map(a -> _broadcast_getindex_range(a,kr), B.args)...)
-
 copy(bc::Broadcasted{<:LazyQuasiArrayStyle}) = BroadcastQuasiArray(bc)
 
 
