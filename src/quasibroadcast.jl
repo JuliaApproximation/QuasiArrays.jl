@@ -117,6 +117,7 @@ Base.@propagate_inbounds newindex(arg, I::QuasiCartesianIndex) = QuasiCartesianI
 end
 
 Base.@propagate_inbounds Base.getindex(bc::Broadcasted{<:AbstractQuasiArrayStyle}, i1::Number, I::Number...) = bc[QuasiCartesianIndex(i1, I...)]
+Base.@propagate_inbounds Base.getindex(bc::Broadcasted{<:AbstractQuasiArrayStyle}, i1::Integer, i2::Integer, I::Integer...) = bc[QuasiCartesianIndex(i1, i2, I...)]
 Base.@propagate_inbounds Base.getindex(bc::Broadcasted{<:AbstractQuasiArrayStyle}) = bc[QuasiCartesianIndex()]
 
 @inline Base.checkbounds(bc::Broadcasted{<:AbstractQuasiArrayStyle}, I::Number) =

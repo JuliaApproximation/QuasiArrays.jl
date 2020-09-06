@@ -1,6 +1,6 @@
 # This file is based on a part of Julia. License is MIT: https://julialang.org/license
 
-using QuasiArrays, Test
+using QuasiArrays, LazyArrays, Test
 import Base: OneTo, Slice
 import Base.Broadcast: check_broadcast_axes, newindex, broadcasted, broadcastable, Broadcasted, DefaultArrayStyle, BroadcastStyle
 import QuasiArrays: QuasiCartesianIndex, QuasiCartesianIndices, DefaultQuasiArrayStyle, SubQuasiArray
@@ -120,7 +120,6 @@ import QuasiArrays: QuasiCartesianIndex, QuasiCartesianIndices, DefaultQuasiArra
         a = QuasiVector(randn(6), 0:0.5:2.5)
         b = BroadcastQuasiArray(exp, a)
         @test b[0.5] == exp(a[0.5])
-        @test b[0.5:0.5:1.0] isa QuasiArrays.BroadcastArray
         @test b[0.5:0.5:1.0] == b[[0.5,1.0]] == exp.(a[0.5:0.5:1.0]) 
 
         A = QuasiArray(randn(6,6), (0:0.5:2.5,0:0.5:2.5))
@@ -142,6 +141,16 @@ import QuasiArrays: QuasiCartesianIndex, QuasiCartesianIndices, DefaultQuasiArra
         @testset "index bugs (ContinuumArrays #53)" begin
             x = Inclusion([0.0,2.0])
             @test BroadcastQuasiArray(exp,x)[QuasiCartesianIndex(2.0)] == exp(2.0)
+        end
+
+        @testset "subview" begin
+            v = view(b,0.0:0.5:1.0)
+            c = BroadcastArray(v)
+            @test c == b[0.0:0.5:1.0]
+
+            w = view(b,Inclusion(0.0:0.5:1.0))
+            d = BroadcastQuasiArray(w)
+            @test d == b[Inclusion(0.0:0.5:1.0)]
         end
     end
 
