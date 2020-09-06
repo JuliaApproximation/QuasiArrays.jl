@@ -1,6 +1,6 @@
 # This file is based on a part of Julia. License is MIT: https://julialang.org/license
 
-using QuasiArrays, Test
+using QuasiArrays, LazyArrays, Test
 import Base: OneTo, Slice
 import Base.Broadcast: check_broadcast_axes, newindex, broadcasted, broadcastable, Broadcasted, DefaultArrayStyle, BroadcastStyle
 import QuasiArrays: QuasiCartesianIndex, QuasiCartesianIndices, DefaultQuasiArrayStyle, SubQuasiArray
