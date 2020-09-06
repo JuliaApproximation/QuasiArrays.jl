@@ -95,4 +95,11 @@ Base.getindex(A::MyQuasiLazyMatrix, x::Float64, y::Float64) = A.A[x,y]
         @test A^2.5 * b ≈ Ap*b
         @test A^2.5 * B ≈ Ap*B
     end
+    @testset "Broadcast" begin
+        A = MyQuasiLazyMatrix(QuasiArray(rand(3,3),(0:0.5:1,0:0.5:1)))
+        @test exp.(A) isa BroadcastQuasiArray
+        @test exp.(A) == exp.(A.A)
+        @test exp.(exp.(A) .+ 1) isa BroadcastQuasiArray
+        @test exp.(exp.(A) .+ 1) == exp.(exp.(A.A) .+ 1)
+    end
 end

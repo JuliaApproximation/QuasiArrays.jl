@@ -142,6 +142,16 @@ import QuasiArrays: QuasiCartesianIndex, QuasiCartesianIndices, DefaultQuasiArra
             x = Inclusion([0.0,2.0])
             @test BroadcastQuasiArray(exp,x)[QuasiCartesianIndex(2.0)] == exp(2.0)
         end
+
+        @testset "subview" begin
+            v = view(b,0.0:0.5:1.0)
+            c = BroadcastArray(v)
+            @test c == b[0.0:0.5:1.0]
+
+            w = view(b,Inclusion(0.0:0.5:1.0))
+            d = BroadcastQuasiArray(w)
+            @test d == b[Inclusion(0.0:0.5:1.0)]
+        end
     end
 
     @testset "SubQuasi Broadcast" begin

@@ -111,6 +111,8 @@ BroadcastQuasiArray(bc::Broadcasted{S}) where S =
 BroadcastQuasiArray(b::BroadcastQuasiArray) = b
 BroadcastQuasiArray(f, A, As...) = BroadcastQuasiArray(broadcasted(f, A, As...))
 
+@inline BroadcastQuasiArray(A::AbstractQuasiArray) = BroadcastQuasiArray(call(A), arguments(A)...)
+
 broadcasted(A::BroadcastQuasiArray) = instantiate(broadcasted(A.f, A.args...))
 
 axes(A::BroadcastQuasiArray) = axes(broadcasted(A))
