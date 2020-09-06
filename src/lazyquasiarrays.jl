@@ -138,7 +138,7 @@ MemoryLayout(M::Type{BroadcastQuasiArray{T,N,F,Args}}) where {T,N,F,Args} =
     broadcastlayout(F, tuple_type_memorylayouts(Args)...)
 
 arguments(b::BroadcastLayout, V::SubQuasiArray) = LazyArrays._broadcast_sub_arguments(V)
-
+call(b::BroadcastLayout, a::SubQuasiArray) = call(b, parent(a))
 
 
 ###
