@@ -110,6 +110,9 @@ BroadcastQuasiArray(bc::Broadcasted{S}) where S =
     _BroadcastQuasiArray(instantiate(Broadcasted{S}(bc.f, _broadcast2broadcastarray(bc.args...))))
 BroadcastQuasiArray(b::BroadcastQuasiArray) = b
 BroadcastQuasiArray(f, A, As...) = BroadcastQuasiArray(broadcasted(f, A, As...))
+BroadcastQuasiVector(f, A...) = BroadcastQuasiVector{combine_eltypes(f, A)}(f, A...)
+BroadcastQuasiMatrix(f, A...) = BroadcastQuasiMatrix{combine_eltypes(f, A)}(f, A...)
+BroadcastQuasiArray{T,N}(f, A...) where {T,N} = BroadcastQuasiArray{T,N,typeof(f),typeof(A)}(f, A)
 
 @inline BroadcastQuasiArray(A::AbstractQuasiArray) = BroadcastQuasiArray(call(A), arguments(A)...)
 
