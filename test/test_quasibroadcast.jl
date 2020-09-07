@@ -121,10 +121,12 @@ import QuasiArrays: QuasiCartesianIndex, QuasiCartesianIndices, DefaultQuasiArra
         b = BroadcastQuasiArray(exp, a)
         @test b[0.5] == exp(a[0.5])
         @test b[0.5:0.5:1.0] == b[[0.5,1.0]] == exp.(a[0.5:0.5:1.0]) 
+        @test b == BroadcastQuasiVector(exp, a) == BroadcastQuasiVector{Float64}(exp, a) == BroadcastQuasiArray{Float64}(exp, a)
 
         A = QuasiArray(randn(6,6), (0:0.5:2.5,0:0.5:2.5))
         B = BroadcastQuasiArray(exp, A)
         @test B[0.5,1.0] == exp(A[0.5,1.0])
+        @test B == BroadcastQuasiMatrix(exp, A) == BroadcastQuasiMatrix{Float64}(exp, A) == BroadcastQuasiArray{Float64}(exp, A)
 
         @test axes(exp.(A)) == axes(B)
         @test QuasiMatrix(B) == exp.(A)
