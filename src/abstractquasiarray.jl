@@ -527,8 +527,6 @@ end
 isless(A::AbstractQuasiVector, B::AbstractQuasiVector) = cmp(A, B) < 0
 
 function (==)(A::AbstractQuasiArray, B::AbstractQuasiArray)
-    A === B && return true
-
     if axes(A) != axes(B)
         return false
     end
