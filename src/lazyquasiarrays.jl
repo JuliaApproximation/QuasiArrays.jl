@@ -26,6 +26,11 @@ MemoryLayout(::Type{<:LazyQuasiArray}) = QuasiLazyLayout()
 lazymaterialize(F, args::Union{AbstractQuasiArray,AbstractArray}...) = copy(ApplyQuasiArray(F, args...))
 concretize(A::AbstractQuasiArray) = convert(QuasiArray, A)
 
+
+# Inclusions are left lazy. This could be refined to only be the case where the cardinality is infinite
+BroadcastStyle(::Type{<:Inclusion}) = LazyQuasiArrayStyle{1}()
+
+
 ###
 # ApplyQuasiArray
 ###
@@ -109,7 +114,11 @@ _BroadcastQuasiArray(bc::Broadcasted) = BroadcastQuasiArray{combine_eltypes(bc.f
 BroadcastQuasiArray(bc::Broadcasted{S}) where S =
     _BroadcastQuasiArray(instantiate(Broadcasted{S}(bc.f, _broadcast2broadcastarray(bc.args...))))
 BroadcastQuasiArray(b::BroadcastQuasiArray) = b
-BroadcastQuasiArray(f, A, As...) = BroadcastQuasiArray(broadcasted(f, A, As...))
+BroadcastQuasiArray(f, A, As...) = BroadcastQuasiArray(instantiate(broadcasted(f, A, As...)))
+BroadcastQuasiVector(f, A, As...) = BroadcastQuasiVector{combine_eltypes(f, (A, As...))}(f, A, As...)
+BroadcastQuasiMatrix(f, A, As...) = BroadcastQuasiMatrix{combine_eltypes(f, (A, As...))}(f, A, As...)
+BroadcastQuasiArray{T}(f, A, As...) where {T} = BroadcastQuasiArray{T}(instantiate(broadcasted(f, A, As...)))
+BroadcastQuasiArray{T,N}(f, A, As...) where {T,N} = BroadcastQuasiArray{T,N,typeof(f),typeof((A, As...))}(f, (A, As...))
 
 @inline BroadcastQuasiArray(A::AbstractQuasiArray) = BroadcastQuasiArray(call(A), arguments(A)...)
 
@@ -118,17 +127,17 @@ broadcasted(A::BroadcastQuasiArray) = instantiate(broadcasted(A.f, A.args...))
 axes(A::BroadcastQuasiArray) = axes(broadcasted(A))
 size(A::BroadcastQuasiArray) = map(length, axes(A))
 
-IndexStyle(::BroadcastQuasiArray{<:Any,1}) = IndexLinear()
-
 function ==(A::BroadcastQuasiArray, B::BroadcastQuasiArray)
     A.f == B.f && all(A.args .== B.args) && return true
     error("Not implemented")
 end
 copy(A::BroadcastQuasiArray) = A # BroadcastQuasiArray are immutable
 
-@propagate_inbounds getindex(A::BroadcastQuasiArray, kj::Number...) = broadcasted(A)[kj...]
-@propagate_inbounds getindex(A::BroadcastQuasiArray{T,N}, kj::QuasiCartesianIndex{N}) where {T,N} =
-    A[kj.I...]
+@propagate_inbounds getindex(bc::BroadcastQuasiArray, kj::Number...) = bc[QuasiCartesianIndex(kj...)]
+@propagate_inbounds function getindex(bc::BroadcastQuasiArray{T,N}, kj::QuasiCartesianIndex{N}) where {T,N}
+    args = Base.Broadcast._getindex(bc.args, kj)
+    Base.Broadcast._broadcast_getindex_evalf(bc.f, args...)
+end
 
 
 copy(bc::Broadcasted{<:LazyQuasiArrayStyle}) = BroadcastQuasiArray(bc)
@@ -142,6 +151,50 @@ MemoryLayout(M::Type{BroadcastQuasiArray{T,N,F,Args}}) where {T,N,F,Args} =
 arguments(b::BroadcastLayout, V::SubQuasiArray) = LazyArrays._broadcast_sub_arguments(V)
 call(b::BroadcastLayout, a::SubQuasiArray) = call(b, parent(a))
 
+
+###
+# show
+####
+
+
+function show(io::IO, A::BroadcastQuasiArray)
+    args = arguments(A)
+    print(io, "$(A.f).(")
+    show(io, first(args))
+    for a in tail(args)
+        print(io, ", ")
+        show(io, a)
+    end
+    print(io, ")")
+end
+
+
+for op in (:+, :-, :*, :\, :/)
+    @eval begin
+        function show(io::IO, A::BroadcastQuasiArray{<:Any,N,typeof($op)}) where N
+            args = arguments(A)
+            if length(args) == 1
+                print(io, "($($op)).(")
+                show(io, first(args))
+                print(io, ")")
+            else
+                show(io, first(args))
+                for a in tail(args)
+                    print(io, " .$($op) ")
+                    show(io, a)
+                end
+            end
+        end
+    end
+end
+
+function show(io::IO, A::BroadcastQuasiArray{<:Any,N,typeof(Base.literal_pow),Tuple{Base.RefValue{typeof(^)},XX,Base.RefValue{Val{K}}}}) where {N,XX,K}
+    args = arguments(A)
+    show(io, args[2])
+    print(io, " .^ $K")
+end
+
+show(io::IO, ::MIME"text/plain", A::BroadcastQuasiArray) = show(io, A)
 
 ###
 # *

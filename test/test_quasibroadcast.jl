@@ -1,6 +1,6 @@
 # This file is based on a part of Julia. License is MIT: https://julialang.org/license
 
-using QuasiArrays, LazyArrays, Test
+using QuasiArrays, LazyArrays, Base64, Test
 import Base: OneTo, Slice
 import Base.Broadcast: check_broadcast_axes, newindex, broadcasted, broadcastable, Broadcasted, DefaultArrayStyle, BroadcastStyle
 import QuasiArrays: QuasiCartesianIndex, QuasiCartesianIndices, DefaultQuasiArrayStyle, SubQuasiArray
@@ -120,11 +120,13 @@ import QuasiArrays: QuasiCartesianIndex, QuasiCartesianIndices, DefaultQuasiArra
         a = QuasiVector(randn(6), 0:0.5:2.5)
         b = BroadcastQuasiArray(exp, a)
         @test b[0.5] == exp(a[0.5])
-        @test b[0.5:0.5:1.0] == b[[0.5,1.0]] == exp.(a[0.5:0.5:1.0]) 
+        @test b[0.5:0.5:1.0] == b[[0.5,1.0]] == exp.(a[0.5:0.5:1.0])
+        @test b == BroadcastQuasiVector(exp, a) == BroadcastQuasiVector{Float64}(exp, a) == BroadcastQuasiArray{Float64}(exp, a)
 
         A = QuasiArray(randn(6,6), (0:0.5:2.5,0:0.5:2.5))
         B = BroadcastQuasiArray(exp, A)
         @test B[0.5,1.0] == exp(A[0.5,1.0])
+        @test B == BroadcastQuasiMatrix(exp, A) == BroadcastQuasiMatrix{Float64}(exp, A) == BroadcastQuasiArray{Float64}(exp, A)
 
         @test axes(exp.(A)) == axes(B)
         @test QuasiMatrix(B) == exp.(A)
@@ -151,6 +153,24 @@ import QuasiArrays: QuasiCartesianIndex, QuasiCartesianIndices, DefaultQuasiArra
             w = view(b,Inclusion(0.0:0.5:1.0))
             d = BroadcastQuasiArray(w)
             @test d == b[Inclusion(0.0:0.5:1.0)]
+        end
+
+        @testset "view bug" begin
+            b = BroadcastQuasiVector(exp, Inclusion(0:0.5:1))
+            v = view(b, 0.5)
+
+            @test v[] == b[0.5]
+        end
+
+        @testset "show" begin
+            x = Inclusion(0:0.5:1)
+            @test stringmime("text/plain", exp.(x)) == "exp.(Inclusion(0.0:0.5:1.0))"
+            @test stringmime("text/plain", x.^2) == "Inclusion(0.0:0.5:1.0) .^ 2"
+            @test stringmime("text/plain", x .- x) == "Inclusion(0.0:0.5:1.0) .- Inclusion(0.0:0.5:1.0)"
+            @test stringmime("text/plain", x .+ x) == "Inclusion(0.0:0.5:1.0) .+ Inclusion(0.0:0.5:1.0)"
+            @test stringmime("text/plain", (-).(x)) == "(-).(Inclusion(0.0:0.5:1.0))"
+            @test stringmime("text/plain", x ./ x) == "Inclusion(0.0:0.5:1.0) ./ Inclusion(0.0:0.5:1.0)"
+            @test stringmime("text/plain", x .\ x) == "Inclusion(0.0:0.5:1.0) .\\ Inclusion(0.0:0.5:1.0)"
         end
     end
 
