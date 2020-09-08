@@ -26,6 +26,11 @@ MemoryLayout(::Type{<:LazyQuasiArray}) = QuasiLazyLayout()
 lazymaterialize(F, args::Union{AbstractQuasiArray,AbstractArray}...) = copy(ApplyQuasiArray(F, args...))
 concretize(A::AbstractQuasiArray) = convert(QuasiArray, A)
 
+
+# Inclusions are left lazy. This could be refined to only be the case where the cardinality is infinite
+BroadcastStyle(::Type{<:Inclusion}) = LazyQuasiArrayStyle{1}()
+
+
 ###
 # ApplyQuasiArray
 ###

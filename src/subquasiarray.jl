@@ -322,3 +322,18 @@ end
 
 @inline sub_materialize(_, V::AbstractQuasiArray, _) = QuasiArray(V)
 @inline sub_materialize(V::SubQuasiArray) = sub_materialize(MemoryLayout(typeof(V)), V)
+
+
+###
+# show
+###
+
+function show(io::IO, v::SubQuasiArray)
+    print(io, "view(")
+    show(io, parent(v))
+    Base.showindices(io, v.indices...)
+    print(io, ')')
+    print(io, " with eltype ", eltype(v))
+end
+
+show(io::IO, ::MIME"text/plain", v::SubQuasiArray) = show(io, v)
