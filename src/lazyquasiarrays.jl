@@ -122,8 +122,6 @@ broadcasted(A::BroadcastQuasiArray) = instantiate(broadcasted(A.f, A.args...))
 axes(A::BroadcastQuasiArray) = axes(broadcasted(A))
 size(A::BroadcastQuasiArray) = map(length, axes(A))
 
-IndexStyle(::BroadcastQuasiArray{<:Any,1}) = IndexLinear()
-
 function ==(A::BroadcastQuasiArray, B::BroadcastQuasiArray)
     A.f == B.f && all(A.args .== B.args) && return true
     error("Not implemented")
@@ -148,6 +146,50 @@ MemoryLayout(M::Type{BroadcastQuasiArray{T,N,F,Args}}) where {T,N,F,Args} =
 arguments(b::BroadcastLayout, V::SubQuasiArray) = LazyArrays._broadcast_sub_arguments(V)
 call(b::BroadcastLayout, a::SubQuasiArray) = call(b, parent(a))
 
+
+###
+# show
+####
+
+
+function show(io::IO, A::BroadcastQuasiArray)
+    args = arguments(A)
+    print(io, "$(A.f).(")
+    show(io, first(args))
+    for a in tail(args)
+        print(io, ", ")
+        show(io, a)
+    end
+    print(io, ")")
+end
+
+
+for op in (:+, :-, :*, :\, :/)
+    @eval begin
+        function show(io::IO, A::BroadcastQuasiArray{<:Any,N,typeof($op)}) where N
+            args = arguments(A)
+            if length(args) == 1
+                print(io, "($($op)).(")
+                show(io, first(args))
+                print(io, ")")
+            else
+                show(io, first(args))
+                for a in tail(args)
+                    print(io, " .$($op) ")
+                    show(io, a)
+                end
+            end
+        end
+    end
+end
+
+function show(io::IO, A::BroadcastQuasiArray{<:Any,N,typeof(Base.literal_pow),Tuple{Base.RefValue{typeof(^)},XX,Base.RefValue{Val{K}}}}) where {N,XX,K}
+    args = arguments(A)
+    show(io, args[2])
+    print(io, " .^ $K")
+end
+
+show(io::IO, ::MIME"text/plain", A::BroadcastQuasiArray) = show(io, A)
 
 ###
 # *
