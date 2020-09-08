@@ -130,9 +130,11 @@ function ==(A::BroadcastQuasiArray, B::BroadcastQuasiArray)
 end
 copy(A::BroadcastQuasiArray) = A # BroadcastQuasiArray are immutable
 
-@propagate_inbounds getindex(A::BroadcastQuasiArray, kj::Number...) = broadcasted(A)[kj...]
-@propagate_inbounds getindex(A::BroadcastQuasiArray{T,N}, kj::QuasiCartesianIndex{N}) where {T,N} =
-    A[kj.I...]
+@propagate_inbounds getindex(bc::BroadcastQuasiArray, kj::Number...) = bc[QuasiCartesianIndex(kj...)]
+@propagate_inbounds function getindex(bc::BroadcastQuasiArray{T,N}, kj::QuasiCartesianIndex{N}) where {T,N}
+    args = Base.Broadcast._getindex(bc.args, kj)
+    Base.Broadcast._broadcast_getindex_evalf(bc.f, args...)
+end
 
 
 copy(bc::Broadcasted{<:LazyQuasiArrayStyle}) = BroadcastQuasiArray(bc)
