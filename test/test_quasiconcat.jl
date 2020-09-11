@@ -25,7 +25,7 @@ import QuasiArrays: ApplyQuasiMatrix, UnionVcat, InclusionUnion
         @test_throws BoundsError c[2.5]
     end
 
-    @test "UnionVcat" begin
+    @testset "UnionVcat" begin
         @testset "vector" begin
             a = QuasiVector(randn(5), 0:0.5:2)
             b = QuasiVector([5,6,8], [1,3,4])
