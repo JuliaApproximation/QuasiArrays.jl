@@ -1,12 +1,8 @@
 
-ApplyStyle(::typeof(\), ::Type{A}, ::Type{B}) where {A<:AbstractQuasiArray,B<:AbstractQuasiArray} = 
-    quasildivapplystyle(MemoryLayout(A), MemoryLayout(B))
-ApplyStyle(::typeof(\), ::Type{A}, ::Type{B}) where {A<:AbstractQuasiArray,B<:AbstractArray} = 
-    quasildivapplystyle(MemoryLayout(A), MemoryLayout(B))
-ApplyStyle(::typeof(\), ::Type{A}, ::Type{B}) where {A<:AbstractArray,B<:AbstractQuasiArray} = 
-    quasildivapplystyle(MemoryLayout(A), MemoryLayout(B))
+ApplyStyle(::typeof(\), ::Type{<:AbstractQuasiArray}, ::Type{<:AbstractQuasiArray}) = LdivStyle()
+ApplyStyle(::typeof(\), ::Type{<:AbstractArray}, ::Type{<:AbstractQuasiArray}) = LdivStyle()
+ApplyStyle(::typeof(\), ::Type{<:AbstractQuasiArray}, ::Type{<:AbstractArray}) = LdivStyle()
 
-quasildivapplystyle(_, _) = LdivApplyStyle()
 
 similar(L::Ldiv, ::Type{T}, axes::Tuple{<:AbstractQuasiVector,<:AbstractQuasiVector}) where T = similar(QuasiArray{T}, axes)
 similar(L::Ldiv, ::Type{T}, axes::Tuple{<:AbstractQuasiVector,<:AbstractVector}) where T = similar(QuasiArray{T}, axes)
@@ -53,11 +49,9 @@ pinv(A::PInvQuasiMatrix) = first(A.args)
 @propagate_inbounds getindex(A::PInvQuasiMatrix{T}, k::Int, j::Int) where T =
     (Applied(A)*[Zeros(j-1); one(T); Zeros(size(A,2) - j)])[k]
 
-*(A::PInvQuasiMatrix, B::AbstractQuasiMatrix, C...) = apply(*,Applied(A), B, C...)
-*(A::PInvQuasiMatrix, B::MulQuasiArray, C...) = apply(*,Applied(A), Applied(B), C...)
 
 ## QuasiArray special case
 inv(A::QuasiMatrix) = QuasiArray(inv(A.parent), reverse(A.axes))
 
 _factorize(_, A) = error("Overload for $(typeof(A))")
-factorize(A::AbstractQuasiArray) = _factorize(MemoryLayout(typeof(A)), A)
+factorize(A::AbstractQuasiArray) = _factorize(MemoryLayout(A), A)

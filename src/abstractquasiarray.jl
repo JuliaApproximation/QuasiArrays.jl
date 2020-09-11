@@ -42,8 +42,6 @@ convert(::Type{AbstractArray{T,N}}, a::AbstractQuasiArray{<:Any,N}) where {T,N} 
 convert(::Type{AbstractMatrix}, a::AbstractQuasiMatrix) = convert(AbstractArray, a)
 convert(::Type{AbstractVector}, a::AbstractQuasiVector) = convert(AbstractArray, a)
 
-indextype(A::AbstractQuasiArray) = Tuple{map(eltype, axes(A))...}
-
 
 """
     size(A::AbstractQuasiArray, [dim])

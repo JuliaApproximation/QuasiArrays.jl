@@ -231,5 +231,10 @@ MemoryLayout(::Type{QuasiAdjoint{T,P}}) where {T,P} = adjointlayout(T, MemoryLay
 
 call(::ApplyLayout{typeof(*)}, V::QuasiAdjoint) = *
 call(::ApplyLayout{typeof(*)}, V::QuasiTranspose) = *
-arguments(::ApplyLayout{typeof(*)}, V::QuasiAdjoint) = reverse(adjoint.(arguments(V')))
-arguments(::ApplyLayout{typeof(*)}, V::QuasiTranspose) = reverse(transpose.(arguments(V')))
+arguments(LAY::ApplyLayout{typeof(*)}, V::QuasiAdjoint) = reverse(adjoint.(arguments(LAY, V')))
+arguments(LAY::ApplyLayout{typeof(*)}, V::QuasiTranspose) = reverse(transpose.(arguments(LAY, V')))
+
+
+# This is used in ContinuumArrays.jl to ensure x' is lazy
+BroadcastStyle(::Type{<:QuasiAdjoint{<:Any,<:Inclusion}}) = LazyQuasiArrayStyle{2}()
+BroadcastStyle(::Type{<:QuasiTranspose{<:Any,<:Inclusion}}) = LazyQuasiArrayStyle{2}()

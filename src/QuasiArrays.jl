@@ -1,9 +1,9 @@
 module QuasiArrays
-using Base, LinearAlgebra, LazyArrays
+using Base, LinearAlgebra, LazyArrays, ArrayLayouts
 import Base: getindex, size, axes, axes1, length, ==, isequal, iterate, CartesianIndices, LinearIndices,
                 Indices, IndexStyle, getindex, setindex!, parent, vec, convert, similar, copy, copyto!, zero,
                 map, eachindex, eltype, first, last, firstindex, lastindex, in, reshape, all,
-                isreal, iszero, isempty, empty, isapprox, fill!, getproperty
+                isreal, iszero, isempty, empty, isapprox, fill!, getproperty, showarg
 import Base: @_inline_meta, DimOrInd, OneTo, @_propagate_inbounds_meta, @_noinline_meta,
                 DimsInteger, error_if_canonical_getindex, @propagate_inbounds, _return_type,
                 _maybetail, tail, _getindex, _maybe_reshape, index_ndims, _unsafe_getindex,
@@ -34,14 +34,15 @@ import LinearAlgebra: transpose, adjoint, checkeltype_adjoint, checkeltype_trans
                         AbstractTriangular, pinv, inv, promote_leaf_eltypes, power_by_squaring,
                         integerpow, schurpow, tr, factorize
 
-import LazyArrays: MemoryLayout, UnknownLayout, Mul, ApplyLayout, BroadcastLayout, ⋆,
-                    lmaterialize, _lmaterialize, InvOrPInv, ApplyStyle, AbstractLazyLayout, LazyLayout, 
-                    FlattenMulStyle, IdentityMulStyle, MulAddStyle, LazyArrayApplyStyle,
-                    Applied, flatten, _flatten, arguments, _mat_mul_arguments, _vec_mul_arguments,
+import ArrayLayouts: indextype, concretize
+import LazyArrays: MemoryLayout, UnknownLayout, Mul, ApplyLayout, BroadcastLayout,
+                    InvOrPInv, ApplyStyle, AbstractLazyLayout, LazyLayout, 
+                    MulStyle, MulAddStyle, LazyArrayApplyStyle, combine_mul_styles, DefaultArrayApplyStyle,
+                    Applied, flatten, _flatten, arguments, _mat_mul_arguments, _vec_mul_arguments, _mul_arguments,
                     rowsupport, colsupport, tuple_type_memorylayouts, applylayout, broadcastlayout,
-                    LdivApplyStyle, most, InvLayout, PInvLayout, sub_materialize,
+                    LdivStyle, most, InvLayout, PInvLayout, sub_materialize, lazymaterialize,
                     _mul, rowsupport, DiagonalLayout, adjointlayout, transposelayout, conjlayout,
-                    sublayout, call, combine_mul_styles, result_mul_style, LazyArrayStyle, layout_getindex
+                    sublayout, call, LazyArrayStyle, layout_getindex, _broadcast2broadcastarray
 
 import Base.IteratorsMD
 
@@ -51,25 +52,7 @@ export AbstractQuasiArray, AbstractQuasiMatrix, AbstractQuasiVector, materialize
        BroadcastQuasiArray, BroadcastQuasiMatrix, BroadcastQuasiVector, indextype,
        QuasiKron, UnionVcat
 
-if VERSION < v"1.3-"
-    """
-    broadcast_preserving_zero_d(f, As...)
-
-    Like [`broadcast`](@ref), except in the case of a 0-dimensional result where it returns a 0-dimensional container
-
-    Broadcast automatically unwraps zero-dimensional results to be just the element itself,
-    but in some cases it is necessary to always return a container — even in the 0-dimensional case.
-    """
-    function broadcast_preserving_zero_d(f, As...)
-        bc = broadcasted(f, As...)
-        r = materialize(bc)
-        return length(axes(bc)) == 0 ? fill!(similar(bc, typeof(r)), r) : r
-    end
-    broadcast_preserving_zero_d(f) = fill(f())
-    broadcast_preserving_zero_d(f, as::Number...) = fill(f(as...))
-else
-    import Base.Broadcast: broadcast_preserving_zero_d
-end
+import Base.Broadcast: broadcast_preserving_zero_d
 
 abstract type AbstractQuasiArray{T,N} end
 AbstractQuasiVector{T} = AbstractQuasiArray{T,1}

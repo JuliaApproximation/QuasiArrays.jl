@@ -12,6 +12,7 @@ import QuasiArrays: apply
     end
     @testset "Quasi * Quasi" begin
         A = QuasiArray(rand(3,3),(0:0.5:1,0:0.5:1))
+        @test *(A) == A
         @test A*A isa QuasiArray
         @test QuasiArray(A*A) == QuasiArray(A.parent*A.parent,A.axes)
     end
@@ -21,7 +22,7 @@ import QuasiArrays: apply
         @test A*B isa QuasiArray
         @test QuasiArray(A*B) == QuasiArray(A.parent*B,A.axes)
         @test B*A' isa QuasiArray
-        (A*B)[0.5,1]
+        @test (A*B)[0.5,1] ≈ (Array(A)*B)[2,1]
     end
 
     @testset "Triple" begin

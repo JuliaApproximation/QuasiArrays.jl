@@ -28,14 +28,27 @@ QuasiMatrix(par::AbstractMatrix{T}, axes::NTuple{2,AbstractVector}) where T =
 QuasiVector(par::AbstractVector{T}, axes::Tuple{AbstractVector}) where T = 
     QuasiArray{T,1,typeof(axes)}(par, axes)
 
+QuasiArray{T,N,AXES}(par::AbstractArray{T,N}, axes::NTuple{N,AbstractQuasiOrVector}) where {T,N,AXES} =
+    QuasiArray{T,N,AXES}(par, map(domain,axes))
+QuasiArray{T,N}(par::AbstractArray{T,N}, axes::NTuple{N,AbstractQuasiOrVector}) where {T,N} =
+    QuasiArray{T,N}(par, map(domain,axes))
+QuasiArray{T}(par::AbstractArray{T,N}, axes::NTuple{N,AbstractQuasiOrVector}) where {T,N} =
+    QuasiArray{T}(par, map(domain,axes))
+QuasiArray(par::AbstractArray{T,N}, axes::NTuple{N,AbstractQuasiOrVector}) where {T,N} = 
+    QuasiArray(par, map(domain,axes))
+QuasiMatrix(par::AbstractMatrix{T}, axes::NTuple{2,AbstractQuasiOrVector}) where T = 
+    QuasiMatrix(par, map(domain,axes))
+QuasiVector(par::AbstractVector{T}, axes::Tuple{AbstractQuasiOrVector}) where T = 
+    QuasiVector(par, map(domain,axes))
+
 QuasiVector(par::AbstractVector{T}, axes::AbstractArray) where {T} = 
     QuasiVector(par, (axes,))
     
 
-QuasiArray(a::AbstractQuasiArray) = QuasiArray(Array(a), map(domain,axes(a)))
-QuasiArray{T}(a::AbstractQuasiArray) where T = QuasiArray(Array{T}(a), map(domain,axes(a)))
-QuasiArray{T,N}(a::AbstractQuasiArray{<:Any,N}) where {T,N} = QuasiArray(Array{T}(a), map(domain,axes(a)))
-QuasiArray{T,N,AXES}(a::AbstractQuasiArray{<:Any,N}) where {T,N,AXES} = QuasiArray{T,N,AXES}(Array{T}(a), map(domain,axes(a)))
+QuasiArray(a::AbstractQuasiArray) = QuasiArray(Array(a), axes(a))
+QuasiArray{T}(a::AbstractQuasiArray) where T = QuasiArray(Array{T}(a), axes(a))
+QuasiArray{T,N}(a::AbstractQuasiArray{<:Any,N}) where {T,N} = QuasiArray(Array{T}(a), axes(a))
+QuasiArray{T,N,AXES}(a::AbstractQuasiArray{<:Any,N}) where {T,N,AXES} = QuasiArray{T,N,AXES}(Array{T}(a), axes(a))
 QuasiMatrix(a::AbstractQuasiMatrix) = QuasiArray(a)
 QuasiVector(a::AbstractQuasiVector) = QuasiArray(a)
 
@@ -61,3 +74,11 @@ end
 end
 
 convert(::Type{T}, a::AbstractQuasiArray) where {T<:QuasiArray} = a isa T ? a : T(a)
+
+function _quasimatrix_pow(A, p)
+    axes(A,1) == axes(A,2) || throw(DimensionMismatch("axes must match"))
+    QuasiArray(A.parent^p, A.axes)
+end
+
+^(A::QuasiMatrix, p::Number) = _quasimatrix_pow(A, p)
+^(A::QuasiMatrix, p::Integer) = _quasimatrix_pow(A, p)
