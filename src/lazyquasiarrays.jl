@@ -70,7 +70,7 @@ axes(A::ApplyQuasiArray) = axes(Applied(A))
 size(A::ApplyQuasiArray) = map(length, axes(A))
 copy(A::ApplyQuasiArray) = A # immutable arrays don't need to copy
 
-@propagate_inbounds _getindex(::Type{IND}, A::ApplyQuasiArray, I::IND) where {M,IND} =
+@propagate_inbounds _getindex(::Type{IND}, A::ApplyQuasiArray, I::IND) where IND =
     Applied(A)[I...]
 
 MemoryLayout(M::Type{ApplyQuasiArray{T,N,F,Args}}) where {T,N,F,Args} =
@@ -133,7 +133,7 @@ function ==(A::BroadcastQuasiArray, B::BroadcastQuasiArray)
 end
 copy(A::BroadcastQuasiArray) = A # BroadcastQuasiArray are immutable
 
-@propagate_inbounds getindex(bc::BroadcastQuasiArray, kj::Number...) = bc[QuasiCartesianIndex(kj...)]
+@propagate_inbounds _getindex(::Type{IND}, bc::BroadcastQuasiArray, kj::IND) where IND = bc[QuasiCartesianIndex(kj...)]
 @propagate_inbounds function getindex(bc::BroadcastQuasiArray{T,N}, kj::QuasiCartesianIndex{N}) where {T,N}
     args = Base.Broadcast._getindex(bc.args, kj)
     Base.Broadcast._broadcast_getindex_evalf(bc.f, args...)

@@ -100,7 +100,7 @@ instantiate(bc::Broadcasted{<:AbstractQuasiArrayStyle{0}}) = bc
 result_join(::AbstractQuasiArrayStyle, ::AbstractQuasiArrayStyle, ::Unknown, ::Unknown) =
     QuasiArrayConflict()
 
-Base.@propagate_inbounds _newindex(ax::Tuple, I::Tuple) = (ifelse(Base.unsafe_length(ax[1])==1, first(ax[1]), I[1]), _newindex(tail(ax), tail(I))...)
+Base.@propagate_inbounds _newindex(ax::Tuple, I::Tuple) = (Base.unsafe_length(ax[1])==1 ? first(ax[1]) : I[1], _newindex(tail(ax), tail(I))...)
 Base.@propagate_inbounds _newindex(ax::Tuple{}, I::Tuple) = ()
 Base.@propagate_inbounds _newindex(ax::Tuple, I::Tuple{}) = (first(ax[1]), _newindex(tail(ax), ())...)
 Base.@propagate_inbounds _newindex(ax::Tuple{}, I::Tuple{}) = ()
