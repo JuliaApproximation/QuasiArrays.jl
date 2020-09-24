@@ -190,9 +190,19 @@ end
 
 function show(io::IO, A::BroadcastQuasiArray{<:Any,N,typeof(Base.literal_pow),Tuple{Base.RefValue{typeof(^)},XX,Base.RefValue{Val{K}}}}) where {N,XX,K}
     args = arguments(A)
+    print(io, "(")
     show(io, args[2])
-    print(io, " .^ $K")
+    print(io, ") .^ $K")
 end
+
+function show(io::IO, A::BroadcastQuasiArray{<:Any,N,typeof(^),Tuple{XX,YY}}) where {N,XX,YY}
+    x,y = arguments(A)
+    print(io, "(")
+    show(io, x)
+    print(io, ") .^ ")
+    show(io, y)
+end
+
 
 show(io::IO, ::MIME"text/plain", A::BroadcastQuasiArray) = show(io, A)
 
