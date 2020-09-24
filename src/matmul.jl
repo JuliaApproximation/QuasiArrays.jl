@@ -19,15 +19,6 @@ ApplyStyle(::typeof(*), ::Type{<:AbstractQuasiArray}, ::Type{<:AbstractArray}) =
 ApplyStyle(::typeof(*), ::Type{<:AbstractQuasiArray}, ::Type{<:AbstractQuasiArray}) = MulStyle()
 
 
-function getindex(M::QuasiMatMulVec, k::AbstractArray)
-    A,B = M.args
-    ret = zeros(eltype(M),length(k))
-    @inbounds for j in axes(A,2)
-        ret .+= view(A,k,j) .* B[j]
-    end
-    ret
-end
-
 *(A::AbstractQuasiMatrix) = copy(A)
 *(A::AbstractQuasiArray, B::AbstractQuasiArray) = mul(A, B)
 *(A::AbstractArray, B::AbstractQuasiArray) = mul(A, B)
