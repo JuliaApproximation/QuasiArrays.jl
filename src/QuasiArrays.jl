@@ -15,7 +15,7 @@ import Base: ViewIndex, Slice, IdentityUnitRange, ScalarIndex, RangeIndex, view,
                 _ind2sub, _sub2ind, _ind2sub_recurse, _lookup, SubArray,
                 parentindices, reverse, ndims, checkbounds, uncolon,
                 promote_shape, maybeview, checkindex, checkbounds_indices,
-                throw_boundserror, rdims, replace_in_print_matrix, show,
+                throw_boundserror, rdims, replace_in_print_matrix, show, summary,
                 hcat, vcat, hvcat
 import Base: *, /, \, +, -, ^, inv
 import Base: exp, log, sqrt,
@@ -41,7 +41,7 @@ import LazyArrays: MemoryLayout, UnknownLayout, Mul, ApplyLayout, BroadcastLayou
                     rowsupport, colsupport, tuple_type_memorylayouts, applylayout, broadcastlayout,
                     LdivStyle, most, InvLayout, PInvLayout, sub_materialize, lazymaterialize,
                     _mul, rowsupport, DiagonalLayout, adjointlayout, transposelayout, conjlayout,
-                    sublayout, call, LazyArrayStyle, layout_getindex, _broadcast2broadcastarray
+                    sublayout, call, LazyArrayStyle, layout_getindex, _broadcast2broadcastarray, _applyarray_summary, _broadcastarray_summary
 
 import Base.IteratorsMD
 

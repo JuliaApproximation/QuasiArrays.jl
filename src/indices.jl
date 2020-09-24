@@ -185,7 +185,7 @@ getindex(S::Inclusion{T}, i::AbstractVector{T}) where T =
 getindex(S::Inclusion, i::Inclusion) =
     (@_inline_meta; @boundscheck checkbounds(S, i); copy(S))
 getindex(S::Inclusion, ::Colon) = copy(S)
-show(io::IO, r::Inclusion) = print(io, "Inclusion(", r.domain, ")")
+summary(io::IO, r::Inclusion) = print(io, "Inclusion(", r.domain, ")")
 iterate(S::Inclusion, s...) = iterate(S.domain, s...)
 
 in(x, S::Inclusion) = x in S.domain

@@ -157,52 +157,27 @@ call(b::BroadcastLayout, a::SubQuasiArray) = call(b, parent(a))
 ####
 
 
-function show(io::IO, A::BroadcastQuasiArray)
-    args = arguments(A)
-    print(io, "$(A.f).(")
-    show(io, first(args))
-    for a in tail(args)
-        print(io, ", ")
-        show(io, a)
-    end
-    print(io, ")")
-end
-
+summary(io::IO, A::BroadcastQuasiArray) = _broadcastarray_summary(io, A)
+summary(io::IO, A::ApplyQuasiArray) = _applyarray_summary(io, A)
 
 for op in (:+, :-, :*, :\, :/)
     @eval begin
-        function show(io::IO, A::BroadcastQuasiArray{<:Any,N,typeof($op)}) where N
+        function summary(io::IO, A::BroadcastQuasiArray{<:Any,N,typeof($op)}) where N
             args = arguments(A)
             if length(args) == 1
                 print(io, "($($op)).(")
-                show(io, first(args))
+                summary(io, first(args))
                 print(io, ")")
             else
-                show(io, first(args))
+                summary(io, first(args))
                 for a in tail(args)
                     print(io, " .$($op) ")
-                    show(io, a)
+                    summary(io, a)
                 end
             end
         end
     end
 end
-
-function show(io::IO, A::BroadcastQuasiArray{<:Any,N,typeof(Base.literal_pow),Tuple{Base.RefValue{typeof(^)},XX,Base.RefValue{Val{K}}}}) where {N,XX,K}
-    args = arguments(A)
-    print(io, "(")
-    show(io, args[2])
-    print(io, ") .^ $K")
-end
-
-function show(io::IO, A::BroadcastQuasiArray{<:Any,N,typeof(^),Tuple{XX,YY}}) where {N,XX,YY}
-    x,y = arguments(A)
-    print(io, "(")
-    show(io, x)
-    print(io, ") .^ ")
-    show(io, y)
-end
-
 
 show(io::IO, ::MIME"text/plain", A::BroadcastQuasiArray) = show(io, A)
 
