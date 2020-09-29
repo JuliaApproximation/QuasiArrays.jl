@@ -165,7 +165,7 @@ import QuasiArrays: QuasiCartesianIndex, QuasiCartesianIndices, DefaultQuasiArra
         @testset "show" begin
             x = Inclusion(0:0.5:1)
             @test stringmime("text/plain", exp.(x)) == "exp.(Inclusion(0.0:0.5:1.0))"
-            @test stringmime("text/plain", x.^2) == "Inclusion(0.0:0.5:1.0) .^ 2"
+            @test stringmime("text/plain", x.^2) == "(Inclusion(0.0:0.5:1.0)) .^ 2"
             @test stringmime("text/plain", x .- x) == "Inclusion(0.0:0.5:1.0) .- Inclusion(0.0:0.5:1.0)"
             @test stringmime("text/plain", x .+ x) == "Inclusion(0.0:0.5:1.0) .+ Inclusion(0.0:0.5:1.0)"
             @test stringmime("text/plain", (-).(x)) == "(-).(Inclusion(0.0:0.5:1.0))"
