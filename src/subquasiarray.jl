@@ -331,12 +331,11 @@ end
 # show
 ###
 
-function show(io::IO, v::SubQuasiArray)
+function summary(io::IO, v::SubQuasiArray)
     print(io, "view(")
-    show(io, parent(v))
+    summary(io, parent(v))
     Base.showindices(io, v.indices...)
     print(io, ')')
     print(io, " with eltype ", eltype(v))
 end
 
-show(io::IO, ::MIME"text/plain", v::SubQuasiArray) = show(io, v)
