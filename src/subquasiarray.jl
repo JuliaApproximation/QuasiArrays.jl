@@ -111,16 +111,14 @@ function SubArray(parent::AbstractQuasiArray, indices::Tuple)
     SubArray(IndexStyle(quasi_viewindexing(axes(parent), indices), IndexStyle(parent)), parent, ensure_indexable(indices), quasi_index_dimsum(axes(parent), indices))
 end
 
+
 unsafe_view(A::AbstractQuasiArray, I...) = _unsafe_view(indextype(A), A, I)
-
-
-
-_unsafe_view(::Type{Tuple{IND}}, A::AbstractQuasiArray, I::Tuple{ViewIndex{IND}}) where {IND} = SubArray(A, I)
-_unsafe_view(::Type{Tuple{IND}}, A::AbstractQuasiArray, I::Tuple{QViewIndex{IND}}) where {IND} = SubQuasiArray(A, I)
-_unsafe_view(::Type{Tuple{IND1,IND2}}, A::AbstractQuasiArray, I::Tuple{ViewIndex{IND1},ViewIndex{IND2}}) where {IND1,IND2} = SubArray(A, I)
-_unsafe_view(::Type{Tuple{IND1,IND2}}, A::AbstractQuasiArray, I::Tuple{QViewIndex{IND1},QViewIndex{IND2}}) where {IND1,IND2} = SubQuasiArray(A, I)
-_unsafe_view(::Type{Tuple{IND1,IND2}}, A::AbstractQuasiArray, I::Tuple{QViewIndex{IND1},ViewIndex{IND2}}) where {IND1,IND2} = SubQuasiArray(A, I)
-_unsafe_view(::Type{Tuple{IND1,IND2}}, A::AbstractQuasiArray, I::Tuple{ViewIndex{IND1},QViewIndex{IND2}}) where {IND1,IND2} = SubQuasiArray(A, I)
+unsafe_view(V::SubQuasiArray, I...) = (@_inline_meta; _maybe_reindex(V, I))
+_unsafe_view(::Type{INDS}, A::AbstractQuasiArray, I::Tuple) where {INDS} = _unsafe_view_type(INDS, I)(A, I)
+# If Array-based indexing, use SubArray, otherwise SubQuasiArray
+_unsafe_view_type(::Type{Tuple{}}, ::Tuple) = SubArray
+_unsafe_view_type(inds::Type{<:Tuple{IND,Vararg{Any}}}, I::Tuple{ViewIndex{IND},Vararg{Any}}) where IND = _unsafe_view_type(Base.tuple_type_tail(inds), tail(I))
+_unsafe_view_type(inds::Type{<:Tuple{IND,Vararg{Any}}}, I::Tuple{AbstractQuasiArray{IND},Vararg{Any}}) where IND = SubQuasiArray
 
 
 
@@ -144,14 +142,15 @@ _maybe_reindex(V, I) = (@_inline_meta; _maybe_reindex(V, I, I))
 _maybe_reindex(V, I, A::Tuple{Any, Vararg{Any}}) = (@_inline_meta; _maybe_reindex(V, I, tail(A)))
 
 _subarray(::Type{IND}, A::AbstractArray, idxs) where IND = SubArray(A, idxs)
-_subarray(::Type{IND}, A::AbstractQuasiArray, idxs) where IND = SubQuasiArray(A, idxs)
-_subarray(::Type{IND}, A::AbstractQuasiArray, idxs::NTuple{N,ViewIndex{IND}}) where {N,IND} = SubArray(A, idxs)
+_subarray(::Type{IND}, A::AbstractQuasiArray, idxs) where IND = _unsafe_view_type(IND, idxs)(A, idxs)
 
 function _maybe_reindex(V, I, ::Tuple{})
     @_inline_meta
-    @inbounds idxs = to_indices(V.parent, reindex(V.indices, I))
+    @inbounds idxs = to_indices(V.parent, quasi_reindex(axes(parent(V)), V.indices, I))
     _subarray(indextype(V.parent), V.parent, idxs)
 end
+
+Base._maybe_reindex(V::SubArray{<:Any,N,<:AbstractQuasiArray}, I, ::Tuple{}) where N = _maybe_reindex(V, I, ())
 
 ## Re-indexing is the heart of a view, transforming A[i, j][x, y] to A[i[x], j[y]]
 #
@@ -205,6 +204,10 @@ quasi_reindex(axs::Tuple{AbstractQuasiOrVector{IND}, Vararg{Any}}, idxs::Tuple{I
     (@_propagate_inbounds_meta; (idxs[1], quasi_reindex(tail(axs), tail(idxs), subidxs)...))
 quasi_reindex(axs::Tuple{AbstractQuasiOrVector{IND}, Vararg{Any}}, idxs::Tuple{AbstractQuasiOrVector{IND}, Vararg{Any}}, subidxs::Tuple{Any, Vararg{Any}}) where IND =
     (@_propagate_inbounds_meta; (idxs[1][subidxs[1]], quasi_reindex(tail(axs), tail(idxs), tail(subidxs))...))
+
+# Parent matrices are re-indexed with two sub-indices
+quasi_reindex(axs::Tuple{AbstractQuasiOrVector{IND}, Vararg{Any}},idxs::Tuple{AbstractQuasiOrMatrix{IND}, Vararg{Any}}, subidxs::Tuple{Any, Any, Vararg{Any}}) where IND =
+    (@_propagate_inbounds_meta; (idxs[1][subidxs[1], subidxs[2]], quasi_reindex(tail(axs), tail(idxs), tail(tail(subidxs)))...))
 
 
 quasi_reindex(::Tuple{}, ::Tuple{}, ::Tuple{}) = ()
