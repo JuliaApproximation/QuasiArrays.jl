@@ -112,13 +112,14 @@ function SubArray(parent::AbstractQuasiArray, indices::Tuple)
 end
 
 
-unsafe_view(A::AbstractQuasiArray, I...) = _unsafe_view(indextype(A), A, I)
-unsafe_view(V::SubQuasiArray, I...) = (@_inline_meta; _maybe_reindex(V, I))
+unsafe_view(A::AbstractQuasiArray, I...) = _unsafe_view(indextype(A), A, Base.to_indices(A, I))
+unsafe_view(V::SubQuasiArray, I...) = (@_inline_meta; _maybe_reindex(V, Base.to_indices(V, I)))
 _unsafe_view(::Type{INDS}, A::AbstractQuasiArray, I::Tuple) where {INDS} = _unsafe_view_type(INDS, I)(A, I)
 # If Array-based indexing, use SubArray, otherwise SubQuasiArray
 _unsafe_view_type(::Type{Tuple{}}, ::Tuple) = SubArray
 _unsafe_view_type(inds::Type{<:Tuple{IND,Vararg{Any}}}, I::Tuple{ViewIndex{IND},Vararg{Any}}) where IND = _unsafe_view_type(Base.tuple_type_tail(inds), tail(I))
 _unsafe_view_type(inds::Type{<:Tuple{IND,Vararg{Any}}}, I::Tuple{AbstractQuasiArray{IND},Vararg{Any}}) where IND = SubQuasiArray
+# _unsafe_view_type(inds::Type{<:Tuple{IND,Vararg{Any}}}, I::Tuple{Any,Vararg{Any}}) where IND = _unsafe_view_type(inds, tuple(convert(IND, I[1]), tail(I)...))
 
 
 
