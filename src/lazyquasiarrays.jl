@@ -93,9 +93,9 @@ subbroadcaststyle(::LazyQuasiArrayStyle{N}, _) where N = LazyArrayStyle{N}()
 subbroadcaststyle(::AbstractQuasiArrayStyle{N}, _) where N = DefaultArrayStyle{N}()
 
 ## TODO: Generalise
-subbroadcaststyle(::LazyQuasiArrayStyle{2}, ::Type{Tuple{IND1,IND2}}) where {IND1<:Number,IND2<:Number} = DefaultArrayStyle{0}()
-subbroadcaststyle(::LazyQuasiArrayStyle{2}, ::Type{<:Tuple{IND,Any}}) where IND<:Number = DefaultArrayStyle{1}()
-subbroadcaststyle(::LazyQuasiArrayStyle{2}, ::Type{<:Tuple{Any,IND}}) where IND<:Number = DefaultArrayStyle{1}()
+subbroadcaststyle(::LazyQuasiArrayStyle{2}, ::Type{<:Tuple{Number,Number}}) = DefaultArrayStyle{0}()
+subbroadcaststyle(::LazyQuasiArrayStyle{2}, ::Type{<:Tuple{Number,JR}}) where JR = Base.BroadcastStyle(JR)
+subbroadcaststyle(::LazyQuasiArrayStyle{2}, ::Type{<:Tuple{KR,Number}}) where KR = Base.BroadcastStyle(KR)
 
 
 struct BroadcastQuasiArray{T, N, F, Args} <: LazyQuasiArray{T, N}
