@@ -9,8 +9,8 @@ LazyArrays = "5078a376-72f3-5289-bfd5-ec5146d43c02"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 
 [compat]
-ArrayLayouts = "0.4.3"
-LazyArrays = "0.18.1, 0.19"
+ArrayLayouts = "0.4.10"
+LazyArrays = "0.19"
 julia = "1.5"
 
 [extras]
