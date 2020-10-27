@@ -184,6 +184,18 @@ import QuasiArrays: QuasiCartesianIndex, QuasiCartesianIndices, DefaultQuasiArra
         @test w isa SubQuasiArray
         @test BroadcastStyle(typeof(w)) isa DefaultQuasiArrayStyle{1}
         @test exp.(w) == exp.(a)[Inclusion(0:0.5:1)]
+
+        A = QuasiArray(randn(6,6), (0:0.5:2.5, 0:0.5:2.5))
+        v = view(A,:,0:0.5:1)
+        @test BroadcastStyle(typeof(v)) isa DefaultQuasiArrayStyle{2}
+        v = view(A,0.5,0:0.5:1)
+        @test BroadcastStyle(typeof(v)) isa DefaultArrayStyle{1}
+        @test v .+ (1:3) == parent(A)[2,1:3] .+ (1:3)
+        v = view(A,0:0.5:1,0.5)
+        @test BroadcastStyle(typeof(v)) isa DefaultArrayStyle{1}
+        @test v .+ (1:3) == parent(A)[1:3,2] .+ (1:3)
+        v = view(A,0.5,0.5)
+        @test BroadcastStyle(typeof(v)) isa DefaultArrayStyle{0}
     end
 
     @testset "flatten Broadcast" begin
