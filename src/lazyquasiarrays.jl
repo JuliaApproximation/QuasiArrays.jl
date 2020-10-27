@@ -70,7 +70,7 @@ axes(A::ApplyQuasiArray) = axes(Applied(A))
 size(A::ApplyQuasiArray) = map(length, axes(A))
 copy(A::ApplyQuasiArray) = A # immutable arrays don't need to copy
 
-@propagate_inbounds _getindex(::Type{IND}, A::ApplyQuasiArray, I::IND) where {M,IND} =
+@propagate_inbounds _getindex(::Type{IND}, A::ApplyQuasiArray, I::IND) where IND =
     Applied(A)[I...]
 
 MemoryLayout(M::Type{ApplyQuasiArray{T,N,F,Args}}) where {T,N,F,Args} =
@@ -91,6 +91,11 @@ LazyQuasiArrayStyle{M}(::Val{N}) where {N,M} = LazyQuasiArrayStyle{N}()
 quasisubbroadcaststyle(::LazyQuasiArrayStyle{N}, _) where N = LazyQuasiArrayStyle{N}()
 subbroadcaststyle(::LazyQuasiArrayStyle{N}, _) where N = LazyArrayStyle{N}()
 subbroadcaststyle(::AbstractQuasiArrayStyle{N}, _) where N = DefaultArrayStyle{N}()
+
+# TODO: generalise
+subbroadcaststyle(::AbstractQuasiArrayStyle{2}, ::Type{<:Tuple{Number,Number}}) = DefaultArrayStyle{0}()
+subbroadcaststyle(::AbstractQuasiArrayStyle{2}, ::Type{<:Tuple{Number,JR}}) where JR = Base.BroadcastStyle(JR)
+subbroadcaststyle(::AbstractQuasiArrayStyle{2}, ::Type{<:Tuple{KR,Number}}) where KR = Base.BroadcastStyle(KR)
 
 
 struct BroadcastQuasiArray{T, N, F, Args} <: LazyQuasiArray{T, N}
@@ -133,7 +138,7 @@ function ==(A::BroadcastQuasiArray, B::BroadcastQuasiArray)
 end
 copy(A::BroadcastQuasiArray) = A # BroadcastQuasiArray are immutable
 
-@propagate_inbounds getindex(bc::BroadcastQuasiArray, kj::Number...) = bc[QuasiCartesianIndex(kj...)]
+@propagate_inbounds _getindex(::Type{IND}, bc::BroadcastQuasiArray, kj::IND) where IND = bc[QuasiCartesianIndex(kj...)]
 @propagate_inbounds function getindex(bc::BroadcastQuasiArray{T,N}, kj::QuasiCartesianIndex{N}) where {T,N}
     args = Base.Broadcast._getindex(bc.args, kj)
     Base.Broadcast._broadcast_getindex_evalf(bc.f, args...)
@@ -157,41 +162,26 @@ call(b::BroadcastLayout, a::SubQuasiArray) = call(b, parent(a))
 ####
 
 
-function show(io::IO, A::BroadcastQuasiArray)
-    args = arguments(A)
-    print(io, "$(A.f).(")
-    show(io, first(args))
-    for a in tail(args)
-        print(io, ", ")
-        show(io, a)
-    end
-    print(io, ")")
-end
-
+summary(io::IO, A::BroadcastQuasiArray) = _broadcastarray_summary(io, A)
+summary(io::IO, A::ApplyQuasiArray) = _applyarray_summary(io, A)
 
 for op in (:+, :-, :*, :\, :/)
     @eval begin
-        function show(io::IO, A::BroadcastQuasiArray{<:Any,N,typeof($op)}) where N
+        function summary(io::IO, A::BroadcastQuasiArray{<:Any,N,typeof($op)}) where N
             args = arguments(A)
             if length(args) == 1
                 print(io, "($($op)).(")
-                show(io, first(args))
+                summary(io, first(args))
                 print(io, ")")
             else
-                show(io, first(args))
+                summary(io, first(args))
                 for a in tail(args)
                     print(io, " .$($op) ")
-                    show(io, a)
+                    summary(io, a)
                 end
             end
         end
     end
-end
-
-function show(io::IO, A::BroadcastQuasiArray{<:Any,N,typeof(Base.literal_pow),Tuple{Base.RefValue{typeof(^)},XX,Base.RefValue{Val{K}}}}) where {N,XX,K}
-    args = arguments(A)
-    show(io, args[2])
-    print(io, " .^ $K")
 end
 
 show(io::IO, ::MIME"text/plain", A::BroadcastQuasiArray) = show(io, A)

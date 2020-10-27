@@ -129,6 +129,7 @@ module QuasiIteratorsMD
     # conversions
     convert(::Type{T}, index::QuasiCartesianIndex{1}) where {T} = convert(T, index[1])
     convert(::Type{T}, index::QuasiCartesianIndex) where {T<:Tuple} = convert(T, index.I)
+    convert(::Type{Any}, index::QuasiCartesianIndex{1}) = index
 
     # hashing
     const cartindexhash_seed = UInt == UInt64 ? 0xd60ca92f8284b8b0 : 0xf2ea7c2e
