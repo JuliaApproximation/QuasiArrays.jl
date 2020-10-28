@@ -97,6 +97,10 @@ subbroadcaststyle(::AbstractQuasiArrayStyle{2}, ::Type{<:Tuple{Number,Number}}) 
 subbroadcaststyle(::AbstractQuasiArrayStyle{2}, ::Type{<:Tuple{Number,JR}}) where JR = Base.BroadcastStyle(JR)
 subbroadcaststyle(::AbstractQuasiArrayStyle{2}, ::Type{<:Tuple{KR,Number}}) where KR = Base.BroadcastStyle(KR)
 
+subbroadcaststyle(::LazyQuasiArrayStyle{2}, ::Type{<:Tuple{Number,Number}}) = DefaultArrayStyle{0}()
+subbroadcaststyle(::LazyQuasiArrayStyle{2}, ::Type{<:Tuple{Number,JR}}) where JR = Base.BroadcastStyle(JR)
+subbroadcaststyle(::LazyQuasiArrayStyle{2}, ::Type{<:Tuple{KR,Number}}) where KR = Base.BroadcastStyle(KR)
+
 
 struct BroadcastQuasiArray{T, N, F, Args} <: LazyQuasiArray{T, N}
     f::F
