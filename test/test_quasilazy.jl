@@ -1,5 +1,5 @@
 using QuasiArrays, LazyArrays, ArrayLayouts, Test
-import QuasiArrays: QuasiLazyLayout, QuasiArrayApplyStyle, LazyQuasiMatrix
+import QuasiArrays: QuasiLazyLayout, QuasiArrayApplyStyle, LazyQuasiMatrix, LazyQuasiArrayStyle
 import LazyArrays: MulStyle, ApplyStyle
 
 struct MyQuasiLazyMatrix <: LazyQuasiMatrix{Float64}
@@ -10,6 +10,13 @@ Base.axes(A::MyQuasiLazyMatrix) = axes(A.A)
 Base.getindex(A::MyQuasiLazyMatrix, x::Float64, y::Float64) = A.A[x,y]
 
 @testset "LazyQuasiArray" begin
+    @testset "sub" begin
+        A = MyQuasiLazyMatrix(QuasiArray(rand(3,3),(0:0.5:1,0:0.5:1)))
+        @test Base.BroadcastStyle(typeof(A)) isa LazyQuasiArrayStyle{2}
+        @test Base.BroadcastStyle(typeof(view(A,0.5,0.5))) isa Base.Broadcast.DefaultArrayStyle{0}
+        @test Base.BroadcastStyle(typeof(view(A,0:0.5:0.5,0.5))) isa Base.Broadcast.DefaultArrayStyle{1}
+        @test Base.BroadcastStyle(typeof(view(A,0.5,0:0.5:0.5))) isa Base.Broadcast.DefaultArrayStyle{1}
+    end
     @testset "*" begin
         @testset "Apply" begin
             @testset "Quasi * Quasi" begin
