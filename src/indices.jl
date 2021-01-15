@@ -178,13 +178,11 @@ size(S::Inclusion) = (cardinality(S.domain),)
 length(S::Inclusion) = cardinality(S.domain)
 unsafe_length(S::Inclusion) = cardinality(S.domain)
 cardinality(S::Inclusion) = cardinality(S.domain)
-getindex(S::Inclusion{T}, i::T) where T =
-    (@_inline_meta; @boundscheck checkbounds(S, i); convert(T,i))
-getindex(S::Inclusion{T}, i::AbstractVector{T}) where T =
-    (@_inline_meta; @boundscheck checkbounds(S, i); convert(AbstractVector{T},i))
-getindex(S::Inclusion, i::Inclusion) =
-    (@_inline_meta; @boundscheck checkbounds(S, i); copy(S))
+getindex(S::Inclusion{T}, i::T) where T = (@_inline_meta; @boundscheck checkbounds(S, i); convert(T,i))
+getindex(S::Inclusion{T}, i::AbstractVector{T}) where T = (@_inline_meta; @boundscheck checkbounds(S, i); convert(AbstractVector{T},i))
+getindex(S::Inclusion, i::Inclusion) = (@_inline_meta; @boundscheck checkbounds(S, i); copy(S))
 getindex(S::Inclusion, ::Colon) = copy(S)
+Base.unsafe_getindex(S::Inclusion{T}, x) where T = convert(T, x)::T
 summary(io::IO, r::Inclusion) = print(io, "Inclusion(", r.domain, ")")
 iterate(S::Inclusion, s...) = iterate(S.domain, s...)
 
