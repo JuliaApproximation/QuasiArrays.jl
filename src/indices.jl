@@ -189,8 +189,9 @@ summary(io::IO, r::Inclusion) = print(io, "Inclusion(", r.domain, ")")
 iterate(S::Inclusion, s...) = iterate(S.domain, s...)
 
 in(x, S::Inclusion) = x in S.domain
+Base.issubset(S::Inclusion, d) = S.domain ⊆ d
 
-checkindex(::Type{Bool}, inds::Inclusion, i) = i ∈ inds.domain
+checkindex(::Type{Bool}, inds::Inclusion, i) = i ⊆ inds.domain
 checkindex(::Type{Bool}, inds::Inclusion, ::Colon) = true
 checkindex(::Type{Bool}, inds::Inclusion, ::Inclusion) = true
 function __checkindex(::Type{Bool}, inds::Inclusion, I::AbstractArray)
