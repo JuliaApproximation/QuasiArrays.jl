@@ -178,19 +178,19 @@ size(S::Inclusion) = (cardinality(S.domain),)
 length(S::Inclusion) = cardinality(S.domain)
 unsafe_length(S::Inclusion) = cardinality(S.domain)
 cardinality(S::Inclusion) = cardinality(S.domain)
-getindex(S::Inclusion{T}, i::T) where T =
-    (@_inline_meta; @boundscheck checkbounds(S, i); convert(T,i))
-getindex(S::Inclusion{T}, i::AbstractVector{T}) where T =
-    (@_inline_meta; @boundscheck checkbounds(S, i); convert(AbstractVector{T},i))
-getindex(S::Inclusion, i::Inclusion) =
-    (@_inline_meta; @boundscheck checkbounds(S, i); copy(S))
+getindex(S::Inclusion{T}, i::T) where T = (@_inline_meta; @boundscheck checkbounds(S, i); convert(T,i))
+getindex(S::Inclusion{T}, i::AbstractVector{T}) where T = (@_inline_meta; @boundscheck checkbounds(S, i); convert(AbstractVector{T},i))
+getindex(S::Inclusion, i::Inclusion) = (@_inline_meta; @boundscheck checkbounds(S, i); copy(S))
 getindex(S::Inclusion, ::Colon) = copy(S)
+Base.unsafe_getindex(S::Inclusion{T}, x) where T = convert(T, x)::T
 summary(io::IO, r::Inclusion) = print(io, "Inclusion(", r.domain, ")")
 iterate(S::Inclusion, s...) = iterate(S.domain, s...)
 
 in(x, S::Inclusion) = x in S.domain
+Base.issubset(S::Inclusion, d) = S.domain ⊆ d
 
-checkindex(::Type{Bool}, inds::Inclusion, i) = i ∈ inds.domain
+checkindex(::Type{Bool}, inds::Inclusion{T}, i::T) where T = i in inds.domain
+checkindex(::Type{Bool}, inds::Inclusion, i) = i ⊆ inds.domain
 checkindex(::Type{Bool}, inds::Inclusion, ::Colon) = true
 checkindex(::Type{Bool}, inds::Inclusion, ::Inclusion) = true
 function __checkindex(::Type{Bool}, inds::Inclusion, I::AbstractArray)
@@ -215,3 +215,12 @@ function checkindex(::Type{Bool}, inds::Inclusion{T}, r::AbstractRange) where T
 end
 checkindex(::Type{Bool}, indx::Inclusion, I::AbstractVector{Bool}) = indx == axes1(I)
 checkindex(::Type{Bool}, indx::Inclusion, I::AbstractArray{Bool}) = false
+
+for find in (:(Base.findfirst), :(Base.findlast))
+    @eval $find(f::Base.Fix2{typeof(isequal)}, d::Inclusion) = f.x in d.domain ? f.x : nothing
+end
+
+function Base.findall(f::Base.Fix2{typeof(isequal)}, d::Inclusion)
+    r = findfirst(f,d)
+    r === nothing ? eltype(d)[] : [r]
+end
