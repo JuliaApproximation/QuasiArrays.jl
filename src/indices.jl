@@ -191,6 +191,7 @@ iterate(S::Inclusion, s...) = iterate(S.domain, s...)
 in(x, S::Inclusion) = x in S.domain
 Base.issubset(S::Inclusion, d) = S.domain ⊆ d
 
+checkindex(::Type{Bool}, inds::Inclusion{T}, i::T) where T = i in inds.domain
 checkindex(::Type{Bool}, inds::Inclusion, i) = i ⊆ inds.domain
 checkindex(::Type{Bool}, inds::Inclusion, ::Colon) = true
 checkindex(::Type{Bool}, inds::Inclusion, ::Inclusion) = true
