@@ -217,3 +217,12 @@ function checkindex(::Type{Bool}, inds::Inclusion{T}, r::AbstractRange) where T
 end
 checkindex(::Type{Bool}, indx::Inclusion, I::AbstractVector{Bool}) = indx == axes1(I)
 checkindex(::Type{Bool}, indx::Inclusion, I::AbstractArray{Bool}) = false
+
+for find in (:(Base.findfirst), :(Base.findlast))
+    @eval $find(f::Base.Fix2{typeof(isequal)}, d::Inclusion) = f.x in d.domain ? f.x : nothing
+end
+
+function Base.findall(f::Base.Fix2{typeof(isequal)}, d::Inclusion)
+    r = findfirst(f,d)
+    r === nothing ? eltype(d)[] : [r]
+end
