@@ -727,3 +727,10 @@ function hash(A::AbstractQuasiArray, h::UInt)
 
     return h
 end
+
+
+##
+# show
+##
+
+show(io::IO, A::AbstractQuasiArray) = summary(io, A)

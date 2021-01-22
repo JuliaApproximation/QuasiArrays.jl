@@ -179,21 +179,21 @@ size(S::Inclusion) = (cardinality(S.domain),)
 length(S::Inclusion) = cardinality(S.domain)
 unsafe_length(S::Inclusion) = cardinality(S.domain)
 cardinality(S::Inclusion) = cardinality(S.domain)
-getindex(S::AbstractInclusion{T}, i::T) where T =
-    (@_inline_meta; @boundscheck checkbounds(S, i); convert(T,i))
-getindex(S::AbstractInclusion{T}, i::AbstractVector{T}) where T =
-    (@_inline_meta; @boundscheck checkbounds(S, i); convert(AbstractVector{T},i))
-getindex(S::AbstractInclusion, i::AbstractInclusion) =
-    (@_inline_meta; @boundscheck checkbounds(S, i); copy(S))
+getindex(S::AbstractInclusion{T}, i::T) where T = (@_inline_meta; @boundscheck checkbounds(S, i); convert(T,i))
+getindex(S::AbstractInclusion{T}, i::AbstractArray{T}) where T = (@_inline_meta; @boundscheck checkbounds(S, i); convert(AbstractArray{T},i))
+getindex(S::AbstractInclusion, i::Inclusion) = (@_inline_meta; @boundscheck checkbounds(S, i); copy(S))
 getindex(S::AbstractInclusion, ::Colon) = copy(S)
-show(io::IO, r::Inclusion) = print(io, "Inclusion(", r.domain, ")")
+Base.unsafe_getindex(S::Inclusion{T}, x) where T = convert(T, x)::T
+summary(io::IO, r::Inclusion) = print(io, "Inclusion(", r.domain, ")")
 iterate(S::Inclusion, s...) = iterate(S.domain, s...)
 
 in(x, S::Inclusion) = x in S.domain
+Base.issubset(S::Inclusion, d) = S.domain ⊆ d
 
-checkindex(::Type{Bool}, inds::AbstractInclusion, i) = i ∈ inds
+checkindex(::Type{Bool}, inds::AbstractInclusion{T}, i::T) where T = i ∈ inds.domain
+checkindex(::Type{Bool}, inds::AbstractInclusion, i) = i ⊆ inds.domain
 checkindex(::Type{Bool}, inds::AbstractInclusion, ::Colon) = true
-checkindex(::Type{Bool}, inds::AbstractInclusion, ::AbstractInclusion) = true
+checkindex(::Type{Bool}, inds::AbstractInclusion, ::Inclusion) = true
 function __checkindex(::Type{Bool}, inds::AbstractInclusion, I::AbstractArray)
     @_inline_meta
     b = true
@@ -209,3 +209,20 @@ checkindex(::Type{Bool}, inds::AbstractInclusion{T}, I::AbstractArray{T}) where 
     __checkindex(Bool, inds, I)
 checkindex(::Type{Bool}, inds::AbstractInclusion{T}, I::AbstractArray{<:AbstractArray}) where T<:AbstractArray = 
     __checkindex(Bool, inds, convert(AbstractArray{T}, I))
+
+function checkindex(::Type{Bool}, inds::Inclusion{T}, r::AbstractRange) where T
+    @_propagate_inbounds_meta
+    isempty(r) | (checkindex(Bool, inds, convert(T, first(r))) & checkindex(Bool, inds, last(r)))
+end
+checkindex(::Type{Bool}, indx::Inclusion, I::AbstractVector{Bool}) = indx == axes1(I)
+checkindex(::Type{Bool}, indx::Inclusion, I::AbstractArray{Bool}) = false
+
+for find in (:(Base.findfirst), :(Base.findlast))
+    @eval $find(f::Base.Fix2{typeof(isequal)}, d::Inclusion) = f.x in d.domain ? f.x : nothing
+end
+
+function Base.findall(f::Base.Fix2{typeof(isequal)}, d::Inclusion)
+    r = findfirst(f,d)
+    r === nothing ? eltype(d)[] : [r]
+end
+

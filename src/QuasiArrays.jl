@@ -10,12 +10,12 @@ import Base: @_inline_meta, DimOrInd, OneTo, @_propagate_inbounds_meta, @_noinli
                 index_shape, to_shape, unsafe_length, @nloops, @ncall, unalias, _unaliascopy,
                 to_index, to_indices, _to_subscript_indices, _splatmap, dataids, 
                 compute_stride1, compute_offset1, fill_to_length
-import Base: ViewIndex, Slice, IdentityUnitRange, ScalarIndex, RangeIndex, view, viewindexing, ensure_indexable, index_dimsum,
+import Base: Slice, IdentityUnitRange, ScalarIndex, RangeIndex, view, viewindexing, ensure_indexable, index_dimsum,
                 check_parent_index_match, reindex, _isdisjoint, unsafe_indices, _unsafe_ind2sub,
                 _ind2sub, _sub2ind, _ind2sub_recurse, _lookup, SubArray,
                 parentindices, reverse, ndims, checkbounds, uncolon,
-                promote_shape, maybeview, checkindex, checkbounds_indices,
-                throw_boundserror, rdims, replace_in_print_matrix, show,
+                promote_shape, maybeview, unsafe_view, checkindex, checkbounds_indices,
+                throw_boundserror, rdims, replace_in_print_matrix, show, summary,
                 hcat, vcat, hvcat
 import Base: *, /, \, +, -, ^, inv
 import Base: exp, log, sqrt,
@@ -42,7 +42,7 @@ import LazyArrays: MemoryLayout, UnknownLayout, Mul, ApplyLayout, BroadcastLayou
                     rowsupport, colsupport, tuple_type_memorylayouts, applylayout, broadcastlayout,
                     LdivStyle, most, InvLayout, PInvLayout, sub_materialize, lazymaterialize,
                     _mul, rowsupport, DiagonalLayout, adjointlayout, transposelayout, conjlayout,
-                    sublayout, call, LazyArrayStyle, layout_getindex, _broadcast2broadcastarray
+                    sublayout, call, LazyArrayStyle, layout_getindex, _broadcast2broadcastarray, _applyarray_summary, _broadcastarray_summary
 
 import Base.IteratorsMD
 
@@ -50,7 +50,7 @@ export AbstractQuasiArray, AbstractQuasiMatrix, AbstractQuasiVector, materialize
        QuasiArray, QuasiMatrix, QuasiVector, QuasiDiagonal, Inclusion,
        QuasiAdjoint, QuasiTranspose, ApplyQuasiArray, ApplyQuasiMatrix, ApplyQuasiVector,
        BroadcastQuasiArray, BroadcastQuasiMatrix, BroadcastQuasiVector, indextype,
-       QuasiKron, UnionVcat
+       QuasiKron, UnionVcat, SubQuasiArray
 
 import Base.Broadcast: broadcast_preserving_zero_d
 
