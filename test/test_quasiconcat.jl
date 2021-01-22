@@ -36,7 +36,21 @@ import QuasiArrays: ApplyQuasiMatrix, UnionVcat, InclusionUnion
             @test_throws BoundsError c[2.5]
         end
         @testset "matrix" begin
-            
+            A = QuasiArray(randn(5,2), (0:0.5:2, [1,4]))
+            B = QuasiArray(randn(3,2), (3:0.5:4, [1,4]))
+            C = UnionVcat(A, B)
+            @test C[0,1] == A[0,1]
+            @test C[0.5,1] == A[0.5,1]
+            @test C[0.5,4] == A[0.5,4]
+            @test C[3,1] == B[3,1]
+            @test C[3.5,1] == B[3.5,1]
+            @test C[3.5,4] == B[3.5,4]
+            @test_throws BoundsError C[2.5,1]
+            @test_throws BoundsError C[3,2]
         end
+    end
+
+    @testset "UnionDiag" begin
+        
     end
 end 

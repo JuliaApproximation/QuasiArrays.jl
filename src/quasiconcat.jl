@@ -84,3 +84,10 @@ function _getindex(::Type{IND}, A::UnionVcat{T,1}, (x,)::IND) where {IND,T}
     end
     throw(BoundsError(A, I))
 end
+
+function _getindex(::Type{IND}, A::UnionVcat{T,2}, (x,j)::IND) where {IND,T}
+    for a in A.args
+        x in axes(a,1) && return convert(T,a[x,j])::T
+    end
+    throw(BoundsError(A, I))
+end
