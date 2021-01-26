@@ -210,10 +210,10 @@ checkindex(::Type{Bool}, inds::AbstractInclusion{T}, I::AbstractArray{T}) where 
 checkindex(::Type{Bool}, inds::AbstractInclusion{T}, I::AbstractArray{<:AbstractArray}) where T<:AbstractArray = 
     __checkindex(Bool, inds, convert(AbstractArray{T}, I))
 
-function checkindex(::Type{Bool}, inds::Inclusion{T}, r::AbstractRange) where T
-    @_propagate_inbounds_meta
-    isempty(r) | (checkindex(Bool, inds, convert(T, first(r))) & checkindex(Bool, inds, last(r)))
-end
+@propagate_inbounds _affine_checkindex(inds, r) = isempty(r) | (checkindex(Bool, inds, Base.to_indices(inds, (first(r),))...) & checkindex(Bool, inds,  Base.to_indices(inds, (last(r),))...))
+@propagate_inbounds checkindex(::Type{Bool}, inds::Inclusion, r::AbstractRange) = _affine_checkindex(inds, r)
+
+
 checkindex(::Type{Bool}, indx::Inclusion, I::AbstractVector{Bool}) = indx == axes1(I)
 checkindex(::Type{Bool}, indx::Inclusion, I::AbstractArray{Bool}) = false
 
