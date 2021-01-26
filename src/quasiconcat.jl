@@ -17,40 +17,7 @@ function getindex(f::ApplyQuasiMatrix{T,typeof(hcat)}, k::Number, j::Number) whe
     throw(BoundsError(f, (k,j)))
 end
 
-"""
-    InclusionUnion(A, B, C...)
-
-is used to represent the union of (A...)
-"""
-
-struct InclusionUnion{T, Args<:Tuple} <: AbstractInclusion{T}
-    args::Args
-end
-
-InclusionUnion{T}(a...) where T = InclusionUnion{T,typeof(a)}(a)
-InclusionUnion(a...) = InclusionUnion{mapreduce(eltype,promote_type,a)}(a...)
-
-copy(d::InclusionUnion) = d
-
-==(A::InclusionUnion, B::InclusionUnion) = A.args == B.args
-==(A::InclusionUnion, B::Inclusion) = all(A.args .== Ref(B))
-==(A::Inclusion, B::InclusionUnion) = all(Ref(A) .== B.args)
-
-axes(S::InclusionUnion) = (S,)
-unsafe_indices(S::InclusionUnion) = (S,)
-axes1(S::InclusionUnion) = S
-
-first(S::InclusionUnion) = first(first(S.args))
-last(S::InclusionUnion) = last(last(S.args))
-size(S::InclusionUnion) = (sum(size.(S.args,1)),)
-length(S::InclusionUnion) = sum(map(length,S.args))
-cardinality(S::InclusionUnion) = sum(map(cardinality,S.args))
-show(io::IO, r::InclusionUnion) = print(io, "InclusionUnion(", r.args, ")")
-# iterate(S::InclusionUnion, s...) = iterate(S.domain, s...)
-
-in(x, S::InclusionUnion) = any(in.(Ref(x), S.args))
-
-union(x::AbstractInclusion...) = InclusionUnion(x...)
+union(x::AbstractInclusion...) = Inclusion(UnionDomain(map(domain,x)...))
 
 """
     UnionVcat

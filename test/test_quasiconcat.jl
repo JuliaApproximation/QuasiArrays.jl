@@ -1,5 +1,5 @@
-using QuasiArrays, Test
-import QuasiArrays: ApplyQuasiMatrix, UnionVcat, InclusionUnion
+using QuasiArrays, DomainSets, Test
+import QuasiArrays: ApplyQuasiMatrix, UnionVcat
 
 @testset "Concatenation" begin
     @testset "Hcat" begin
@@ -13,7 +13,7 @@ import QuasiArrays: ApplyQuasiMatrix, UnionVcat, InclusionUnion
         @test QuasiArray(B) == B
     end
 
-    @testset "InclusionUnion" begin
+    @testset "Inclusion Union" begin
         a = Inclusion(0:0.5:2)
         b = Inclusion([1,3,4])
         c = union(a,b)
@@ -30,7 +30,7 @@ import QuasiArrays: ApplyQuasiMatrix, UnionVcat, InclusionUnion
             a = QuasiVector(randn(5), 0:0.5:2)
             b = QuasiVector([5,6,8], [1,3,4])
             c = UnionVcat(a,b)
-            @test axes(c,1) == InclusionUnion(axes(a,1),axes(b,1))
+            @test axes(c,1) == Inclusion(UnionDomain(0:0.5:2, [1,3,4]))
             @test c[0.5] ≡ a[0.5]
             @test c[3] ≡ c[3.0] ≡ 6.0
             @test_throws BoundsError c[2.5]
@@ -48,9 +48,5 @@ import QuasiArrays: ApplyQuasiMatrix, UnionVcat, InclusionUnion
             @test_throws BoundsError C[2.5,1]
             @test_throws BoundsError C[3,2]
         end
-    end
-
-    @testset "UnionDiag" begin
-        
     end
 end 
