@@ -1,29 +1,3 @@
-"""
-    InclusionKron(A, B, C...)
-
-is used to represent Kronecker products of axes
-"""
-
-struct InclusionKron{T, Args<:Tuple} <: AbstractInclusion{T}
-    args::Args
-end
-
-InclusionKron{T}(a...) where T = InclusionKron{T,typeof(a)}(a)
-InclusionKron(a...) = InclusionKron{Tuple{map(eltype,a)...}}(a...)
-
-
-==(A::InclusionKron, B::InclusionKron) = A.args == B.args
-
-
-first(S::InclusionKron) = map(first,S.args)
-last(S::InclusionKron) = map(last,S.args)
-size(S::InclusionKron) = (prod(size.(S.args,1)),)
-length(S::InclusionKron) = prod(map(length,S.args))
-cardinality(S::InclusionKron) = prod(map(cardinality,S.args))
-show(io::IO, r::InclusionKron) = print(io, "InclusionKron(", r.args, ")")
-# iterate(S::InclusionKron, s...) = iterate(S.domain, s...)
-
-in(x, S::InclusionKron) = all(in.(x, S.args))
 
 
 
@@ -44,9 +18,11 @@ QuasiKron{T}(a::AbstractQuasiOrMatrix...) where T = QuasiKron{mapreduce(eltype,p
 QuasiKron(a...) = QuasiKron{mapreduce(eltype,promote_type,a)}(a...)
 
 
-__kronaxes(a::Inclusion...) = InclusionKron(a...)
+quasikron(a::Inclusion...) = Inclusion(ProductDomain(map(domain,a)...))
+quasikron(a...) = QuasiKron(a...)
+
 _kronaxes(::Tuple{}...) = ()
-_kronaxes(a::Tuple...) = (__kronaxes(map(first,a)...), _kronaxes(map(tail,a)...)...)
+_kronaxes(a::Tuple...) = (quasikron(map(first,a)...), _kronaxes(map(tail,a)...)...)
 axes(K::QuasiKron) = _kronaxes(map(axes,K.args)...)
 
 function getindex(K::QuasiKron{<:Any,1}, i::Tuple)

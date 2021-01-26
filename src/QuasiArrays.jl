@@ -50,7 +50,7 @@ export AbstractQuasiArray, AbstractQuasiMatrix, AbstractQuasiVector, materialize
        QuasiArray, QuasiMatrix, QuasiVector, QuasiDiagonal, Inclusion,
        QuasiAdjoint, QuasiTranspose, ApplyQuasiArray, ApplyQuasiMatrix, ApplyQuasiVector,
        BroadcastQuasiArray, BroadcastQuasiMatrix, BroadcastQuasiVector, indextype,
-       QuasiKron, UnionVcat, SubQuasiArray
+       QuasiKron, quasikron, UnionVcat, SubQuasiArray
 
 import Base.Broadcast: broadcast_preserving_zero_d
 
