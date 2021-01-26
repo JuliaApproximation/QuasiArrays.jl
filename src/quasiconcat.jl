@@ -17,7 +17,7 @@ function getindex(f::ApplyQuasiMatrix{T,typeof(hcat)}, k::Number, j::Number) whe
     throw(BoundsError(f, (k,j)))
 end
 
-union(x::AbstractInclusion...) = Inclusion(UnionDomain(map(domain,x)...))
+union(x::Inclusion...) = Inclusion(UnionDomain(map(domain,x)...))
 
 """
     UnionVcat
