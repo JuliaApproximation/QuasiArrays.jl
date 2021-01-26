@@ -2,7 +2,7 @@ module QuasiArrays
 using Base, LinearAlgebra, LazyArrays, ArrayLayouts
 import Base: getindex, size, axes, axes1, length, ==, isequal, iterate, CartesianIndices, LinearIndices,
                 Indices, IndexStyle, getindex, setindex!, parent, vec, convert, similar, copy, copyto!, zero,
-                map, eachindex, eltype, first, last, firstindex, lastindex, in, reshape, all,
+                map, eachindex, eltype, first, last, firstindex, lastindex, in, reshape, permutedims, all,
                 isreal, iszero, isempty, empty, isapprox, fill!, getproperty, showarg
 import Base: @_inline_meta, DimOrInd, OneTo, @_propagate_inbounds_meta, @_noinline_meta,
                 DimsInteger, error_if_canonical_getindex, @propagate_inbounds, _return_type,
@@ -73,6 +73,7 @@ include("abstractquasiarray.jl")
 include("multidimensional.jl")
 include("subquasiarray.jl")
 include("quasireshapedarray.jl")
+include("quasipermutedims.jl")
 include("quasibroadcast.jl")
 include("abstractquasiarraymath.jl")
 

@@ -33,6 +33,9 @@ InclusionUnion(a...) = InclusionUnion{mapreduce(eltype,promote_type,a)}(a...)
 copy(d::InclusionUnion) = d
 
 ==(A::InclusionUnion, B::InclusionUnion) = A.args == B.args
+==(A::InclusionUnion, B::Inclusion) = all(A.args .== Ref(B))
+==(A::Inclusion, B::InclusionUnion) = all(Ref(A) .== B.args)
+
 axes(S::InclusionUnion) = (S,)
 unsafe_indices(S::InclusionUnion) = (S,)
 axes1(S::InclusionUnion) = S
