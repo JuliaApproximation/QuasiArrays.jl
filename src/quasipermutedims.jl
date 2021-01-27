@@ -49,27 +49,13 @@ Base.axes(A::PermutedDimsQuasiArray{T,N,perm}) where {T,N,perm} = genperm(axes(p
 
 Base.similar(A::PermutedDimsQuasiArray, T::Type, dims::Base.Dims) = similar(parent(A), T, dims)
 
-Base.unsafe_convert(::Type{Ptr{T}}, A::PermutedDimsQuasiArray{T}) where {T} = Base.unsafe_convert(Ptr{T}, parent(A))
-
-# It's OK to return a pointer to the first element, and indeed quite
-# useful for wrapping C routines that require a different storage
-# order than used by Julia. But for an array with unconventional
-# storage order, a linear offset is ambiguous---is it a memory offset
-# or a linear index?
-Base.pointer(A::PermutedDimsQuasiArray, i::Integer) = throw(ArgumentError("pointer(A, i) is deliberately unsupported for PermutedDimsQuasiArray"))
-
-function Base.strides(A::PermutedDimsQuasiArray{T,N,perm}) where {T,N,perm}
-    s = strides(parent(A))
-    ntuple(d->s[perm[d]], Val(N))
-end
-Base.elsize(::Type{<:PermutedDimsQuasiArray{<:Any, <:Any, <:Any, <:Any, P}}) where {P} = Base.elsize(P)
 
 @inline function _getindex(::Type{IND}, A::PermutedDimsQuasiArray{T,N,perm,iperm}, I::IND) where {T,N,perm,iperm,IND}
     @boundscheck checkbounds(A, I...)
     @inbounds val = getindex(A.parent, genperm(I, iperm)...)
     val
 end
-@inline function Base.setindex!(A::PermutedDimsQuasiArray{T,N,perm,iperm}, val, I::Vararg{Int,N}) where {T,N,perm,iperm}
+@inline function _setindex!(::Type{IND}, A::PermutedDimsQuasiArray{T,N,perm,iperm}, val, I::IND) where {T,N,perm,iperm,IND}
     @boundscheck checkbounds(A, I...)
     @inbounds setindex!(A.parent, val, genperm(I, iperm)...)
     val

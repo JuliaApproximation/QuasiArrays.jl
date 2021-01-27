@@ -47,6 +47,8 @@ import QuasiArrays: ApplyQuasiMatrix, UnionVcat
             @test C[3.5,4] == B[3.5,4]
             @test_throws BoundsError C[2.5,1]
             @test_throws BoundsError C[3,2]
+
+            @test_throws ArgumentError UnionVcat(A, QuasiArray(randn(3,1), (3:0.5:4, [1])))
         end
     end
 end 
