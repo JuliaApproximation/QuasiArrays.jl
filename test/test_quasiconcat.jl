@@ -23,6 +23,8 @@ import QuasiArrays: ApplyQuasiMatrix, UnionVcat
         @test c[0.5] ≡ 0.5
         @test c[3] ≡ c[3.0] ≡ 3.0
         @test_throws BoundsError c[2.5]
+
+        @test Inclusion{Float64}([1,2]) ∪ Inclusion{Float64}([3,4]) isa Inclusion{Float64}
     end
 
     @testset "UnionVcat" begin
