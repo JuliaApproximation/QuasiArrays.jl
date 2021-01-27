@@ -121,7 +121,6 @@ to_indices(A::AbstractQuasiArray, inds, I::Tuple{Any,Vararg{Any}}) =
 LinearIndices(A::AbstractQuasiArray) = LinearIndices(axes(A))
 
 
-
 """
    Inclusion(domain)
 
@@ -188,9 +187,10 @@ iterate(S::Inclusion, s...) = iterate(S.domain, s...)
 
 in(x, S::Inclusion) = x in S.domain
 Base.issubset(S::Inclusion, d) = S.domain ⊆ d
+Base.issubset(S::Inclusion, d::Inclusion) = S.domain ⊆ d.domain
 
-checkindex(::Type{Bool}, inds::Inclusion{T}, i::T) where T = i in inds.domain
-checkindex(::Type{Bool}, inds::Inclusion, i) = i ⊆ inds.domain
+checkindex(::Type{Bool}, inds::Inclusion{T}, i::T) where T = i ∈ inds
+checkindex(::Type{Bool}, inds::Inclusion, i) = i ⊆ inds
 checkindex(::Type{Bool}, inds::Inclusion, ::Colon) = true
 checkindex(::Type{Bool}, inds::Inclusion, ::Inclusion) = true
 function __checkindex(::Type{Bool}, inds::Inclusion, I::AbstractArray)
@@ -209,10 +209,10 @@ checkindex(::Type{Bool}, inds::Inclusion{T}, I::AbstractArray{T}) where T<:Abstr
 checkindex(::Type{Bool}, inds::Inclusion{T}, I::AbstractArray{<:AbstractArray}) where T<:AbstractArray = 
     __checkindex(Bool, inds, convert(AbstractArray{T}, I))
 
-function checkindex(::Type{Bool}, inds::Inclusion{T}, r::AbstractRange) where T
-    @_propagate_inbounds_meta
-    isempty(r) | (checkindex(Bool, inds, convert(T, first(r))) & checkindex(Bool, inds, last(r)))
-end
+@propagate_inbounds _affine_checkindex(inds, r) = isempty(r) | (checkindex(Bool, inds, Base.to_indices(inds, (first(r),))...) & checkindex(Bool, inds,  Base.to_indices(inds, (last(r),))...))
+@propagate_inbounds checkindex(::Type{Bool}, inds::Inclusion, r::AbstractRange) = _affine_checkindex(inds, r)
+
+
 checkindex(::Type{Bool}, indx::Inclusion, I::AbstractVector{Bool}) = indx == axes1(I)
 checkindex(::Type{Bool}, indx::Inclusion, I::AbstractArray{Bool}) = false
 
@@ -224,3 +224,4 @@ function Base.findall(f::Base.Fix2{typeof(isequal)}, d::Inclusion)
     r = findfirst(f,d)
     r === nothing ? eltype(d)[] : [r]
 end
+

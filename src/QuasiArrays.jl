@@ -1,8 +1,8 @@
 module QuasiArrays
-using Base, LinearAlgebra, LazyArrays, ArrayLayouts
+using Base, LinearAlgebra, LazyArrays, ArrayLayouts, DomainSets
 import Base: getindex, size, axes, axes1, length, ==, isequal, iterate, CartesianIndices, LinearIndices,
                 Indices, IndexStyle, getindex, setindex!, parent, vec, convert, similar, copy, copyto!, zero,
-                map, eachindex, eltype, first, last, firstindex, lastindex, in, reshape, all,
+                map, eachindex, eltype, first, last, firstindex, lastindex, in, reshape, permutedims, all,
                 isreal, iszero, isempty, empty, isapprox, fill!, getproperty, showarg
 import Base: @_inline_meta, DimOrInd, OneTo, @_propagate_inbounds_meta, @_noinline_meta,
                 DimsInteger, error_if_canonical_getindex, @propagate_inbounds, _return_type,
@@ -24,6 +24,7 @@ import Base: exp, log, sqrt,
           acos, asin, atan, acsc, asec, acot,
           acosh, asinh, atanh, acsch, asech, acoth
 import Base: Array, Matrix, Vector
+import Base: union, intersect
 
 import Base.Broadcast: materialize, materialize!, BroadcastStyle, AbstractArrayStyle, Style, broadcasted, Broadcasted, Unknown,
                         newindex, broadcastable, preprocess, _eachindex, _broadcast_getindex,
@@ -49,7 +50,7 @@ export AbstractQuasiArray, AbstractQuasiMatrix, AbstractQuasiVector, materialize
        QuasiArray, QuasiMatrix, QuasiVector, QuasiDiagonal, Inclusion,
        QuasiAdjoint, QuasiTranspose, ApplyQuasiArray, ApplyQuasiMatrix, ApplyQuasiVector,
        BroadcastQuasiArray, BroadcastQuasiMatrix, BroadcastQuasiVector, indextype,
-       SubQuasiArray
+       QuasiKron, quasikron, UnionVcat, SubQuasiArray
 
 import Base.Broadcast: broadcast_preserving_zero_d
 
@@ -72,6 +73,7 @@ include("abstractquasiarray.jl")
 include("multidimensional.jl")
 include("subquasiarray.jl")
 include("quasireshapedarray.jl")
+include("quasipermutedims.jl")
 include("quasibroadcast.jl")
 include("abstractquasiarraymath.jl")
 
@@ -86,6 +88,8 @@ include("inv.jl")
 include("quasiadjtrans.jl")
 include("quasidiagonal.jl")
 include("dense.jl")
+
+include("quasikron.jl")
 
 promote_leaf_eltypes(x::AbstractQuasiArray{T}) where {T<:Number} = T
 promote_leaf_eltypes(x::AbstractQuasiArray) = mapreduce(promote_leaf_eltypes, promote_type, x; init=Bool)
