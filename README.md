@@ -1,7 +1,7 @@
 # QuasiArrays.jl
 A package for representing quasi-arrays
 
-[![Build Status](https://travis-ci.org/JuliaApproximation/QuasiArrays.jl.svg?branch=master)](https://travis-ci.org/JuliaApproximation/QuasiArrays.jl)
+[![Build Status](https://github.com/JuliaApproximation/QuasiArrays.jl/workflows/CI/badge.svg)](https://github.com/JuliaApproximation/QuasiArrays.jl/actions)
 [![codecov](https://codecov.io/gh/JuliaApproximation/QuasiArrays.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaApproximation/QuasiArrays.jl)
 
 
