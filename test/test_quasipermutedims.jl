@@ -1,4 +1,4 @@
-using QuasiArrays, Test
+using QuasiArrays, LinearAlgebra, Test
 
 
 @testset "permutedims" begin
@@ -11,4 +11,10 @@ using QuasiArrays, Test
     @test similar(P) isa QuasiArray
     P[4,0.5] = 2
     @test A[0.5,4] ≡ 2.0
+
+    @testset "Diag of view" begin
+        # this is used in ContinuumArrays
+        D = Diagonal(view(A, 0.0, [1,4]))
+        @test permutedims(D) ≡ D
+    end
 end

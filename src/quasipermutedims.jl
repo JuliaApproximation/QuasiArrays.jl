@@ -78,3 +78,7 @@ permutedims(A::AbstractQuasiMatrix) = PermutedDimsQuasiArray(A, (2,1))
 #     print(io, ", ", perm, ')')
 #     toplevel && print(io, " with eltype ", eltype(A))
 # end
+
+
+## diagonal special case
+permutedims(D::Diagonal{<:Any,<:SubArray{<:Any,1,<:AbstractQuasiArray}}) = D
