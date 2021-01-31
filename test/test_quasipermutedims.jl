@@ -1,4 +1,4 @@
-using QuasiArrays, Test
+using QuasiArrays, LinearAlgebra, Test
 
 
 @testset "permutedims" begin
