@@ -78,7 +78,7 @@ module QuasiIteratorsMD
     @inline _flatten(i::QuasiCartesianIndex, I...) = (i.I..., _flatten(I...)...)
     show(io::IO, i::QuasiCartesianIndex) = (print(io, "QuasiCartesianIndex"); show(io, i.I))
 
-    Base.convert(::Type{QuasiCartesianIndex{N,II}}, Q::QuasiCartesianIndex) where {N,II<:Tuple} = 
+    Base.convert(::Type{QuasiCartesianIndex{N,II}}, Q::QuasiCartesianIndex) where {N,II<:Tuple} =
         QuasiCartesianIndex{N,II}(convert(II, Q.I)...)
 
     # length
@@ -246,9 +246,9 @@ module QuasiIteratorsMD
     struct QuasiCartesianIndices{N,R<:NTuple{N,AbstractQuasiOrVector},RR<:NTuple{N,Any}} <: AbstractArray{QuasiCartesianIndex{N,RR},N}
         indices::R
     end
-    QuasiCartesianIndices(nd::NTuple{N,AbstractVector}) where N = 
+    QuasiCartesianIndices(nd::NTuple{N,AbstractVector}) where N =
         QuasiCartesianIndices{N,typeof(nd),Tuple{map(eltype,nd)...}}(nd)
-    QuasiCartesianIndices(nd::NTuple{N,AbstractQuasiOrVector}) where N = 
+    QuasiCartesianIndices(nd::NTuple{N,AbstractQuasiOrVector}) where N =
         QuasiCartesianIndices(convert.(AbstractArray,nd))
 
     QuasiCartesianIndices(::Tuple{}) = QuasiCartesianIndices{0,typeof(())}(())
@@ -415,14 +415,16 @@ to_indices(A::AbstractQuasiArray, I::Tuple{Any}) = (@_inline_meta; to_indices(A,
 # QuasiCartesianIndexes are simple; they just splat out
 @inline to_indices(A::AbstractQuasiArray, inds, I::Tuple{QuasiCartesianIndex, Vararg{Any}}) =
     to_indices(A, inds, (I[1].I..., tail(I)...))
-@inline to_indices(A::AbstractQuasiArray, I::Tuple{Vararg{Union{Integer, CartesianIndex}}}) = to_indices(A, axes(A), I)    
+@inline to_indices(A::AbstractQuasiArray, I::Tuple{Vararg{Union{Integer, CartesianIndex}}}) = to_indices(A, axes(A), I)
+@inline to_indices(A::AbstractQuasiArray, I::Tuple{Vararg{Integer}}) = to_indices(A, axes(A), I)
+@inline to_indices(A::AbstractQuasiArray, I::Tuple{Vararg{Int}}) = to_indices(A, axes(A), I)
 # But for arrays of QuasiCartesianIndex, we just skip the appropriate number of inds
 @inline function to_indices(A::AbstractQuasiArray, inds, I::Tuple{AbstractArray{QuasiCartesianIndex{N}}, Vararg{Any}}) where N
     _, indstail = IteratorsMD.split(inds, Val(N))
     (to_index(A, I[1]), to_indices(A, indstail, tail(I))...)
 end
 
-### From abstractarray.jl: Internal multidimensional indexing definitions ###   
+### From abstractarray.jl: Internal multidimensional indexing definitions ###
 
 @inline index_dimsum(::AbstractQuasiArray{Bool}, I...) = (true, index_dimsum(I...)...)
 @inline function index_dimsum(::AbstractQuasiArray{<:Any,N}, I...) where N
