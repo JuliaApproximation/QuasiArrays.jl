@@ -94,6 +94,7 @@ copy(M::Mul{QuasiArrayLayout,QuasiArrayLayout}) = QuasiArray(M)
 copy(M::Mul{QuasiArrayLayout}) = QuasiArray(M)
 copy(M::Mul{<:Any,QuasiArrayLayout}) = QuasiArray(M)
 copy(M::Mul{<:AbstractLazyLayout,QuasiArrayLayout}) = ApplyQuasiArray(M)
+copy(M::Mul{ApplyLayout{typeof(\)},QuasiArrayLayout}) = ApplyQuasiArray(M)
 copy(M::Mul{QuasiArrayLayout,<:AbstractLazyLayout}) = ApplyQuasiArray(M)
 
 
