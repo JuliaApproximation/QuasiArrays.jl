@@ -254,7 +254,7 @@ module QuasiIteratorsMD
     QuasiCartesianIndices(::Tuple{}) = QuasiCartesianIndices{0,typeof(())}(())
 
     QuasiCartesianIndices(index::QuasiCartesianIndex) = QuasiCartesianIndices(index.I)
-    QuasiCartesianIndices(sz::NTuple{N,Any}) where {N} = QuasiCartesianIndices(map(Base.OneTo, sz))
+    QuasiCartesianIndices(sz::NTuple{N,Any}) where {N} = QuasiCartesianIndices(map(oneto, sz))
 
     QuasiCartesianIndices(A::AbstractQuasiArray) = QuasiCartesianIndices(axes(A))
 
