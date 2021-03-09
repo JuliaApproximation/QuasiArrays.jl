@@ -39,12 +39,7 @@
     else
         A*A^(p-1)
     end
-function (^)(A::AbstractQuasiMatrix{T}, p::Integer) where T<:Integer
-    # make sure that e.g. [1 1;1 0]^big(3)
-    # gets promotes in a similar way as 2^big(3)
-    TT = promote_op(^, T, typeof(p))
-    return convert(AbstractQuasiMatrix{TT}, A)^p
-end
+
 # function integerpow(A::AbstractQuasiMatrix{T}, p) where T
 #     TT = promote_op(^, T, typeof(p))
 #     return (TT == T ? A : copyto!(similar(A, TT), A))^Integer(p)
