@@ -293,6 +293,8 @@ using QuasiArrays, Base64, Test
         @test V2 isa SubArray
         @test parent(V2) isa QuasiArray
         @test V2 == A[0:0.5:0.5,1:0.5:1.5]
+
+        @test QuasiArrays.sub_materialize(A) == A
     end
 
     @testset "Show" begin
