@@ -90,9 +90,11 @@ end
 struct QuasiArrayLayout <: MemoryLayout end
 MemoryLayout(::Type{<:AbstractQuasiArray}) = QuasiArrayLayout()
 
-copy(M::Mul{QuasiArrayLayout,QuasiArrayLayout}) = QuasiArray(M)
-copy(M::Mul{QuasiArrayLayout}) = QuasiArray(M)
-copy(M::Mul{<:Any,QuasiArrayLayout}) = QuasiArray(M)
+_quasi_mul(M, _) = QuasiArray(M)
+_quasi_mul(M, ::NTuple{N,OneTo{Int}}) where N = Array(QuasiArray(M))
+copy(M::Mul{QuasiArrayLayout,QuasiArrayLayout}) = _quasi_mul(M, axes(M))
+copy(M::Mul{QuasiArrayLayout}) = _quasi_mul(M, axes(M))
+copy(M::Mul{<:Any,QuasiArrayLayout}) = _quasi_mul(M, axes(M))
 copy(M::Mul{<:AbstractLazyLayout,QuasiArrayLayout}) = ApplyQuasiArray(M)
 copy(M::Mul{ApplyLayout{typeof(\)},QuasiArrayLayout}) = ApplyQuasiArray(M)
 copy(M::Mul{QuasiArrayLayout,<:AbstractLazyLayout}) = ApplyQuasiArray(M)

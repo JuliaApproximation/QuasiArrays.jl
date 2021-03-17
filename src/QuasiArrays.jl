@@ -10,7 +10,7 @@ import Base: @_inline_meta, DimOrInd, OneTo, @_propagate_inbounds_meta, @_noinli
                 index_shape, to_shape, unsafe_length, @nloops, @ncall, unalias, _unaliascopy,
                 to_index, to_indices, _to_subscript_indices, _splatmap, dataids, 
                 compute_stride1, compute_offset1, fill_to_length
-import Base: Slice, IdentityUnitRange, ScalarIndex, RangeIndex, view, viewindexing, ensure_indexable, index_dimsum,
+import Base: Slice, IdentityUnitRange, ScalarIndex, RangeIndex, view, viewindexing, mightalias, ensure_indexable, index_dimsum,
                 check_parent_index_match, reindex, _isdisjoint, unsafe_indices, _unsafe_ind2sub,
                 _ind2sub, _sub2ind, _ind2sub_recurse, _lookup, SubArray,
                 parentindices, reverse, ndims, checkbounds, uncolon,
