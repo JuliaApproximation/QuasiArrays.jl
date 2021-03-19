@@ -296,117 +296,98 @@ end
     @test QuasiZeros(ax,bx) * A isa QuasiZeros
     @test B * QuasiZeros(bx,cx) isa QuasiZeros
     @test_throws DimensionMismatch B * QuasiZeros(ax, ax)
-    @test eltype(Zeros{Int}(3,4) * fill(1, 4, 5)) == Int
-    @test eltype(Zeros{Int}(3,4) * fill(3.4, 4, 5)) == Float64
-    @test Zeros(3, 4) * randn(4) == Zeros(3, 4) * Zeros(4) == Zeros(3)
-    @test Zeros(3, 4) * Zeros(4, 5) === Zeros(3, 5)
-
-    @test_throws MethodError [1,2,3]*Zeros(1) # Not defined for [1,2,3]*[0] either
-    @test [1,2,3]*Zeros(1,3) ≡ Zeros(3,3)
-    @test_throws MethodError [1,2,3]*Zeros(3) # Not defined for [1,2,3]*[0,0,0] either
-
+    
     # Check multiplication by Adjoint vectors works as expected.
-    @test randn(4, 3)' * Zeros(4) === Zeros(3)
-    @test randn(4)' * Zeros(4) === zero(Float64)
-    @test [1, 2, 3]' * Zeros{Int}(3) === zero(Int)
-    @test [SVector(1,2)', SVector(2,3)', SVector(3,4)']' * Zeros{Int}(3) === SVector(0,0)
-    @test_throws DimensionMismatch randn(4)' * Zeros(3)
+    @test QuasiArray(randn(3, 4),ax,bx)' * QuasiZeros(ax) === QuasiZeros(bx)
+    @test QuasiArray(randn(4),bx)' * QuasiZeros(bx) === zero(Float64)
+    @test QuasiArray([1, 2, 3],ax)' * QuasiZeros{Int}(ax) === zero(Int)
+    @test_broken QuasiArray([SVector(1,2)', SVector(2,3)', SVector(3,4)'],ax)' * QuasiZeros{Int}(ax) === SVector(0,0)
 
-    # Check multiplication by Transpose-d vectors works as expected.
-    @test transpose(randn(4, 3)) * Zeros(4) === Zeros(3)
-    @test transpose(randn(4)) * Zeros(4) === zero(Float64)
-    @test transpose([1, 2, 3]) * Zeros{Int}(3) === zero(Int)
-    @test_throws DimensionMismatch transpose(randn(4)) * Zeros(3)
 
-    @test +(Zeros{Float64}(3, 5)) === Zeros{Float64}(3, 5)
-    @test -(Zeros{Float32}(5, 2)) === Zeros{Float32}(5, 2)
+    @test +(QuasiZeros{Float64}(ax, bx)) === QuasiZeros{Float64}(ax, bx)
+    @test -(QuasiZeros{Float32}(bx, cx)) === QuasiZeros{Float32}(bx, cx)
 
     # `Zeros` are closed under addition and subtraction (both unary and binary).
-    z1, z2 = Zeros{Float64}(4), Zeros{Int}(4)
+    z1, z2 = QuasiZeros{Float64}(ax), QuasiZeros{Int}(ax)
     @test +(z1) === z1
     @test -(z1) === z1
 
-    test_addition_and_subtraction([z1, z2], [z1, z2], Zeros)
-    test_addition_and_subtraction_dim_mismatch(z1, Zeros{Float64}(4, 2))
+    test_addition_and_subtraction([z1, z2], [z1, z2], QuasiZeros)
+    test_addition_and_subtraction_dim_mismatch(z1, QuasiZeros{Float64}(ax, bx))
 
     # `Zeros` +/- `Fill`s should yield `Fills`.
-    fill1, fill2 = Fill(5.0, 4), Fill(5, 4)
-    test_addition_and_subtraction([z1, z2], [fill1, fill2], Fill)
-    test_addition_and_subtraction_dim_mismatch(z1, Fill(5, 5))
+    fill1, fill2 = QuasiFill(5.0, ax), QuasiFill(5, ax)
+    test_addition_and_subtraction([z1, z2], [fill1, fill2], QuasiFill)
+    test_addition_and_subtraction_dim_mismatch(z1, QuasiFill(5, bx))
 
-    X = randn(3, 5)
+    X = QuasiArray(randn(3, 4), ax, bx)
     for op in [+, -]
 
         # Addition / subtraction with same eltypes.
-        @test op(Zeros(6, 4), Zeros(6, 4)) === Zeros(6, 4)
-        @test_throws DimensionMismatch op(X, Zeros(4, 6))
-        @test eltype(op(Zeros(3, 5), X)) == Float64
+        @test op(QuasiZeros(ax, bx), QuasiZeros(ax, bx)) === QuasiZeros(ax, bx)
+        @test_throws DimensionMismatch op(X, QuasiZeros(ax, cx))
+        @test eltype(op(QuasiZeros(ax, bx), X)) == Float64
 
         # Different eltypes, the other way around.
-        @test op(X, Zeros{Float32}(3, 5)) isa Matrix{Float64}
-        @test !(op(X, Zeros{Float32}(3, 5)) === X)
-        @test op(X, Zeros{Float32}(3, 5)) == X
-        @test !(op(X, Zeros{ComplexF64}(3, 5)) === X)
-        @test op(X, Zeros{ComplexF64}(3, 5)) == X
+        @test op(X, QuasiZeros{Float32}(ax,bx)) isa QuasiMatrix{Float64}
+        @test !(op(X, QuasiZeros{Float32}(ax,bx)) === X)
+        @test op(X, QuasiZeros{Float32}(ax,bx)) == X
+        @test !(op(X, QuasiZeros{ComplexF64}(ax,bx)) === X)
+        @test op(X, QuasiZeros{ComplexF64}(ax,bx)) == X
 
         # Addition / subtraction of Zeros.
-        @test eltype(op(Zeros{Float64}(4, 5), Zeros{Int}(4, 5))) == Float64
-        @test eltype(op(Zeros{Int}(5, 4), Zeros{Float32}(5, 4))) == Float32
-        @test op(Zeros{Float64}(4, 5), Zeros{Int}(4, 5)) isa Zeros{Float64}
-        @test op(Zeros{Float64}(4, 5), Zeros{Int}(4, 5)) === Zeros{Float64}(4, 5)
+        @test eltype(op(QuasiZeros{Float64}(ax,bx), QuasiZeros{Int}(ax,bx))) == Float64
+        @test eltype(op(QuasiZeros{Int}(bx,ax), QuasiZeros{Float32}(bx,ax))) == Float32
+        @test op(QuasiZeros{Float64}(ax,bx), QuasiZeros{Int}(ax,bx)) isa QuasiZeros{Float64}
+        @test op(QuasiZeros{Float64}(ax,bx), QuasiZeros{Int}(ax,bx)) === QuasiZeros{Float64}(ax,bx)
     end
 
     # Zeros +/- dense where + / - have different results.
-    @test +(Zeros(3, 5), X) == X && +(X, Zeros(3, 5)) == X
-    @test !(Zeros(3, 5) + X === X) && !(X + Zeros(3, 5) === X)
-    @test -(Zeros(3, 5), X) == -X
+    @test +(QuasiZeros(ax,bx), X) == X && +(X, QuasiZeros(ax,bx)) == X
+    @test !(QuasiZeros(ax,bx) + X === X) && !(X + QuasiZeros(ax,bx) === X)
+    @test -(QuasiZeros(ax,bx), X) == -X
 
     # Addition with different eltypes.
-    @test +(Zeros{Float32}(3, 5), X) isa Matrix{Float64}
-    @test !(+(Zeros{Float32}(3, 5), X) === X)
-    @test +(Zeros{Float32}(3, 5), X) == X
-    @test !(+(Zeros{ComplexF64}(3, 5), X) === X)
-    @test +(Zeros{ComplexF64}(3, 5), X) == X
+    @test +(QuasiZeros{Float32}(ax,bx), X) isa QuasiMatrix{Float64}
+    @test !(+(QuasiZeros{Float32}(ax,bx), X) === X)
+    @test +(QuasiZeros{Float32}(ax,bx), X) == X
+    @test !(+(QuasiZeros{ComplexF64}(ax,bx), X) === X)
+    @test +(QuasiZeros{ComplexF64}(ax,bx), X) == X
 
     # Subtraction with different eltypes.
-    @test -(Zeros{Float32}(3, 5), X) isa Matrix{Float64}
-    @test -(Zeros{Float32}(3, 5), X) == -X
-    @test -(Zeros{ComplexF64}(3, 5), X) == -X
+    @test -(QuasiZeros{Float32}(ax,bx), X) isa QuasiMatrix{Float64}
+    @test -(QuasiZeros{Float32}(ax,bx), X) == -X
+    @test -(QuasiZeros{ComplexF64}(ax,bx), X) == -X
 
     # Tests for ranges.
-    X = randn(5)
-    @test !(Zeros(5) + X === X)
-    @test Zeros{Int}(5) + (1:5) === (1:5) && (1:5) + Zeros{Int}(5) === (1:5)
-    @test Zeros(5) + (1:5) === (1.0:1.0:5.0) && (1:5) + Zeros(5) === (1.0:1.0:5.0)
-    @test (1:5) - Zeros{Int}(5) === (1:5)
-    @test Zeros{Int}(5) - (1:5) === -1:-1:-5
-    @test Zeros(5) - (1:5) === -1.0:-1.0:-5.0
+    X = QuasiArray(randn(3),ax)
+    @test !(QuasiZeros(ax) + X === X)
 
     # test Base.zero
-    @test zero(Zeros(10)) == Zeros(10)
-    @test zero(Ones(10,10)) == Zeros(10,10)
-    @test zero(Fill(0.5, 10, 10)) == Zeros(10,10)
+    @test zero(QuasiZeros(ax)) == QuasiZeros(ax)
+    @test zero(QuasiOnes(ax,ax)) == QuasiZeros(ax,ax)
+    @test zero(QuasiFill(0.5, ax, ax)) == QuasiZeros(ax,ax)
 end
 
 @testset "maximum/minimum/svd/sort" begin
-    @test maximum(Fill(1, 1_000_000_000)) == minimum(Fill(1, 1_000_000_000)) == 1
-    @test svdvals(fill(2,5,6)) ≈ svdvals(Fill(2,5,6))
-    @test svdvals(Eye(5)) === Fill(1.0,5)
-    @test sort(Ones(5)) == sort!(Ones(5))
+    ax = [1,3,4]
+    @test maximum(QuasiFill(1, ax)) == minimum(QuasiFill(1, ax)) == 1
+    @test sort(QuasiOnes(ax)) == sort!(QuasiOnes(ax))
 end
 
 @testset "Cumsum and diff" begin
-    @test sum(Fill(3,10)) ≡ 30
-    @test sum(x -> x + 1, Fill(3,10)) ≡ 40
-    @test cumsum(Fill(3,10)) ≡ 3:3:30
+    ax = [1,3,4]
+    @test sum(QuasiFill(3,ax)) ≡ 9
+    @test sum(x -> x + 1, QuasiFill(3,ax)) ≡ 12
+    @test cumsum(QuasiFill(3,ax)) == 3:3:9
 
-    @test sum(Ones(10)) ≡ 10.0
-    @test sum(x -> x + 1, Ones(10)) ≡ 20.0
-    @test cumsum(Ones(10)) ≡ 1.0:10.0
+    @test sum(QuasiOnes(ax)) ≡ 3.0
+    @test sum(x -> x + 1, QuasiOnes(ax)) ≡ 6.0
+    @test cumsum(QuasiOnes(ax)) == 1:3
 
-    @test sum(Ones{Int}(10)) ≡ 10
-    @test sum(x -> x + 1, Ones{Int}(10)) ≡ 20
-    @test cumsum(Ones{Int}(10)) ≡ Base.OneTo(10)
+    @test sum(QuasiOnes{Int}(ax)) ≡ 3
+    @test sum(x -> x + 1, QuasiOnes{Int}(ax)) ≡ 6
+    @test cumsum(QuasiOnes{Int}(ax)) == Base.OneTo(3)
 
     @test sum(Zeros(10)) ≡ 0.0
     @test sum(x -> x + 1, Zeros(10)) ≡ 10.0
@@ -422,9 +403,6 @@ end
 
     @test diff(Fill(1,10)) ≡ Zeros{Int}(9)
     @test diff(Ones{Float64}(10)) ≡ Zeros{Float64}(9)
-    if VERSION ≥ v"1.0"
-        @test_throws UndefKeywordError cumsum(Fill(1,1,5))
-    end
 end
 
 @testset "Broadcast" begin

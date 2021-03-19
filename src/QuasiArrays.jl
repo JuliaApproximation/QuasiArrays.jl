@@ -24,7 +24,7 @@ import Base: exp, log, sqrt,
           acos, asin, atan, acsc, asec, acot,
           acosh, asinh, atanh, acsch, asech, acoth
 import Base: Array, Matrix, Vector
-import Base: union, intersect
+import Base: union, intersect, sort, sort!
 
 import Base.Broadcast: materialize, materialize!, BroadcastStyle, AbstractArrayStyle, Style, broadcasted, Broadcasted, Unknown,
                         newindex, broadcastable, preprocess, _eachindex, _broadcast_getindex, broadcast_shape,

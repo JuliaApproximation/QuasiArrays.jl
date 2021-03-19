@@ -82,8 +82,8 @@ QuasiVector(par::AbstractVector{T}, axes::AbstractArray) where {T} =
     
 
 QuasiArray(a::AbstractQuasiArray) = QuasiArray(a[map(collect,axes(a))...], axes(a))
-QuasiArray{T}(a::AbstractQuasiArray) where T = QuasiArray(Array{T}(a), axes(a))
-QuasiArray{T,N}(a::AbstractQuasiArray{<:Any,N}) where {T,N} = QuasiArray(Array{T}(a), axes(a))
+QuasiArray{T}(a::AbstractQuasiArray) where T = QuasiArray(convert(AbstractArray{T},a[map(collect,axes(a))...]), axes(a))
+QuasiArray{T,N}(a::AbstractQuasiArray{<:Any,N}) where {T,N} = QuasiArray(convert(AbstractArray{T,N},a[map(collect,axes(a))...]), axes(a))
 QuasiArray{T,N,AXES}(a::AbstractQuasiArray{<:Any,N}) where {T,N,AXES} = QuasiArray{T,N,AXES}(Array{T}(a), axes(a))
 QuasiMatrix(a::AbstractQuasiMatrix) = QuasiArray(a)
 QuasiVector(a::AbstractQuasiVector) = QuasiArray(a)
@@ -96,6 +96,9 @@ convert(::Type{AbstractQuasiArray{T,N}}, a::QuasiArray) where {T,N} = convert(Qu
 convert(::Type{AbstractQuasiArray{T}}, a::QuasiArray) where T = convert(QuasiArray{T}, a)
 convert(::Type{AbstractQuasiArray{T,N}}, a::QuasiArray{T,N}) where {T,N} = a
 convert(::Type{AbstractQuasiArray{T}}, a::QuasiArray{T}) where T = a
+
+AbstractQuasiArray{T,N}(a::QuasiArray) where {T,N} = QuasiArray{T,N}(a)
+AbstractQuasiArray{T}(a::QuasiArray) where T = QuasiArray{T}(a)
 
 
 _inclusion(d::Slice) = d

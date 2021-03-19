@@ -451,5 +451,11 @@ MemoryLayout(::Type{<:QuasiZeros}) = ZerosLayout()
 MemoryLayout(::Type{<:QuasiOnes}) = OnesLayout()
 
 _quasi_mul(M::Mul{ZerosLayout}, _) = QuasiZeros{eltype(M)}(axes(M))
+_quasi_mul(M::Mul{QuasiArrayLayout,ZerosLayout}, _) = QuasiZeros{eltype(M)}(axes(M))
 fillzeros(::Type{T}, a::Tuple{AbstractQuasiVector,Vararg{Any}}) where T<:Number = QuasiZeros{T}(a)
 fillzeros(::Type{T}, a::Tuple{Any,AbstractQuasiVector,Vararg{Any}}) where T<:Number = QuasiZeros{T}(a)
+
+copy(M::MulAdd{<:AbstractFillLayout,<:AbstractFillLayout,<:AbstractFillLayout,<:Any,<:AbstractQuasiArray}) = 
+    QuasiFill(M.α*getindex_value(M.A)*getindex_value(M.B) + M.β*getindex_value(M.C), axes(M))
+copy(M::MulAdd{ZerosLayout,ZerosLayout,ZerosLayout,<:Any,<:AbstractQuasiArray}) = 
+    QuasiZeros{eltype(M)}(axes(M))
