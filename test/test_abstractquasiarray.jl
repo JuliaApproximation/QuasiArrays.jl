@@ -1,4 +1,4 @@
-using QuasiArrays, Test
+using QuasiArrays, LinearAlgebra, Test
 import QuasiArrays: QuasiCartesianIndex
 
 @testset "AbstractQuasiArray" begin
@@ -131,5 +131,21 @@ import QuasiArrays: QuasiCartesianIndex
         @test Base.to_indices(A, axes(A), ([1,2],)) isa Tuple{Vector{Float64}}
         @test parentindices(view(A,[1,2])) isa Tuple{Vector{Float64}}
         @test A[[1,2]] == A[[1.0,2.0]] == parent(A)[1] 
+    end
+
+    @testset "convert" begin
+        A = QuasiArray([1,3], ([[1,2],[3,4]],))
+        @test convert(typeof(A), A) ≡ convert(QuasiVector{Int}, A) ≡ convert(QuasiArray{Int}, A) ≡ convert(AbstractQuasiVector{Int}, A) ≡ convert(AbstractQuasiArray{Int}, A) ≡ A
+        @test convert(QuasiVector{Float64}, A) isa QuasiVector{Float64}
+        @test convert(QuasiArray{Float64}, A) isa QuasiVector{Float64}
+        @test convert(AbstractQuasiVector{Float64}, A) isa QuasiVector{Float64}
+        @test convert(AbstractQuasiArray{Float64}, A) isa QuasiVector{Float64}
+    end
+
+    @testset "copy_oftype" begin
+        A = QuasiArray([1,3], ([[1,2],[3,4]],))
+        @test LinearAlgebra.copy_oftype(A, Int) isa QuasiArray{Int}
+        @test LinearAlgebra.copy_oftype(A, Float64) isa QuasiArray{Float64}
+        @test A == LinearAlgebra.copy_oftype(A, Int) == LinearAlgebra.copy_oftype(A, Float64)
     end
 end
