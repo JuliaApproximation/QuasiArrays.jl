@@ -132,4 +132,11 @@ import QuasiArrays: QuasiCartesianIndex
         @test parentindices(view(A,[1,2])) isa Tuple{Vector{Float64}}
         @test A[[1,2]] == A[[1.0,2.0]] == parent(A)[1] 
     end
+
+    @testset "copy_oftype" begin
+        A = QuasiArray([1,3], ([[1,2],[3,4]],))
+        @test copy_oftype(A, Int) isa QuasiArray{Int}
+        @test copy_oftype(A, Float64) isa QuasiArray{Float64}
+        @test A == copy_oftype(A, Int) == copy_oftype(A, Float64)
+    end
 end
