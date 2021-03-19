@@ -28,6 +28,10 @@ QuasiMatrix(par::AbstractMatrix{T}, axes::NTuple{2,AbstractVector}) where T =
 QuasiVector(par::AbstractVector{T}, axes::Tuple{AbstractVector}) where T = 
     QuasiArray{T,1,typeof(axes)}(par, axes)
 
+QuasiArray(par::AbstractArray) = QuasiArray(par, axes(par))
+QuasiMatrix(par::AbstractArray) = QuasiMatrix(par, axes(par))
+QuasiVector(par::AbstractArray) = QuasiVector(par, axes(par))
+
 QuasiArray{T,N,AXES}(par::AbstractArray{T,N}, axes::NTuple{N,AbstractQuasiOrVector}) where {T,N,AXES} =
     QuasiArray{T,N,AXES}(par, map(domain,axes))
 QuasiArray{T,N}(par::AbstractArray{T,N}, axes::NTuple{N,AbstractQuasiOrVector}) where {T,N} =
@@ -89,3 +93,9 @@ end
 
 ^(A::QuasiMatrix, p::Number) = _quasimatrix_pow(A, p)
 ^(A::QuasiMatrix, p::Integer) = _quasimatrix_pow(A, p)
+
+
+==(A::QuasiArray{T,N,NTuple{N,OneTo{Int}}}, B::AbstractArray{V,N}) where {T,V,N} =
+    axes(A) == axes(B) && A.parent == B
+==(B::AbstractArray{V,N}, A::QuasiArray{T,N,NTuple{N,OneTo{Int}}}) where {T,V,N} =
+    A == B

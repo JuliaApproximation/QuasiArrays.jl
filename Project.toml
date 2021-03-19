@@ -1,17 +1,19 @@
 name = "QuasiArrays"
 uuid = "c4ea9172-b204-11e9-377d-29865faadc5c"
 authors = ["Sheehan Olver <solver@mac.com>"]
-version = "0.4.10"
+version = "0.5"
 
 [deps]
 ArrayLayouts = "4c555306-a7a7-4459-81d9-ec55ddd5c99a"
 DomainSets = "5b8099bc-c8ec-5219-889f-1d9e522a28bf"
+FillArrays = "1a297f60-69ca-5386-bcde-b61e274b549b"
 LazyArrays = "5078a376-72f3-5289-bfd5-ec5146d43c02"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 
 [compat]
 ArrayLayouts = "0.5, 0.6"
 DomainSets = "0.4"
+FillArrays = "0.11"
 LazyArrays = "0.20, 0.21"
 julia = "1.5"
 

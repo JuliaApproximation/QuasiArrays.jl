@@ -1,5 +1,5 @@
 module QuasiArrays
-using Base, LinearAlgebra, LazyArrays, ArrayLayouts, DomainSets
+using Base, LinearAlgebra, LazyArrays, ArrayLayouts, DomainSets, FillArrays
 import Base: getindex, size, axes, axes1, length, ==, isequal, iterate, CartesianIndices, LinearIndices,
                 Indices, IndexStyle, getindex, setindex!, parent, vec, convert, similar, copy, copyto!, zero,
                 map, eachindex, eltype, first, last, firstindex, lastindex, in, reshape, permutedims, all,
@@ -50,7 +50,7 @@ export AbstractQuasiArray, AbstractQuasiMatrix, AbstractQuasiVector, materialize
        QuasiArray, QuasiMatrix, QuasiVector, QuasiDiagonal, Inclusion,
        QuasiAdjoint, QuasiTranspose, ApplyQuasiArray, ApplyQuasiMatrix, ApplyQuasiVector,
        BroadcastQuasiArray, BroadcastQuasiMatrix, BroadcastQuasiVector, indextype,
-       QuasiKron, quasikron, UnionVcat, SubQuasiArray
+       QuasiKron, quasikron, UnionVcat, SubQuasiArray, QuasiFill, QuasiZeros, QuasiOnes
 
 import Base.Broadcast: broadcast_preserving_zero_d
 
@@ -96,6 +96,7 @@ include("matmul.jl")
 include("inv.jl")
 include("quasiadjtrans.jl")
 include("quasidiagonal.jl")
+include("quasifill.jl")
 include("dense.jl")
 
 include("quasikron.jl")
