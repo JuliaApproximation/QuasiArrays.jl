@@ -1,4 +1,4 @@
-using QuasiArrays, Test
+using QuasiArrays, LinearAlgebra, Test
 import QuasiArrays: QuasiCartesianIndex
 
 @testset "AbstractQuasiArray" begin
@@ -135,8 +135,8 @@ import QuasiArrays: QuasiCartesianIndex
 
     @testset "copy_oftype" begin
         A = QuasiArray([1,3], ([[1,2],[3,4]],))
-        @test copy_oftype(A, Int) isa QuasiArray{Int}
-        @test copy_oftype(A, Float64) isa QuasiArray{Float64}
-        @test A == copy_oftype(A, Int) == copy_oftype(A, Float64)
+        @test LinearAlgebra.copy_oftype(A, Int) isa QuasiArray{Int}
+        @test LinearAlgebra.copy_oftype(A, Float64) isa QuasiArray{Float64}
+        @test A == LinearAlgebra.copy_oftype(A, Int) == LinearAlgebra.copy_oftype(A, Float64)
     end
 end

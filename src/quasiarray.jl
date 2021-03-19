@@ -53,6 +53,15 @@ QuasiMatrix(a::AbstractQuasiMatrix) = QuasiArray(a)
 QuasiVector(a::AbstractQuasiVector) = QuasiArray(a)
 
 
+convert(::Type{T}, a::AbstractQuasiArray) where {T<:QuasiArray} = a isa T ? a : T(a)
+convert(::Type{QuasiArray{T,N}}, a::AbstractQuasiArray) where {T,N} = a isa QuasiArray{T,N} ? a : QuasiArray{T,N}(a)
+convert(::Type{QuasiArray{T}}, a::AbstractQuasiArray) where T = a isa QuasiArray{T} ? a : QuasiArray{T}(a)
+convert(::Type{AbstractQuasiArray{T,N}}, a::QuasiArray) where {T,N} = convert(QuasiArray{T,N}, a)
+convert(::Type{AbstractQuasiArray{T}}, a::QuasiArray) where T = convert(QuasiArray{T}, a)
+convert(::Type{AbstractQuasiArray{T,N}}, a::QuasiArray{T,N}) where {T,N} = a
+convert(::Type{AbstractQuasiArray{T}}, a::QuasiArray{T}) where T = a
+
+
 _inclusion(d::Slice) = d
 _inclusion(d::OneTo) = d
 _inclusion(d::IdentityUnitRange{<:Integer}) = d
@@ -72,8 +81,6 @@ end
     @inbounds A.parent[findfirst.(isequal.(I), A.axes)...] = v
     A
 end
-
-convert(::Type{T}, a::AbstractQuasiArray) where {T<:QuasiArray} = a isa T ? a : T(a)
 
 function _quasimatrix_pow(A, p)
     axes(A,1) == axes(A,2) || throw(DimensionMismatch("axes must match"))
