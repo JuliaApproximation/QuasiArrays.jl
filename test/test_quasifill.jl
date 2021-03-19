@@ -43,176 +43,131 @@ import QuasiArrays: AbstractQuasiFill
     end
 
     @test QuasiFill(1) ≡ QuasiFill{Int}(1) ≡ QuasiFill{Int,0}(1) ≡ QuasiFill{Int,0,Tuple{}}(1,())
-    @test QuasiFill(1,(-1,5)) ≡ QuasiFill(1,(0,5))
-    @test QuasiFill(1.0,5) isa AbstractQuasiVector{Float64}
-    @test QuasiFill(1.0,5,5) isa AbstractQuasiMatrix{Float64}
-    @test QuasiFill(1,5) ≡ QuasiFill(1,(5,))
-    @test QuasiFill(1,5,5) ≡ QuasiFill(1,(5,5))
-    @test eltype(QuasiFill(1.0,5,5)) == Float64
-
-    @test Matrix{Float64}(Zeros{ComplexF64}(10,10)) == zeros(10,10)
-    @test_throws InexactError Matrix{Float64}(Fill(1.0+1.0im,10,10))
-
+    ax = [1,3,4]
+    @test QuasiFill(1.0,ax) isa AbstractQuasiVector{Float64}
+    @test QuasiFill(1.0,ax,ax) isa AbstractQuasiMatrix{Float64}
+    @test QuasiFill(1,ax) ≡ QuasiFill(1,(Inclusion(ax),))
+    @test QuasiFill(1,ax,ax) ≡ QuasiFill(1,(Inclusion(ax),Inclusion(ax)))
+    @test eltype(QuasiFill(1.0,ax,ax)) == Float64
 
     for T in (Int, Float64)
-        F = Fill{T}(one(T), 5)
+        F = QuasiFill{T}(one(T), ax)
+        qF = QuasiArray(fill(one(T),length(ax)), (ax,))
 
         @test eltype(F) == T
-        @test Array(F) == fill(one(T),5)
-        @test Array{T}(F) == fill(one(T),5)
-        @test Array{T,1}(F) == fill(one(T),5)
+        @test QuasiArray(F) == qF
+        @test QuasiArray{T}(F) == qF
+        @test QuasiArray{T,1}(F) == qF
 
-        F = Fill{T}(one(T), 5, 5)
+        F = QuasiFill{T}(one(T), ax, ax)
+        qF = QuasiArray(fill(one(T),length(ax),length(ax)), (ax,ax))
         @test eltype(F) == T
-        @test Array(F) == fill(one(T),5,5)
-        @test Array{T}(F) == fill(one(T),5,5)
-        @test Array{T,2}(F) == fill(one(T),5,5)
+        @test QuasiArray(F) == qF
+        @test QuasiArray{T}(F) == qF
+        @test QuasiArray{T,2}(F) == qF
 
         @test convert(AbstractQuasiArray,F) ≡ F
         @test convert(AbstractQuasiArray{T},F) ≡ AbstractQuasiArray{T}(F) ≡ F
         @test convert(AbstractQuasiMatrix{T},F) ≡ AbstractQuasiMatrix{T}(F) ≡ F
 
         @test convert(AbstractQuasiArray{Float32},F) ≡ AbstractQuasiArray{Float32}(F) ≡
-                Fill{Float32}(one(Float32),5,5)
+                QuasiFill{Float32}(one(Float32),ax,ax)
         @test convert(AbstractQuasiMatrix{Float32},F) ≡ AbstractQuasiMatrix{Float32}(F) ≡
-                Fill{Float32}(one(Float32),5,5)
+                QuasiFill{Float32}(one(Float32),ax,ax)
 
-        @test Fill{T}(F) ≡ Fill{T,2}(F) ≡ typeof(F)(F) ≡ F
-
-        show(devnull, MIME("text/plain"), F) # for codecov
+        @test QuasiFill{T}(F) ≡ QuasiFill{T,2}(F) ≡ typeof(F)(F) ≡ F
     end
 
-    @test Eye(5) isa Diagonal{Float64}
-    @test SquareEye(5) isa Diagonal{Float64}
-    @test Eye(5) == Eye{Float64}(5) == SquareEye(5) == SquareEye{Float64}(5)
-    @test Eye(5,6) == Eye{Float64}(5,6)
-    @test Eye(Ones(5,6)) == Eye{Float64}(5,6)
-    @test eltype(Eye(5)) == Float64
-    @test eltype(Eye(5,6)) == Float64
+    @test QuasiEye(ax) isa QuasiDiagonal{Float64}
+    @test QuasiEye(ax) == QuasiEye{Float64}(ax)
+    @test eltype(QuasiEye(ax)) == Float64
 
-    @test Eye((Base.OneTo(5),)) ≡ SquareEye((Base.OneTo(5),)) ≡ Eye(5)
-    @test Eye((Base.OneTo(5),Base.OneTo(6))) ≡ Eye(5,6)
+    @test QuasiEye((Inclusion(ax),)) ≡ QuasiEye(ax)
 
     for T in (Int, Float64)
-        E = Eye{T}(5)
-        M = Matrix{T}(I, 5, 5)
+        E = QuasiEye{T}(ax)
+        M = QuasiMatrix{T}(I, ax, ax)
 
         @test eltype(E) == T
-        @test Array(E) == M
-        @test Array{T}(E) == M
-        @test Array{T,2}(E) == M
+        @test QuasiArray(E) == M
+        @test QuasiArray{T}(E) == M
+        @test QuasiArray{T,2}(E) == M
 
         @test convert(AbstractQuasiArray,E) === E
         @test convert(AbstractQuasiArray{T},E) === E
         @test convert(AbstractQuasiMatrix{T},E) === E
 
 
-        @test AbstractQuasiArray{Float32}(E) == Eye{Float32}(5)
-        @test AbstractQuasiArray{Float32}(E) == Eye{Float32}(5, 5)
-
-        @test Eye{T}(randn(4,5)) ≡ Eye{T}(4,5) ≡ Eye{T}((Base.OneTo(4),Base.OneTo(5)))
-        @test Eye{T}((Base.OneTo(5),)) ≡ SquareEye{T}((Base.OneTo(5),)) ≡ Eye{T}(5)
+        @test AbstractQuasiArray{Float32}(E) == QuasiEye{Float32}(ax)
+        @test QuasiEye{T}((Inclusion(ax),)) ≡ QuasiEye{T}(ax)
     end
 
     @testset "Bool should change type" begin
-        x = Fill(true,5)
+        ax = [1,3,4]
+        x = QuasiFill(true,ax)
         y = x + x
-        @test y isa Fill{Int,1}
+        @test y isa QuasiFill{Int,1}
         @test y[1] == 2
 
-        x = Ones{Bool}(5)
+        x = QuasiOnes{Bool}(ax)
         y = x + x
-        @test y isa Fill{Int,1}
+        @test y isa QuasiFill{Int,1}
         @test y[1] == 2
-        @test x + Zeros{Bool}(5) ≡ x
-        @test x - Zeros{Bool}(5) ≡ x
-        @test Zeros{Bool}(5) + x ≡ x
-        @test -x ≡ Fill(-1,5)
+        @test x + QuasiZeros{Bool}(ax) ≡ x
+        @test x - QuasiZeros{Bool}(ax) ≡ x
+        @test QuasiZeros{Bool}(ax) + x ≡ x
+        @test -x ≡ QuasiFill(-1,ax)
     end
 
     @testset "copy should return Fill" begin
-        x = Fill(1.0,10)
+        ax = [1,3,4]
+        x = QuasiFill(1.0,ax)
         @test copy(x) ≡ x
-        x = Zeros(10)
+        x = QuasiZeros(10)
         @test copy(x) ≡ x
-        x = Fill([1.,2.],10)
+        x = QuasiFill([1.,2.],ax)
         @test copy(x) == x
         @test copy(x) === x   # because isbits(x)
-        @test copy(x) isa Fill
-        @test copy(Fill(:a, 4)) == fill(:a, 4)    # FillArrays#63
-    end
-
-    @testset "vec" begin
-        @test vec(Ones{Int}(5,10)) ≡ Ones{Int}(50)
-        @test vec(Zeros{Int}(5,10)) ≡ Zeros{Int}(50)
-        @test vec(Zeros{Int}(5,10,20)) ≡ Zeros{Int}(1000)
-        @test vec(Fill(1,5,10)) ≡ Fill(1,50)
+        @test copy(x) isa QuasiFill
     end
 
     @testset "in" begin
-        for T in [Zeros, Ones, Fill, Trues, Falses]
-            A = T(4, 4)
+        ax = [1,3,4]
+        for T in [QuasiZeros, QuasiOnes, QuasiFill]
+            A = T(4, ax)
             @test FillArrays.getindex_value(A) in A
             @test !(FillArrays.getindex_value(A) + 1 in A)
         end
-        A = FillArrays.RectDiagonal([1, 2, 3])
-        @test 3 in A
-        @test 0 in A
-        @test !(4 in A)
-        A = FillArrays.RectDiagonal([1])
-        @test 1 in A
-        @test !(0 in A)
-        A = FillArrays.RectDiagonal([2], (1:1, 1:4))
-        @test 2 in A
-        @test 0 in A
-        @test !(1 in A)
-        @test !(Zeros(1,1) in A)
-        A = FillArrays.RectDiagonal(Int[])
-        @test !(0 in A)
-        A = FillArrays.RectDiagonal(Int[], (1:0, 1:4))
-        @test !(0 in A)
     end
 end
 
 @testset "indexing" begin
-    A = Fill(3.0,5)
-    @test A[1:3] ≡ Fill(3.0,3)
-    @test A[1:3,1:1] ≡ Fill(3.0,3,1)
-    @test_throws BoundsError A[1:3,2]
+    ax = [1,3,4]
+    A = QuasiFill(3.0,ax)
+    @test A[[1,3]] ≡ Fill(3.0,2)
+    @test A[Inclusion([1,3])] isa QuasiFill
+    @test_throws BoundsError A[1:3]
     @test_throws BoundsError A[1:26]
-    @test A[[true, false, true, false, false]] ≡ Fill(3.0, 2)
-    A = Fill(3.0, 2, 2)
-    @test A[[true true; true false]] ≡ Fill(3.0, 3)
-    @test_throws BoundsError A[[true, false]]
+    A = QuasiFill(3.0, ax, ax)
+    @test A[[1,3], [3,4]] ≡ Fill(3.0,2,2)
+    @test A[[1,3], Inclusion([3,4])] == QuasiFill(3.0,(Base.OneTo(2),Inclusion([3,4])))
 
-    A = Ones{Int}(5,5)
-    @test A[1:3] ≡ Ones{Int}(3)
-    @test A[1:3,1:2] ≡ Ones{Int}(3,2)
-    @test A[1:3,2] ≡ Ones{Int}(3)
+    A = QuasiOnes{Int}(ax,ax)
+    @test A[[1,3],1] ≡ Ones{Int}(2)
+    @test A[[1,3],[3,4]] ≡ Ones{Int}(2,2)
     @test_throws BoundsError A[1:26]
-    A = Ones{Int}(2,2)
-    @test A[[true false; true false]] ≡ Ones{Int}(2)
-    @test A[[true, false, true, false]] ≡ Ones{Int}(2)
-    @test_throws BoundsError A[[true false false; true false false]]
-
-    A = Zeros{Int}(5,5)
-    @test A[1:3] ≡ Zeros{Int}(3)
-    @test A[1:3,1:2] ≡ Zeros{Int}(3,2)
-    @test A[1:3,2] ≡ Zeros{Int}(3)
+    
+    A = QuasiZeros{Int}(ax,ax)
+    @test A[[1,3],1] ≡ Zeros{Int}(2)
+    @test A[[1,3],[3,4]] ≡ Zeros{Int}(2,2)
     @test_throws BoundsError A[1:26]
-    A = Zeros{Int}(2,2)
-    @test A[[true false; true false]] ≡ Zeros{Int}(2)
-    @test A[[true, false, true, false]] ≡ Zeros{Int}(2)
-    @test_throws BoundsError A[[true false false; true false false]]
 
     @testset "colon" begin
-        @test Ones(2)[:] ≡ Ones(2)[Base.Slice(Base.OneTo(2))] ≡ Ones(2)
-        @test Zeros(2)[:] ≡ Zeros(2)[Base.Slice(Base.OneTo(2))] ≡ Zeros(2)
-        @test Fill(3.0,2)[:] ≡ Fill(3.0,2)[Base.Slice(Base.OneTo(2))] ≡ Fill(3.0,2)
+        @test QuasiOnes(ax)[:] == QuasiOnes(ax)
+        @test QuasiZeros(ax)[:] == QuasiZeros(ax)
+        @test QuasiFill(3.0,ax)[:] == QuasiFill(3.0,ax)
 
-        @test Ones(2,2)[:,:] ≡ Ones(2,2)[Base.Slice(Base.OneTo(2)),Base.Slice(Base.OneTo(2))] ≡ Ones(2,2)
-        @test Zeros(2,2)[:,:] ≡ Zeros(2)[Base.Slice(Base.OneTo(2)),Base.Slice(Base.OneTo(2))] ≡ Zeros(2,2)
-        @test Fill(3.0,2,2)[:,:] ≡ Fill(3.0,2,2)[Base.Slice(Base.OneTo(2)),Base.Slice(Base.OneTo(2))] ≡ Fill(3.0,2,2)
+        @test QuasiOnes(ax,ax)[:,:] ≡ QuasiOnes(ax,ax)
     end
 
     @testset "mixed integer / vector /colon" begin

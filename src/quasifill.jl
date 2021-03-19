@@ -1,4 +1,4 @@
-import FillArrays: _fill_getindex, getindex_value, fillsimilar
+import FillArrays: getindex_value, fillsimilar, fillzero
 
 """
     AbstractQuasiFill{T, N, Axes} <: AbstractQuasiArray{T, N}
@@ -7,14 +7,21 @@ Supertype for lazy array types whose entries are all equal to constant.
 """
 abstract type AbstractQuasiFill{T, N, Axes} <: AbstractQuasiArray{T, N} end
 
-Base.@propagate_inbounds @inline function _fill_getindex(F::AbstractQuasiFill, kj::IND) where IND
+Base.@propagate_inbounds @inline function _fill_getindex(::Type{IND}, F::AbstractQuasiFill, kj::IND) where IND
     @boundscheck checkbounds(F, kj...)
     getindex_value(F)
 end
 
+Base.@propagate_inbounds @inline function _fill_getindex(::Type{IND}, A::AbstractQuasiFill{<:Any,N}, I) where {N,IND}
+    @boundscheck checkbounds(A, I...)
+    shape = Base.index_shape(I...)
+    fillsimilar(A, shape...)
+end
+
 ==(a::AbstractQuasiFill, b::AbstractQuasiFill) = axes(a) == axes(b) && getindex_value(a) == getindex_value(b)
 
-_getindex(::Type{IND}, F::AbstractQuasiFill, k::IND) where IND = _fill_getindex(F, k)
+_getindex(::Type{IND}, F::AbstractQuasiFill, k::IND) where IND = _fill_getindex(IND, F, k)
+
 
 @inline function _setindex!(::Type{IND}, F::AbstractQuasiFill, v, k::IND) where IND
     @boundscheck checkbounds(F, k...)
@@ -54,6 +61,8 @@ QuasiFill{T,N,Axes}(x, sz::Axes) where Axes<:Tuple{Vararg{Any,N}} where {T, N} =
     QuasiFill{T,N,Axes}(x, sz)
 @inline QuasiFill{T, N}(x, sz::Axes) where Axes<:Tuple{Vararg{Any,N}} where {T, N} =
     QuasiFill{T,N}(convert(T, x)::T, sz)
+QuasiFill{T}(x, sz::NTuple{N,Any}) where {T,N} = QuasiFill{T,N}(x, sz)
+QuasiFill(x::T, sz::NTuple{N,Any}) where {T,N} = QuasiFill{T,N}(x, sz)
 
 QuasiFill{T,N}(x, sz...) where {T,N} = QuasiFill{T,N}(x, map(_inclusion, sz))
 QuasiFill{T}(x, sz...) where T = QuasiFill{T}(x, map(_inclusion, sz))
@@ -95,15 +104,6 @@ getindex(F::QuasiFill{<:Any,0}) = getindex_value(F)
 sort(a::AbstractQuasiFill; kwds...) = a
 sort!(a::AbstractQuasiFill; kwds...) = a
 
-+(a::AbstractQuasiFill) = a
--(a::AbstractQuasiFill) = QuasiFill(-getindex_value(a), axes(a))
-
-# Fill +/- Fill
-function +(a::AbstractQuasiFill{T, N}, b::AbstractQuasiFill{V, N}) where {T, V, N}
-    axes(a) ≠ axes(b) && throw(DimensionMismatch("dimensions must match."))
-    return QuasiFill(getindex_value(a) + getindex_value(b), axes(a))
-end
--(a::AbstractQuasiFill, b::AbstractQuasiFill) = a + (-b)
 
 for (Typ, funcs, func) in ((:QuasiZeros, :zeros, :zero), (:QuasiOnes, :ones, :one))
     @eval begin
@@ -151,17 +151,19 @@ fillsimilar(a::QuasiOnes{T}, axes...) where T = QuasiOnes{T}(axes)
 fillsimilar(a::QuasiZeros{T}, axes...) where T = QuasiZeros{T}(axes)
 fillsimilar(a::AbstractQuasiFill, axes...) = QuasiFill(getindex_value(a), axes)
 
+fillsimilar(a::QuasiOnes{T}, axes::OneTo...) where T = Ones{T}(axes)
+fillsimilar(a::QuasiZeros{T}, axes::OneTo...) where T = Zeros{T}(axes)
+fillsimilar(a::AbstractQuasiFill, axes::OneTo...) = Fill(getindex_value(a), axes)
+
+
 
 rank(F::QuasiZeros) = 0
 rank(F::QuasiOnes) = 1
 
 const QuasiEye{T,Axes} = QuasiDiagonal{T,QuasiOnes{T,1,Tuple{Axes}}}
 
-@inline QuasiEye{T}(n::Integer) where T = Diagonal(Ones{T}(n))
-@inline QuasiEye(n::Integer) = Diagonal(Ones(n))
-@inline QuasiEye{T}(ax::Tuple{AbstractUnitRange{Int}}) where T = Diagonal(Ones{T}(ax))
-@inline QuasiEye(ax::Tuple{AbstractUnitRange{Int}}) = Diagonal(Ones(ax))
-
+@inline QuasiEye{T}(n) where T = QuasiDiagonal(QuasiOnes{T}(n))
+@inline QuasiEye(n) = QuasiDiagonal(QuasiOnes(n))
 
 # function iterate(iter::Eye, istate = (1, 1))
 #     (i::Int, j::Int) = istate
@@ -230,3 +232,94 @@ zero(r::QuasiFill{T,N}) where {T,N} = QuasiZeros{T,N}(r.axes)
 # in
 #########
 in(x, A::AbstractQuasiFill) = x == getindex_value(A)
+
+
+
+####
+# Algebra
+####
+
++(a::AbstractQuasiFill) = a
+-(a::AbstractQuasiFill) = QuasiFill(-getindex_value(a), axes(a))
+
+# Fill +/- Fill
+function +(a::AbstractQuasiFill{T, N}, b::AbstractQuasiFill{V, N}) where {T, V, N}
+    axes(a) ≠ axes(b) && throw(DimensionMismatch("dimensions must match."))
+    return QuasiFill(getindex_value(a) + getindex_value(b), axes(a))
+end
+-(a::AbstractQuasiFill, b::AbstractQuasiFill) = a + (-b)
+
+
+## Transpose/Adjoint
+# cannot do this for vectors since that would destroy scalar dot product
+
+
+transpose(a::QuasiOnes{T,2}) where T = QuasiOnes{T}(reverse(a.axes))
+adjoint(a::QuasiOnes{T,2}) where T = QuasiOnes{T}(reverse(a.axes))
+transpose(a::QuasiZeros{T,2}) where T = QuasiZeros{T}(reverse(a.axes))
+adjoint(a::QuasiZeros{T,2}) where T = QuasiZeros{T}(reverse(a.axes))
+transpose(a::QuasiFill{T,2}) where T = QuasiFill{T}(transpose(a.value), reverse(a.axes))
+adjoint(a::QuasiFill{T,2}) where T = QuasiFill{T}(adjoint(a.value), reverse(a.axes))
+
+permutedims(a::AbstractQuasiFill{<:Any,1}) = fillsimilar(a, (1, length(a)))
+permutedims(a::AbstractQuasiFill{<:Any,2}) = fillsimilar(a, reverse(a.axes))
+
+function permutedims(B::AbstractQuasiFill, perm)
+    dimsB = size(B)
+    ndimsB = length(dimsB)
+    (ndimsB == length(perm) && isperm(perm)) || throw(ArgumentError("no valid permutation of dimensions"))
+    dimsP = ntuple(i->dimsB[perm[i]], ndimsB)::typeof(dimsB)
+    fillsimilar(B, dimsP)
+end
+
+## Algebraic identities
+
++(a::QuasiZeros) = a
+-(a::QuasiZeros) = a
+
+# Zeros +/- Zeros
+function +(a::QuasiZeros{T}, b::QuasiZeros{V}) where {T, V}
+    axes(a) ≠ axes(b) && throw(DimensionMismatch("dimensions must match."))
+    return QuasiZeros{promote_type(T,V)}(axes(a))
+end
+-(a::QuasiZeros, b::QuasiZeros) = -(a + b)
+-(a::QuasiOnes, b::QuasiOnes) = QuasiZeros(a)+QuasiZeros(b)
+
+# Zeros +/- Fill and Fill +/- Zeros
+function +(a::AbstractQuasiFill{T}, b::QuasiZeros{V}) where {T, V}
+    axes(a) ≠ axes(b) && throw(DimensionMismatch("dimensions must match."))
+    return convert(AbstractQuasiFill{promote_type(T, V)}, a)
+end
++(a::QuasiZeros, b::AbstractQuasiFill) = b + a
+-(a::AbstractQuasiFill, b::QuasiZeros) = a + b
+-(a::QuasiZeros, b::AbstractQuasiFill) = a + (-b)
+
+# QuasiZeros +/- Array and Array +/- QuasiZeros
+function +(a::QuasiZeros{T, N}, b::AbstractQuasiArray{V, N}) where {T, V, N}
+    axes(a) ≠ axes(b) && throw(DimensionMismatch("dimensions must match."))
+    return AbstractQuasiArray{promote_type(T,V),N}(b)
+end
+function +(a::QuasiArray{T, N}, b::QuasiZeros{V, N}) where {T, V, N}
+    axes(a) ≠ axes(b) && throw(DimensionMismatch("dimensions must match."))
+    return AbstractQuasiArray{promote_type(T,V),N}(a)
+end
+
+function -(a::QuasiZeros{T, N}, b::AbstractQuasiArray{V, N}) where {T, V, N}
+    axes(a) ≠ axes(b) && throw(DimensionMismatch("dimensions must match."))
+    return -b + a
+end
+-(a::QuasiArray{T, N}, b::QuasiZeros{V, N}) where {T, V, N} = a + b
+
+
+##
+# view
+##
+
+Base.@propagate_inbounds _unsafe_view(::Type{IND}, A::AbstractQuasiFill{<:Any,N}, I::Tuple) where {IND,N} =
+    _fill_getindex(IND, A, Base.to_indices(A,I))
+
+# not getindex since we need array-like indexing
+Base.@propagate_inbounds function _unsafe_view(::Type{IND}, A::AbstractQuasiFill{<:Any,N}, I::Vararg{IND, N}) where {N,IND}
+    @boundscheck checkbounds(A, I...)
+    fillsimilar(A)
+end

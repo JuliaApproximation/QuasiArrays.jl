@@ -424,6 +424,8 @@ to_indices(A::AbstractQuasiArray, I::Tuple{Any}) = (@_inline_meta; to_indices(A,
     (to_index(A, I[1]), to_indices(A, indstail, tail(I))...)
 end
 
+@inline index_shape(A::AbstractQuasiArray, rest...) = (axes(A)..., index_shape(rest...)...)
+
 ### From abstractarray.jl: Internal multidimensional indexing definitions ###
 
 @inline index_dimsum(::AbstractQuasiArray{Bool}, I...) = (true, index_dimsum(I...)...)

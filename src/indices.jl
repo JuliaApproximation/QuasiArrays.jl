@@ -213,9 +213,6 @@ checkindex(::Type{Bool}, inds::Inclusion{T}, I::AbstractArray{T}) where T<:Abstr
 checkindex(::Type{Bool}, inds::Inclusion{T}, I::AbstractArray{<:AbstractArray}) where T<:AbstractArray = 
     __checkindex(Bool, inds, convert(AbstractArray{T}, I))
 
-@propagate_inbounds _affine_checkindex(inds, r) = isempty(r) | (checkindex(Bool, inds, Base.to_indices(inds, (first(r),))...) & checkindex(Bool, inds,  Base.to_indices(inds, (last(r),))...))
-@propagate_inbounds checkindex(::Type{Bool}, inds::Inclusion, r::AbstractRange) = _affine_checkindex(inds, r)
-
 
 checkindex(::Type{Bool}, indx::Inclusion, I::AbstractVector{Bool}) = indx == axes1(I)
 checkindex(::Type{Bool}, indx::Inclusion, I::AbstractArray{Bool}) = false

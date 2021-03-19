@@ -8,6 +8,9 @@ struct QuasiArray{T,N,AXES<:NTuple{N,AbstractVector}} <: AbstractQuasiArray{T,N}
     end
 end
 
+QuasiArray{T,N,AXES}(par::AbstractArray{<:Any,N}, axes::AXES) where {T,N,AXES<:NTuple{N,AbstractVector}} =
+    QuasiArray{T,N,AXES}(convert(AbstractArray{T,N}, par)::AbstractArray{T,N}, axes)
+
 const QuasiMatrix{T,AXES<:NTuple{2,AbstractVector}} = QuasiArray{T,2,AXES}
 const QuasiVector{T,AXES<:Tuple{AbstractVector}} = QuasiArray{T,1,AXES}
 
@@ -27,6 +30,35 @@ QuasiMatrix(par::AbstractMatrix{T}, axes::NTuple{2,AbstractVector}) where T =
     QuasiArray{T,2,typeof(axes)}(par, axes)
 QuasiVector(par::AbstractVector{T}, axes::Tuple{AbstractVector}) where T = 
     QuasiArray{T,1,typeof(axes)}(par, axes)
+
+QuasiArray{T}(par::AbstractArray{<:Any,N}, axes::NTuple{N,AbstractVector}) where {T,N} = 
+    QuasiArray{T,N,typeof(axes)}(par, axes)
+QuasiMatrix{T}(par::AbstractMatrix, axes::NTuple{2,AbstractVector}) where T = 
+    QuasiMatrix{T,typeof(axes)}(par, axes)
+QuasiVector{T}(par::AbstractVector, axes::Tuple{AbstractVector}) where T = 
+    QuasiVector{T,typeof(axes)}(par, axes)
+
+QuasiArray(par::AbstractArray{T,N}, axes::Vararg{AbstractVector,N}) where {T,N} = 
+    QuasiArray(par, axes)
+QuasiMatrix(par::AbstractMatrix{T}, axes::Vararg{AbstractVector,2}) where T = 
+    QuasiMatrix(par, axes)
+QuasiVector(par::AbstractVector{T}, axes::AbstractVector) where T = 
+    QuasiVector(par, (axes,))
+
+QuasiArray{T}(par::AbstractArray{<:Any,N}, axes::Vararg{AbstractVector,N}) where {T,N} = 
+    QuasiArray{T}(par, axes)
+QuasiMatrix{T}(par::AbstractMatrix, axes::Vararg{AbstractVector,2}) where T = 
+    QuasiMatrix{T}(par, axes)
+QuasiVector{T}(par::AbstractVector, axes::AbstractVector) where T = 
+    QuasiVector{T}(par, (axes,))
+
+
+
+QuasiMatrix(λ::UniformScaling, ax::NTuple{2,AbstractVector}) = QuasiMatrix(Matrix(λ,map(length,ax)...), ax)
+QuasiMatrix{T}(λ::UniformScaling, ax::NTuple{2,AbstractVector}) where T = QuasiMatrix{T}(Matrix(λ,map(length,ax)...), ax)
+QuasiMatrix(λ::UniformScaling, ax1::AbstractVector, ax2::AbstractVector) = QuasiMatrix(λ, (ax1, ax2))
+QuasiMatrix{T}(λ::UniformScaling, ax1::AbstractVector, ax2::AbstractVector) where T = QuasiMatrix{T}(λ, (ax1, ax2))
+
 
 QuasiArray(par::AbstractArray) = QuasiArray(par, axes(par))
 QuasiMatrix(par::AbstractArray) = QuasiMatrix(par, axes(par))

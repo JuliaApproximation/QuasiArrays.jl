@@ -63,8 +63,7 @@ QuasiDiagonal{T}(D::QuasiDiagonal{T}) where {T} = D
 QuasiDiagonal{T}(D::QuasiDiagonal) where {T} = QuasiDiagonal{T}(D.diag)
 
 AbstractQuasiMatrix{T}(D::QuasiDiagonal) where {T} = QuasiDiagonal{T}(D)
-Matrix(D::QuasiDiagonal) = diagm(0 => D.diag)
-Array(D::QuasiDiagonal) = Matrix(D)
+AbstractQuasiArray{T}(D::QuasiDiagonal) where T = AbstractQuasiMatrix{T}(D)
 
 # For D<:QuasiDiagonal, similar(D[, neweltype]) should yield a QuasiDiagonal matrix.
 # On the other hand, similar(D, [neweltype,] shape...) should yield a sparse matrix.
