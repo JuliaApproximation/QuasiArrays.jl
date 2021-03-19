@@ -81,7 +81,7 @@ QuasiVector(par::AbstractVector{T}, axes::AbstractArray) where {T} =
     QuasiVector(par, (axes,))
     
 
-QuasiArray(a::AbstractQuasiArray) = QuasiArray(Array(a), axes(a))
+QuasiArray(a::AbstractQuasiArray) = QuasiArray(a[map(collect,axes(a))...], axes(a))
 QuasiArray{T}(a::AbstractQuasiArray) where T = QuasiArray(Array{T}(a), axes(a))
 QuasiArray{T,N}(a::AbstractQuasiArray{<:Any,N}) where {T,N} = QuasiArray(Array{T}(a), axes(a))
 QuasiArray{T,N,AXES}(a::AbstractQuasiArray{<:Any,N}) where {T,N,AXES} = QuasiArray{T,N,AXES}(Array{T}(a), axes(a))
@@ -101,10 +101,10 @@ convert(::Type{AbstractQuasiArray{T}}, a::QuasiArray{T}) where T = a
 _inclusion(d::Slice) = d
 _inclusion(d::OneTo) = d
 _inclusion(d::IdentityUnitRange{<:Integer}) = d
-_inclusion(d::AbstractUnitRange{<:Integer}) = Slice(d)
+_inclusion(d::AbstractUnitRange{<:Integer}) = IdentityUnitRange(d)
 _inclusion(d) = Inclusion(d)
 
-axes(A::QuasiArray) = _inclusion.(A.axes)
+axes(A::QuasiArray) = map(_inclusion,A.axes)
 parent(A::QuasiArray) = A.parent
 
 @propagate_inbounds @inline function _getindex(::Type{IND}, A::QuasiArray, I::IND) where IND

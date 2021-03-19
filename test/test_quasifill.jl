@@ -171,89 +171,49 @@ end
     end
 
     @testset "mixed integer / vector /colon" begin
-        a = Fill(2.0,5)
-        z = Zeros(5)
-        @test a[1:5] ≡ a[:] ≡ a
-        @test z[1:5] ≡ z[:] ≡ z
+        ax = [1,3,4]
+        a = QuasiFill(2.0,ax)
+        z = QuasiZeros(ax)
+        @test a[Inclusion(ax)] ≡ a[:] ≡ a
+        @test z[Inclusion(ax)] ≡ z[:] ≡ z
 
-        A = Fill(2.0,5,6)
-        Z = Zeros(5,6)
-        @test A[:,1] ≡ A[1:5,1] ≡ Fill(2.0,5)
-        @test A[1,:] ≡ A[1,1:6] ≡ Fill(2.0,6)
-        @test A[:,:] ≡ A[1:5,1:6] ≡ A[1:5,:] ≡ A[:,1:6] ≡ A
-        @test Z[:,1] ≡ Z[1:5,1] ≡ Zeros(5)
-        @test Z[1,:] ≡ Z[1,1:6] ≡ Zeros(6)
-        @test Z[:,:] ≡ Z[1:5,1:6] ≡ Z[1:5,:] ≡ Z[:,1:6] ≡ Z
+        bx = 2:5
+        A = QuasiFill(2.0,ax,bx)
+        Z = QuasiZeros(ax,bx)
+        @test A[:,2] ≡ A[Inclusion(ax),2] ≡ QuasiFill(2.0,ax)
+        @test A[ax,2] ≡ Fill(2.0,3)
+        @test A[1,:] ≡ A[1,Base.IdentityUnitRange(bx)] ≡ QuasiFill(2.0,bx)
 
-        A = Fill(2.0,5,6,7)
-        Z = Zeros(5,6,7)
-        @test A[:,1,1] ≡ A[1:5,1,1] ≡ Fill(2.0,5)
-        @test A[1,:,1] ≡ A[1,1:6,1] ≡ Fill(2.0,6)
-        @test A[:,:,:] ≡ A[1:5,1:6,1:7] ≡ A[1:5,:,1:7] ≡ A[:,1:6,1:7] ≡ A
+        @test A[:,:] == A[Inclusion(ax),Base.IdentityUnitRange(bx)] == A[Inclusion(ax),:] == A[:,Base.IdentityUnitRange(bx)] == A
+        @test Z[:,2] ≡ Z[Inclusion(ax),2] ≡ QuasiZeros(ax)
+        @test Z[1,:] ≡ Z[1,Base.IdentityUnitRange(bx)] ≡ QuasiZeros(bx)
+        @test Z[:,:] == Z[Inclusion(ax),Base.IdentityUnitRange(bx)] == Z[Inclusion(ax),:] == Z[:,Base.IdentityUnitRange(bx)] == Z
+
+        cx = 1:2
+        A = QuasiFill(2.0,ax,bx,cx)
+        Z = QuasiZeros(ax,bx,cx)
+        @test A[:,2,1] ≡ A[Inclusion(ax),2,1] ≡ QuasiFill(2.0,ax)
+        @test A[1,:,1] ≡ A[1,Base.IdentityUnitRange(bx),1] ≡ QuasiFill(2.0,bx)
+        @test A[:,:,:] ≡ A[Inclusion(ax),Base.IdentityUnitRange(bx),Base.IdentityUnitRange(cx)] ≡ A[Inclusion(ax),:,Base.IdentityUnitRange(cx)] ≡ A[:,Base.IdentityUnitRange(bx),Base.IdentityUnitRange(cx)] ≡ A
     end
 end
 
-@testset "RectDiagonal" begin
-    data = 1:3
-    expected_size = (5, 3)
-    expected_axes = Base.OneTo.(expected_size)
-    expected_matrix = [1 0 0; 0 2 0; 0 0 3; 0 0 0; 0 0 0]
-    expected = RectDiagonal{Int, UnitRange{Int}}(data, expected_axes)
-
-    @test axes(expected) == expected_axes
-    @test size(expected) == expected_size
-    @test (axes(expected, 1), axes(expected, 2)) == expected_axes
-    @test (size(expected, 1), size(expected, 2)) == expected_size
-
-    @test expected == expected_matrix
-    @test Matrix(expected) == expected_matrix
-    @test expected[:, 2] == expected_matrix[:, 2]
-    @test expected[2, :] == expected_matrix[2, :]
-    @test expected[5, :] == expected_matrix[5, :]
-
-
-    for Typ in (RectDiagonal, RectDiagonal{Int}, RectDiagonal{Int, UnitRange{Int}})
-        @test Typ(data) == expected[1:3, 1:3]
-        @test Typ(data, expected_axes) == expected
-        @test Typ(data, expected_axes...) == expected
-        @test Typ(data, expected_size) == expected
-        @test Typ(data, expected_size...) == expected
-    end
-
-    @test diag(expected) === expected.diag
-
-    mut = RectDiagonal(collect(data), expected_axes)
-    @test mut == expected
-    @test mut == expected_matrix
-    mut[1, 1] = 5
-    @test mut[1] == 5
-    @test diag(mut) == [5, 2, 3]
-    mut[2, 1] = 0
-    @test_throws ArgumentError mut[2, 1] = 9
-
-    D = RectDiagonal([1.,2.], (Base.OneTo(3),Base.OneTo(2)))
-    if VERSION < v"1.6-"
-        @test stringmime("text/plain", D) == "3×2 RectDiagonal{Float64,Array{Float64,1},Tuple{Base.OneTo{$Int},Base.OneTo{$Int}}}:\n 1.0   ⋅ \n  ⋅   2.0\n  ⋅    ⋅ "
-    else
-        @test stringmime("text/plain", D) == "3×2 RectDiagonal{Float64, Vector{Float64}, Tuple{Base.OneTo{$Int}, Base.OneTo{$Int}}}:\n 1.0   ⋅ \n  ⋅   2.0\n  ⋅    ⋅ "
-    end
-end
 
 # Check that all pair-wise combinations of + / - elements of As and Bs yield the correct
 # type, and produce numerically correct results.
 function test_addition_and_subtraction(As, Bs, Tout::Type)
     for A in As, B in Bs
         @test A + B isa Tout{promote_type(eltype(A), eltype(B))}
-        @test Array(A + B) == Array(A) + Array(B)
+        @test QuasiArray(A + B) == QuasiArray(A) + QuasiArray(B)
 
         @test A - B isa Tout{promote_type(eltype(A), eltype(B))}
-        @test Array(A - B) == Array(A) - Array(B)
+        @test QuasiArray(A - B) == QuasiArray(A) - QuasiArray(B)
 
         @test B + A isa Tout{promote_type(eltype(B), eltype(A))}
-        @test Array(B + A) == Array(B) + Array(A)
+        @test QuasiArray(B + A) == QuasiArray(B) + QuasiArray(A)
 
         @test B - A isa Tout{promote_type(eltype(B), eltype(A))}
-        @test Array(B - A) == Array(B) - Array(A)
+        @test QuasiArray(B - A) == QuasiArray(B) - QuasiArray(A)
     end
 end
 
@@ -266,115 +226,76 @@ function test_addition_and_subtraction_dim_mismatch(a, b)
 end
 
 @testset "FillArray addition and subtraction" begin
-    test_addition_and_subtraction_dim_mismatch(Zeros(5), Zeros(6))
-    test_addition_and_subtraction_dim_mismatch(Zeros(5), Zeros{Int}(6))
-    test_addition_and_subtraction_dim_mismatch(Zeros(5), Zeros(6,6))
-    test_addition_and_subtraction_dim_mismatch(Zeros(5), Zeros{Int}(6,5))
+    ax = [1,3,4]
+    bx = 2:5
+    test_addition_and_subtraction_dim_mismatch(QuasiZeros(ax), QuasiZeros(bx))
+    test_addition_and_subtraction_dim_mismatch(QuasiZeros(ax), QuasiZeros{Int}(bx))
+    test_addition_and_subtraction_dim_mismatch(QuasiZeros(ax), QuasiZeros(bx,bx))
+    test_addition_and_subtraction_dim_mismatch(QuasiZeros(ax), QuasiZeros{Int}(bx,ax))
 
     # Construct FillArray for repeated use.
     rng = MersenneTwister(123456)
-    A_fill, B_fill = Fill(randn(rng, Float64), 5), Fill(4, 5)
+    A_fill, B_fill = QuasiFill(randn(rng, Float64), ax), QuasiFill(4, ax)
 
     # Unary +/- constructs a new FillArray.
     @test +A_fill === A_fill
-    @test -A_fill === Fill(-A_fill.value, 5)
+    @test -A_fill === QuasiFill(-A_fill.value, ax)
 
     # FillArray +/- FillArray should construct a new FillArray.
-    test_addition_and_subtraction([A_fill, B_fill], [A_fill, B_fill], Fill)
-    test_addition_and_subtraction_dim_mismatch(A_fill, Fill(randn(rng), 5, 2))
+    test_addition_and_subtraction([A_fill, B_fill], [A_fill, B_fill], QuasiFill)
+    test_addition_and_subtraction_dim_mismatch(A_fill, QuasiFill(randn(rng), 5, 2))
 
     # FillArray + Array (etc) should construct a new Array using `getindex`.
-    A_dense, B_dense = randn(rng, 5), [5, 4, 3, 2, 1]
-    test_addition_and_subtraction([A_fill, B_fill], [A_dense, B_dense], Array)
-    test_addition_and_subtraction_dim_mismatch(A_fill, randn(rng, 5, 2))
-
-    # FillArray + StepLenRange / UnitRange (etc) should yield an AbstractRange.
-    A_ur, B_ur = 1.0:5.0, 6:10
-    test_addition_and_subtraction([A_fill, B_fill], (A_ur, B_ur), AbstractRange)
-    test_addition_and_subtraction_dim_mismatch(A_fill, 1.0:6.0)
-    test_addition_and_subtraction_dim_mismatch(A_fill, 5:10)
+    A_dense, B_dense = QuasiArray(randn(rng, 3),ax), QuasiArray([5, 4, 3],ax)
+    test_addition_and_subtraction([A_fill, B_fill], [A_dense, B_dense], QuasiArray)
+    test_addition_and_subtraction_dim_mismatch(A_fill, QuasiArray(randn(rng, 3, 4),ax,bx))
 end
 
 @testset "Other matrix types" begin
-    @test Diagonal(Zeros(5)) == Diagonal(zeros(5))
+    ax = [1,3,4]
+    bx = 2:5
+    z = QuasiZeros(ax)
+    @test QuasiDiagonal(z) == QuasiDiagonal(QuasiArray(z))
 
-    @test Diagonal(Zeros(8,5)) == Diagonal(zeros(5))
-    @test convert(Diagonal, Zeros(5,5)) == Diagonal(zeros(5))
-    @test_throws BoundsError convert(Diagonal, Zeros(8,5))
+    @test QuasiDiagonal(QuasiZeros(ax,bx)) == QuasiDiagonal(z)
+    @test convert(QuasiDiagonal, QuasiZeros(ax,ax)) == QuasiDiagonal(z)
+    @test_throws BoundsError convert(QuasiDiagonal, QuasiZeros(ax,bx))
 
-    @test convert(Diagonal{Int}, Zeros(5,5)) == Diagonal(zeros(Int,5))
-    @test_throws BoundsError convert(Diagonal{Int}, Zeros(8,5))
+    @test convert(QuasiDiagonal{Int}, QuasiZeros(ax,ax)) == QuasiDiagonal(z)
+    @test_throws BoundsError convert(QuasiDiagonal{Int}, QuasiZeros(bx,ax))
 
 
-    @test Diagonal(Eye(8,5)) == Diagonal(ones(5))
-    @test convert(Diagonal, Eye(5)) == Diagonal(ones(5))
-    @test convert(Diagonal{Int}, Eye(5)) == Diagonal(ones(Int,5))
+    @test QuasiDiagonal(QuasiEye(ax)) == QuasiEye(ax)
+    @test convert(QuasiDiagonal, QuasiEye(ax)) ==  QuasiEye(ax)
+    @test convert(QuasiDiagonal{Int}, QuasiEye(ax)) == QuasiEye(ax)
 end
 
-@testset "Sparse vectors and matrices" begin
-    @test SparseVector(Zeros(5)) ==
-            SparseVector{Float64}(Zeros(5)) ==
-            SparseVector{Float64,Int}(Zeros(5)) ==
-            convert(AbstractSparseArray,Zeros(5)) ==
-            convert(AbstractSparseVector,Zeros(5)) ==
-            convert(AbstractSparseArray{Float64},Zeros(5)) ==
-            convert(AbstractSparseVector{Float64},Zeros(5)) ==
-            convert(AbstractSparseVector{Float64,Int},Zeros(5)) ==
-            spzeros(5)
-
-    for (Mat, SMat) in ((Zeros(5,5), spzeros(5,5)), (Zeros(6,5), spzeros(6,5)),
-                        (Eye(5), sparse(I,5,5)), (Eye(6,5), sparse(I,6,5)))
-        @test SparseMatrixCSC(Mat) ==
-                SparseMatrixCSC{Float64}(Mat) ==
-                SparseMatrixCSC{Float64,Int}(Mat) ==
-                convert(AbstractSparseArray,Mat) ==
-                convert(AbstractSparseMatrix,Mat) ==
-                convert(AbstractSparseArray{Float64},Mat) ==
-                convert(AbstractSparseArray{Float64,Int},Mat) ==
-                convert(AbstractSparseMatrix{Float64},Mat) ==
-                convert(AbstractSparseMatrix{Float64,Int},Mat) ==
-                SMat
-    end
-end
 
 @testset "==" begin
-    @test Zeros(5,4) == Fill(0,5,4)
-    @test Zeros(5,4) ≠ Zeros(3)
-    @test Ones(5,4) == Fill(1,5,4)
+    ax,bx = [1,3,4],2:5
+    @test QuasiZeros(ax,bx) == QuasiFill(0,ax,bx)
+    @test QuasiZeros(ax,bx) ≠ QuasiZeros(3)
+    @test QuasiOnes(ax,bx) == QuasiFill(1,ax,bx)
 end
 
 @testset "Rank" begin
-    @test rank(Zeros(5,4)) == 0
-    @test rank(Ones(5,4)) == 1
-    @test rank(Fill(2,5,4)) == 1
-    @test rank(Fill(0,5,4)) == 0
-    @test rank(Eye(2)) == 2
+    ax,bx = [1,3,4],2:5
+    @test rank(QuasiZeros(ax,bx)) == 0
+    @test rank(QuasiOnes(ax,bx)) == 1
+    @test rank(QuasiFill(2,ax,bx)) == 1
+    @test rank(QuasiFill(0,ax,bx)) == 0
 end
 
-@testset "BigInt indices" begin
-    for A in (Zeros(BigInt(100)), Ones(BigInt(100)), Fill(2, BigInt(100)))
-        @test length(A) isa BigInt
-        @test axes(A) == tuple(Base.OneTo{BigInt}(BigInt(100)))
-        @test size(A) isa Tuple{BigInt}
-    end
-    for A in (Eye(BigInt(100)), Eye(BigInt(100), BigInt(100)))
-        @test length(A) isa BigInt
-        @test axes(A) == tuple(Base.OneTo{BigInt}(BigInt(100)),Base.OneTo{BigInt}(BigInt(100)))
-        @test size(A) isa Tuple{BigInt,BigInt}
-    end
-    for A in (Zeros(BigInt(10), 10), Ones(BigInt(10), 10), Fill(2.0, (BigInt(10), 10)), Eye(BigInt(10), 8))
-        @test size(A) isa Tuple{BigInt,Int}
-    end
-
-end
-
-@testset "IndexStyle" begin
-    @test IndexStyle(Zeros(5,5)) == IndexStyle(typeof(Zeros(5,5))) == IndexLinear()
-end
 
 @testset "Identities" begin
-    @test Zeros(3,4) * randn(4,5) === randn(3,4) * Zeros(4,5) === Zeros(3, 5)
-    @test_throws DimensionMismatch randn(3,4) * Zeros(3, 3)
+    ax,bx,cx = [1,3,4],2:5,1:5
+    A = QuasiArray(randn(4,5),bx,cx)
+    B = QuasiArray(randn(3,4),ax,bx)
+    @test 1.0 .* QuasiZeros(ax,bx) ≡ QuasiZeros(ax,bx) .* 1.0 ≡ QuasiZeros(ax,bx)
+    @test QuasiZeros(ax,bx) * QuasiZeros(bx,cx) == QuasiZeros(ax,bx) * A == B * QuasiZeros(bx,cx) == QuasiZeros(ax,cx)
+    @test QuasiZeros(ax,bx) * A isa QuasiZeros
+    @test B * QuasiZeros(bx,cx) isa QuasiZeros
+    @test_throws DimensionMismatch B * QuasiZeros(ax, ax)
     @test eltype(Zeros{Int}(3,4) * fill(1, 4, 5)) == Int
     @test eltype(Zeros{Int}(3,4) * fill(3.4, 4, 5)) == Float64
     @test Zeros(3, 4) * randn(4) == Zeros(3, 4) * Zeros(4) == Zeros(3)

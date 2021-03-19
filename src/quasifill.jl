@@ -75,6 +75,7 @@ QuasiFill(x, sz...) = QuasiFill(x, map(_inclusion, sz))
 
 @inline axes(F::QuasiFill) = F.axes
 @inline size(F::QuasiFill) = length.(F.axes)
+MemoryLayout(::Type{<:QuasiFill}) = FillLayout()
 
 @inline getindex_value(F::QuasiFill) = F.value
 
@@ -159,6 +160,8 @@ fillsimilar(a::AbstractQuasiFill, axes::OneTo...) = Fill(getindex_value(a), axes
 
 rank(F::QuasiZeros) = 0
 rank(F::QuasiOnes) = 1
+
+diag(F::QuasiZeros{T,2}) where T = QuasiZeros{T}((axes(F,1),))
 
 const QuasiEye{T,Axes} = QuasiDiagonal{T,QuasiOnes{T,1,Tuple{Axes}}}
 
@@ -323,3 +326,130 @@ Base.@propagate_inbounds function _unsafe_view(::Type{IND}, A::AbstractQuasiFill
     @boundscheck checkbounds(A, I...)
     fillsimilar(A)
 end
+
+####
+# broadcast
+####
+
+### map
+
+map(f::Function, r::AbstractQuasiFill) = QuasiFill(f(getindex_value(r)), axes(r))
+
+
+### Unary broadcasting
+
+function broadcasted(::DefaultQuasiArrayStyle{N}, op, r::AbstractQuasiFill{T,N}) where {T,N}
+    return QuasiFill(op(getindex_value(r)), axes(r))
+end
+
+broadcasted(::DefaultQuasiArrayStyle, ::typeof(+), r::QuasiZeros) = r
+broadcasted(::DefaultQuasiArrayStyle, ::typeof(-), r::QuasiZeros) = r
+broadcasted(::DefaultQuasiArrayStyle, ::typeof(+), r::QuasiOnes) = r
+
+broadcasted(::DefaultQuasiArrayStyle{N}, ::typeof(conj), r::QuasiZeros{T,N}) where {T,N} = r
+broadcasted(::DefaultQuasiArrayStyle{N}, ::typeof(conj), r::QuasiOnes{T,N}) where {T,N} = r
+broadcasted(::DefaultQuasiArrayStyle{N}, ::typeof(real), r::QuasiZeros{T,N}) where {T,N} = QuasiZeros{real(T)}(r.axes)
+broadcasted(::DefaultQuasiArrayStyle{N}, ::typeof(real), r::QuasiOnes{T,N}) where {T,N} = QuasiOnes{real(T)}(r.axes)
+broadcasted(::DefaultQuasiArrayStyle{N}, ::typeof(imag), r::QuasiZeros{T,N}) where {T,N} = QuasiZeros{real(T)}(r.axes)
+broadcasted(::DefaultQuasiArrayStyle{N}, ::typeof(imag), r::QuasiOnes{T,N}) where {T,N} = QuasiZeros{real(T)}(r.axes)
+
+### Binary broadcasting
+
+function broadcasted(::DefaultQuasiArrayStyle, op, a::AbstractQuasiFill, b::AbstractQuasiFill)
+    val = op(getindex_value(a), getindex_value(b))
+    return QuasiFill(val, broadcast_shape(axes(a), axes(b)))
+end
+
+
+_broadcasted_zeros(f, a, b) = QuasiZeros{Base.Broadcast.combine_eltypes(f, (a, b))}(broadcast_shape(axes(a), axes(b)))
+_broadcasted_ones(f, a, b) = QuasiOnes{Base.Broadcast.combine_eltypes(f, (a, b))}(broadcast_shape(axes(a), axes(b)))
+_broadcasted_nan(f, a, b) = QuasiFill(convert(Base.Broadcast.combine_eltypes(f, (a, b)), NaN), broadcast_shape(axes(a), axes(b)))
+
+
+broadcasted(::DefaultQuasiArrayStyle, ::typeof(+), a::QuasiZeros, b::QuasiZeros) = _broadcasted_zeros(+, a, b)
+broadcasted(::DefaultQuasiArrayStyle, ::typeof(+), a::QuasiOnes, b::QuasiZeros) = _broadcasted_ones(+, a, b)
+broadcasted(::DefaultQuasiArrayStyle, ::typeof(+), a::QuasiZeros, b::QuasiOnes) = _broadcasted_ones(+, a, b)
+
+broadcasted(::DefaultQuasiArrayStyle, ::typeof(-), a::QuasiZeros, b::QuasiZeros) = _broadcasted_zeros(-, a, b)
+broadcasted(::DefaultQuasiArrayStyle, ::typeof(-), a::QuasiOnes, b::QuasiZeros) = _broadcasted_ones(-, a, b)
+broadcasted(::DefaultQuasiArrayStyle, ::typeof(-), a::QuasiOnes, b::QuasiOnes) = _broadcasted_zeros(-, a, b)
+
+broadcasted(::DefaultQuasiArrayStyle{1}, ::typeof(+), a::QuasiZeros{<:Any,1}, b::QuasiZeros{<:Any,1}) = _broadcasted_zeros(+, a, b)
+broadcasted(::DefaultQuasiArrayStyle{1}, ::typeof(+), a::QuasiOnes{<:Any,1}, b::QuasiZeros{<:Any,1}) = _broadcasted_ones(+, a, b)
+broadcasted(::DefaultQuasiArrayStyle{1}, ::typeof(+), a::QuasiZeros{<:Any,1}, b::QuasiOnes{<:Any,1}) = _broadcasted_ones(+, a, b)
+
+broadcasted(::DefaultQuasiArrayStyle{1}, ::typeof(-), a::QuasiZeros{<:Any,1}, b::QuasiZeros{<:Any,1}) = _broadcasted_zeros(-, a, b)
+broadcasted(::DefaultQuasiArrayStyle{1}, ::typeof(-), a::QuasiOnes{<:Any,1}, b::QuasiZeros{<:Any,1}) = _broadcasted_ones(-, a, b)
+
+
+broadcasted(::DefaultQuasiArrayStyle, ::typeof(*), a::QuasiZeros, b::QuasiZeros) = _broadcasted_zeros(*, a, b)
+
+# In following, need to restrict to <: Number as otherwise we cannot infer zero from type
+# TODO: generalise to things like SVector
+for op in (:*, :/)
+    @eval begin
+        broadcasted(::DefaultQuasiArrayStyle, ::typeof($op), a::QuasiZeros, b::QuasiOnes) = _broadcasted_zeros($op, a, b)
+        broadcasted(::DefaultQuasiArrayStyle, ::typeof($op), a::QuasiZeros, b::QuasiFill{<:Number}) = _broadcasted_zeros($op, a, b)
+        broadcasted(::DefaultQuasiArrayStyle, ::typeof($op), a::QuasiZeros, b::Number) = _broadcasted_zeros($op, a, b)
+        broadcasted(::DefaultQuasiArrayStyle, ::typeof($op), a::QuasiZeros, b::Base.Broadcast.Broadcasted) = _broadcasted_zeros($op, a, b)
+    end
+end
+
+for op in (:*, :\)
+    @eval begin
+        broadcasted(::DefaultQuasiArrayStyle, ::typeof($op), a::QuasiOnes, b::QuasiZeros) = _broadcasted_zeros($op, a, b)
+        broadcasted(::DefaultQuasiArrayStyle, ::typeof($op), a::QuasiFill{<:Number}, b::QuasiZeros) = _broadcasted_zeros($op, a, b)
+        broadcasted(::DefaultQuasiArrayStyle, ::typeof($op), a::Number, b::QuasiZeros) = _broadcasted_zeros($op, a, b)
+        broadcasted(::DefaultQuasiArrayStyle, ::typeof($op), a::Base.Broadcast.Broadcasted, b::QuasiZeros) = _broadcasted_zeros($op, a, b)
+    end
+end
+
+for op in (:*, :/, :\)
+    @eval broadcasted(::DefaultQuasiArrayStyle, ::typeof($op), a::QuasiOnes, b::QuasiOnes) = _broadcasted_ones($op, a, b)
+end
+
+for op in (:/, :\)
+    @eval broadcasted(::DefaultQuasiArrayStyle, ::typeof($op), a::QuasiZeros{<:Number}, b::QuasiZeros{<:Number}) = _broadcasted_nan($op, a, b)
+end
+
+
+for op in (:+, -)
+    @eval begin
+        function broadcasted(::DefaultQuasiArrayStyle{1}, ::typeof($op), a::AbstractQuasiVector{T}, b::Zeros{V,1}) where {T,V}
+            broadcast_shape(axes(a), axes(b)) == axes(a) || throw(ArgumentError("Cannot broadcast $a and $b. Convert $b to a Vector first."))
+            LinearAlgebra.copy_oftype(a, promote_type(T,V))
+        end
+
+        broadcasted(::DefaultQuasiArrayStyle{1}, ::typeof($op), a::AbstractQuasiFill{T,1}, b::QuasiZeros{V,1}) where {T,V} = 
+            Base.invoke(broadcasted, Tuple{DefaultQuasiArrayStyle, typeof($op), AbstractQuasiFill, AbstractQuasiFill}, DefaultQuasiArrayStyle{1}(), $op, a, b)
+    end
+end
+
+function broadcasted(::DefaultQuasiArrayStyle{1}, ::typeof(+), a::QuasiZeros{T,1}, b::AbstractQuasiVector{V}) where {T,V}
+    broadcast_shape(axes(a), axes(b))
+    LinearAlgebra.copy_oftype(b, promote_type(T,V))
+end
+
+broadcasted(::DefaultQuasiArrayStyle{1}, ::typeof(+), a::QuasiZeros{V,1}, b::AbstractQuasiFill{T,1}) where {T,V} = 
+            Base.invoke(broadcasted, Tuple{DefaultQuasiArrayStyle, typeof(+), AbstractQuasiFill, AbstractQuasiFill}, DefaultQuasiArrayStyle{1}(), +, a, b)
+
+# Need to prevent array-valued fills from broadcasting over entry
+_broadcast_getindex_value(a::AbstractQuasiFill{<:Number}) = getindex_value(a)
+_broadcast_getindex_value(a::AbstractQuasiFill) = Ref(getindex_value(a))
+
+
+broadcasted(::DefaultQuasiArrayStyle{N}, op, r::AbstractQuasiFill{T,N}, x::Number) where {T,N} = QuasiFill(op(getindex_value(r),x), axes(r))
+broadcasted(::DefaultQuasiArrayStyle{N}, op, x::Number, r::AbstractQuasiFill{T,N}) where {T,N} = QuasiFill(op(x, getindex_value(r)), axes(r))
+broadcasted(::DefaultQuasiArrayStyle{N}, op, r::AbstractQuasiFill{T,N}, x::Ref) where {T,N} = QuasiFill(op(getindex_value(r),x[]), axes(r))
+broadcasted(::DefaultQuasiArrayStyle{N}, op, x::Ref, r::AbstractQuasiFill{T,N}) where {T,N} = QuasiFill(op(x[], getindex_value(r)), axes(r))
+
+###
+# Mul
+###
+
+MemoryLayout(::Type{<:QuasiZeros}) = ZerosLayout()
+MemoryLayout(::Type{<:QuasiOnes}) = OnesLayout()
+
+_quasi_mul(M::Mul{ZerosLayout}, _) = QuasiZeros{eltype(M)}(axes(M))
+fillzeros(::Type{T}, a::Tuple{AbstractQuasiVector,Vararg{Any}}) where T<:Number = QuasiZeros{T}(a)
+fillzeros(::Type{T}, a::Tuple{Any,AbstractQuasiVector,Vararg{Any}}) where T<:Number = QuasiZeros{T}(a)

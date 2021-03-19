@@ -8,7 +8,7 @@ import Base: @_inline_meta, DimOrInd, OneTo, @_propagate_inbounds_meta, @_noinli
                 DimsInteger, error_if_canonical_getindex, @propagate_inbounds, _return_type,
                 _maybetail, tail, _getindex, _maybe_reshape, index_ndims, _unsafe_getindex,
                 index_shape, to_shape, unsafe_length, @nloops, @ncall, unalias, _unaliascopy,
-                to_index, to_indices, _to_subscript_indices, _splatmap, dataids, 
+                to_index, to_indices, _to_subscript_indices, _splatmap, dataids,
                 compute_stride1, compute_offset1, fill_to_length
 import Base: Slice, IdentityUnitRange, ScalarIndex, RangeIndex, view, viewindexing, mightalias, ensure_indexable, index_dimsum,
                 check_parent_index_match, reindex, _isdisjoint, unsafe_indices, _unsafe_ind2sub,
@@ -27,16 +27,16 @@ import Base: Array, Matrix, Vector
 import Base: union, intersect
 
 import Base.Broadcast: materialize, materialize!, BroadcastStyle, AbstractArrayStyle, Style, broadcasted, Broadcasted, Unknown,
-                        newindex, broadcastable, preprocess, _eachindex, _broadcast_getindex,
-                        DefaultArrayStyle, axistype, throwdm, instantiate, combine_eltypes, eltypes                   
+                        newindex, broadcastable, preprocess, _eachindex, _broadcast_getindex, broadcast_shape,
+                        DefaultArrayStyle, axistype, throwdm, instantiate, combine_eltypes, eltypes
 
 import LinearAlgebra: transpose, adjoint, checkeltype_adjoint, checkeltype_transpose, Diagonal,
                         AbstractTriangular, pinv, inv, promote_leaf_eltypes, power_by_squaring,
-                        integerpow, schurpow, tr, factorize, copy_oftype
+                        integerpow, schurpow, tr, factorize, copy_oftype, rank
 
-import ArrayLayouts: indextype, concretize
+import ArrayLayouts: indextype, concretize, fillzeros
 import LazyArrays: MemoryLayout, UnknownLayout, Mul, ApplyLayout, BroadcastLayout,
-                    InvOrPInv, ApplyStyle, AbstractLazyLayout, LazyLayout, 
+                    InvOrPInv, ApplyStyle, AbstractLazyLayout, LazyLayout,
                     MulStyle, MulAddStyle, LazyArrayApplyStyle, combine_mul_styles, DefaultArrayApplyStyle,
                     Applied, flatten, _flatten, arguments, _mat_mul_arguments, _vec_mul_arguments, _mul_arguments,
                     rowsupport, colsupport, tuple_type_memorylayouts, applylayout, broadcastlayout,

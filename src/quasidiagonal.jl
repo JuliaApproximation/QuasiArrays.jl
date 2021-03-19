@@ -35,7 +35,7 @@ julia> QuasiDiagonal(A)
 """
 QuasiDiagonal(A::AbstractQuasiMatrix) = QuasiDiagonal(diag(A))
 
-Diagonal(A::AbstractQuasiArray) = QuasiDiagonal(A)
+@deprecate Diagonal(A::AbstractQuasiArray) QuasiDiagonal(A)
 
 
 """
@@ -64,6 +64,10 @@ QuasiDiagonal{T}(D::QuasiDiagonal) where {T} = QuasiDiagonal{T}(D.diag)
 
 AbstractQuasiMatrix{T}(D::QuasiDiagonal) where {T} = QuasiDiagonal{T}(D)
 AbstractQuasiArray{T}(D::QuasiDiagonal) where T = AbstractQuasiMatrix{T}(D)
+
+convert(::Type{QuasiDiagonal}, A::QuasiDiagonal) = A
+convert(::Type{QuasiDiagonal{T}}, A::QuasiDiagonal{T}) where T = A
+convert(::Type{QuasiDiagonal{T}}, A::QuasiDiagonal) where T = QuasiDiagonal(convert(AbstractQuasiVector{T}, A.diag))
 
 # For D<:QuasiDiagonal, similar(D[, neweltype]) should yield a QuasiDiagonal matrix.
 # On the other hand, similar(D, [neweltype,] shape...) should yield a sparse matrix.
