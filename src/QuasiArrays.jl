@@ -32,7 +32,7 @@ import Base.Broadcast: materialize, materialize!, BroadcastStyle, AbstractArrayS
 
 import LinearAlgebra: transpose, adjoint, checkeltype_adjoint, checkeltype_transpose, Diagonal,
                         AbstractTriangular, pinv, inv, promote_leaf_eltypes, power_by_squaring,
-                        integerpow, schurpow, tr, factorize
+                        integerpow, schurpow, tr, factorize, copy_oftype
 
 import ArrayLayouts: indextype, concretize
 import LazyArrays: MemoryLayout, UnknownLayout, Mul, ApplyLayout, BroadcastLayout,
@@ -88,6 +88,9 @@ include("quasiarraymath.jl")
 
 include("lazyquasiarrays.jl")
 include("quasiconcat.jl")
+
+copy_oftype(A::AbstractQuasiArray{T}, ::Type{T}) where {T} = copy(A)
+copy_oftype(A::AbstractQuasiArray{T,N}, ::Type{S}) where {T,N,S} = convert(AbstractQuasiArray{S,N}, A)
 
 include("matmul.jl")
 include("inv.jl")
