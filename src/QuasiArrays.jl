@@ -25,6 +25,7 @@ import Base: exp, log, sqrt,
           acosh, asinh, atanh, acsch, asech, acoth
 import Base: Array, Matrix, Vector
 import Base: union, intersect, sort, sort!
+import Base: conj, real, imag
 
 import Base.Broadcast: materialize, materialize!, BroadcastStyle, AbstractArrayStyle, Style, broadcasted, Broadcasted, Unknown,
                         newindex, broadcastable, preprocess, _eachindex, _broadcast_getindex, broadcast_shape,
@@ -34,7 +35,7 @@ import LinearAlgebra: transpose, adjoint, checkeltype_adjoint, checkeltype_trans
                         AbstractTriangular, pinv, inv, promote_leaf_eltypes, power_by_squaring,
                         integerpow, schurpow, tr, factorize, copy_oftype, rank
 
-import ArrayLayouts: indextype, concretize, fillzeros
+import ArrayLayouts: indextype, concretize, fillzeros, OnesLayout, AbstractFillLayout, FillLayout, ZerosLayout
 import LazyArrays: MemoryLayout, UnknownLayout, Mul, ApplyLayout, BroadcastLayout,
                     InvOrPInv, ApplyStyle, AbstractLazyLayout, LazyLayout,
                     MulStyle, MulAddStyle, LazyArrayApplyStyle, combine_mul_styles, DefaultArrayApplyStyle,

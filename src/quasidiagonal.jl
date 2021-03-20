@@ -199,3 +199,7 @@ for f in (:exp, :log, :sqrt,
     @eval $f(D::QuasiDiagonal) = QuasiDiagonal($f.(D.diag))
 end
 
+
+permutedims(D::QuasiDiagonal) = D
+inv(D::QuasiDiagonal) = QuasiDiagonal(inv.(D.diag))
+copy(D::QuasiDiagonal) = QuasiDiagonal(copy(D.diag))

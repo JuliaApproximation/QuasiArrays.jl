@@ -100,6 +100,9 @@ copy(M::Mul{ApplyLayout{typeof(\)},QuasiArrayLayout}) = ApplyQuasiArray(M)
 copy(M::Mul{QuasiArrayLayout,<:AbstractLazyLayout}) = ApplyQuasiArray(M)
 
 
+LazyArrays._vec_mul_view(a::AbstractQuasiVector, kr, ::Colon) = view(a, kr)
+
+
 ###
 # Scalar special case, simplifies x * A and A * x
 # Find an AbstractArray to latch on to by commuting

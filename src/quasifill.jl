@@ -264,16 +264,9 @@ adjoint(a::QuasiZeros{T,2}) where T = QuasiZeros{T}(reverse(a.axes))
 transpose(a::QuasiFill{T,2}) where T = QuasiFill{T}(transpose(a.value), reverse(a.axes))
 adjoint(a::QuasiFill{T,2}) where T = QuasiFill{T}(adjoint(a.value), reverse(a.axes))
 
-permutedims(a::AbstractQuasiFill{<:Any,1}) = fillsimilar(a, (1, length(a)))
-permutedims(a::AbstractQuasiFill{<:Any,2}) = fillsimilar(a, reverse(a.axes))
+permutedims(a::AbstractQuasiFill{<:Any,1}) = fillsimilar(a, Inclusion(1), axes(a,1))
+permutedims(a::AbstractQuasiFill{<:Any,2}) = fillsimilar(a, reverse(a.axes)...)
 
-function permutedims(B::AbstractQuasiFill, perm)
-    dimsB = size(B)
-    ndimsB = length(dimsB)
-    (ndimsB == length(perm) && isperm(perm)) || throw(ArgumentError("no valid permutation of dimensions"))
-    dimsP = ntuple(i->dimsB[perm[i]], ndimsB)::typeof(dimsB)
-    fillsimilar(B, dimsP)
-end
 
 ## Algebraic identities
 
@@ -392,6 +385,7 @@ for op in (:*, :/)
         broadcasted(::DefaultQuasiArrayStyle, ::typeof($op), a::QuasiZeros, b::QuasiFill{<:Number}) = _broadcasted_zeros($op, a, b)
         broadcasted(::DefaultQuasiArrayStyle, ::typeof($op), a::QuasiZeros, b::Number) = _broadcasted_zeros($op, a, b)
         broadcasted(::DefaultQuasiArrayStyle, ::typeof($op), a::QuasiZeros, b::Base.Broadcast.Broadcasted) = _broadcasted_zeros($op, a, b)
+        broadcasted(::DefaultQuasiArrayStyle, ::typeof($op), a::QuasiZeros, b::AbstractQuasiArray{<:Number}) = _broadcasted_zeros($op, a, b)
     end
 end
 
@@ -401,6 +395,7 @@ for op in (:*, :\)
         broadcasted(::DefaultQuasiArrayStyle, ::typeof($op), a::QuasiFill{<:Number}, b::QuasiZeros) = _broadcasted_zeros($op, a, b)
         broadcasted(::DefaultQuasiArrayStyle, ::typeof($op), a::Number, b::QuasiZeros) = _broadcasted_zeros($op, a, b)
         broadcasted(::DefaultQuasiArrayStyle, ::typeof($op), a::Base.Broadcast.Broadcasted, b::QuasiZeros) = _broadcasted_zeros($op, a, b)
+        broadcasted(::DefaultQuasiArrayStyle, ::typeof($op), a::AbstractQuasiArray{<:Number}, b::QuasiZeros) = _broadcasted_zeros($op, a, b)
     end
 end
 
@@ -452,10 +447,18 @@ MemoryLayout(::Type{<:QuasiOnes}) = OnesLayout()
 
 _quasi_mul(M::Mul{ZerosLayout}, _) = QuasiZeros{eltype(M)}(axes(M))
 _quasi_mul(M::Mul{QuasiArrayLayout,ZerosLayout}, _) = QuasiZeros{eltype(M)}(axes(M))
+_quasi_mul(M::Mul{QuasiArrayLayout,ZerosLayout}, ::NTuple{N,OneTo{Int}}) where N = Zeros{eltype(M)}(axes(M))
 fillzeros(::Type{T}, a::Tuple{AbstractQuasiVector,Vararg{Any}}) where T<:Number = QuasiZeros{T}(a)
 fillzeros(::Type{T}, a::Tuple{Any,AbstractQuasiVector,Vararg{Any}}) where T<:Number = QuasiZeros{T}(a)
 
 copy(M::MulAdd{<:AbstractFillLayout,<:AbstractFillLayout,<:AbstractFillLayout,<:Any,<:AbstractQuasiArray}) = 
-    QuasiFill(M.α*getindex_value(M.A)*getindex_value(M.B) + M.β*getindex_value(M.C), axes(M))
+    QuasiFill(measure(axes(M.A,2))*M.α*getindex_value(M.A)*getindex_value(M.B) + M.β*getindex_value(M.C), axes(M))
 copy(M::MulAdd{ZerosLayout,ZerosLayout,ZerosLayout,<:Any,<:AbstractQuasiArray}) = 
+    QuasiZeros{eltype(M)}(axes(M))    
+copy(M::MulAdd{ZerosLayout,<:AbstractFillLayout,ZerosLayout,<:Any,<:AbstractQuasiArray}) = 
     QuasiZeros{eltype(M)}(axes(M))
+copy(M::MulAdd{<:AbstractFillLayout,ZerosLayout,ZerosLayout,<:Any,<:AbstractQuasiArray}) = 
+    QuasiZeros{eltype(M)}(axes(M))
+
+
+inv(D::QuasiEye) = D
