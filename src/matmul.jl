@@ -89,9 +89,10 @@ end
 
 struct QuasiArrayLayout <: MemoryLayout end
 MemoryLayout(::Type{<:AbstractQuasiArray}) = QuasiArrayLayout()
-
+Array(M::Mul{<:Any,<:Any,<:Any,<:AbstractQuasiMatrix}) = eltype(M)[M[k,j] for k in axes(M)[1], j in axes(M)[2]]
+Array(M::Mul{<:Any,<:Any,<:Any,<:AbstractQuasiVector}) = eltype(M)[M[k] for k in axes(M)[1]]
 _quasi_mul(M, _) = QuasiArray(M)
-_quasi_mul(M, ::NTuple{N,OneTo{Int}}) where N = Array(QuasiArray(M))
+_quasi_mul(M, ::NTuple{N,OneTo{Int}}) where N = Array(M)
 copy(M::Mul{QuasiArrayLayout,QuasiArrayLayout}) = _quasi_mul(M, axes(M))
 copy(M::Mul{QuasiArrayLayout}) = _quasi_mul(M, axes(M))
 copy(M::Mul{<:Any,QuasiArrayLayout}) = _quasi_mul(M, axes(M))

@@ -1,4 +1,4 @@
-using QuasiArrays, FillArrays, LinearAlgebra, SparseArrays, StaticArrays, Random, Base64, Test
+using QuasiArrays, FillArrays, LinearAlgebra, StaticArrays, Random, Base64, Test
 import QuasiArrays: AbstractQuasiFill
 
 @testset "fill array constructors and convert" begin
@@ -507,8 +507,9 @@ end
     end
 
     @testset "Zero .*" begin
-        a = QuasiArray(randn(10),ax)
-        b = QuasiArray(1:10,ax)
+        ax = [1,3,4]
+        a = QuasiArray(randn(3),ax)
+        b = QuasiArray(1:3,ax)
         @test QuasiZeros{Int}(ax) .* QuasiZeros{Int}(ax) ≡ QuasiZeros{Int}(ax)
         @test a .* QuasiZeros(ax) isa QuasiZeros
         @test QuasiZeros(ax) .* a isa QuasiZeros
@@ -662,191 +663,15 @@ end
     @test A*QuasiZeros(bx)  ≡ Zeros((Base.OneTo(1),))
     @test A*QuasiZeros(bx,cx) ≡ QuasiZeros(Base.OneTo(1),cx)
 
-    D = Diagonal(randn(1))
-    @test QuasiZeros(1,1)*D ≡ QuasiZeros(1,1)
-    @test QuasiZeros(1)*D ≡ QuasiZeros(1,1)
-    @test D*QuasiZeros(1,1) ≡ QuasiZeros(1,1)
-    @test D*QuasiZeros(1) ≡ QuasiZeros(1)
+    D = QuasiDiagonal(a)
+    @test QuasiZeros(ax,bx)*D ≡ QuasiZeros(ax,bx)
+    @test D*QuasiZeros(bx,cx) ≡ QuasiZeros(bx,cx)
+    @test D*QuasiZeros(bx) ≡ QuasiZeros(bx)
 
-    D = Diagonal(QuasiFill(2,10))
-    @test D * QuasiOnes(10) ≡ QuasiFill(2.0,10)
-    @test D * QuasiOnes(10,5) ≡ QuasiFill(2.0,10,5)
-    @test QuasiOnes(5,10) * D ≡ QuasiFill(2.0,5,10)
-
-    # following test is broken in Base as of Julia v1.5
-    @test_skip @test_throws DimensionMismatch Diagonal(QuasiFill(1,1)) * QuasiOnes(10)
-    @test_throws DimensionMismatch Diagonal(QuasiFill(1,1)) * QuasiOnes(10,5)
-    @test_throws DimensionMismatch QuasiOnes(5,10) * Diagonal(QuasiFill(1,1))
-
-    E = Eye(5)
-    @test E*(1:5) ≡ 1.0:5.0
-    @test (1:5)'E == (1.0:5)'
-    @test E*E ≡ E
+    D = QuasiDiagonal(QuasiFill(2,bx))
+    @test D * QuasiOnes(bx) == QuasiFill(2.0,bx)
+    @test D * QuasiOnes(bx,cx) == QuasiFill(2.0,bx,cx)
+    @test QuasiOnes(ax,bx) * D == QuasiFill(2.0,ax,bx)
 end
 
-@testset "count" begin
-    @test count(Ones{Bool}(10)) == count(Fill(true,10)) == 10
-    @test count(Zeros{Bool}(10)) == count(Fill(false,10)) == 0
-    @test count(x -> 1 ≤ x < 2, Fill(1.3,10)) == 10
-    @test count(x -> 1 ≤ x < 2, Fill(2.0,10)) == 0
-end
 
-@testset "norm" begin
-    for a in (Zeros{Int}(5), Zeros(5,3), Zeros(2,3,3),
-                Ones{Int}(5), Ones(5,3), Ones(2,3,3),
-                Fill(2.3,5), Fill([2.3,4.2],5), Fill(4)),
-        p in (-Inf, 0, 0.1, 1, 2, 3, Inf)
-        @test norm(a,p) ≈ norm(Array(a),p)
-    end
-end
-
-@testset "multiplication" begin
-    for T in (Float64, ComplexF64)
-        fv = T == Float64 ? Float64(1.6) : ComplexF64(1.6, 1.3)
-        n  = 10
-        k  = 12
-        m  = 15
-        fillvec = Fill(fv, k)
-        fillmat = Fill(fv, k, m)
-        A  = rand(ComplexF64, n, k)
-        @test A*fillvec ≈ A*Array(fillvec)
-        @test A*fillmat ≈ A*Array(fillmat)
-        A  = rand(ComplexF64, k, n)
-        @test transpose(A)*fillvec ≈ transpose(A)*Array(fillvec)
-        @test transpose(A)*fillmat ≈ transpose(A)*Array(fillmat)
-        @test adjoint(A)*fillvec ≈ adjoint(A)*Array(fillvec)
-        @test adjoint(A)*fillmat ≈ adjoint(A)*Array(fillmat)
-    end
-end
-
-@testset "dot products" begin
-    n = 15
-    o = Ones(1:n)
-    z = Zeros(1:n)
-    D = Diagonal(o)
-    Z = Diagonal(z)
-
-    Random.seed!(5)
-    u = rand(n)
-    v = rand(n)
-
-    @test dot(u, D, v) == dot(u, v)
-    @test dot(u, 2D, v) == 2dot(u, v)
-    @test dot(u, Z, v) == 0
-
-    @test_throws DimensionMismatch dot(u[1:end-1], D, v)
-    @test_throws DimensionMismatch dot(u[1:end-1], D, v[1:end-1])
-
-    @test_throws DimensionMismatch dot(u, 2D, v[1:end-1])
-    @test_throws DimensionMismatch dot(u, 2D, v[1:end-1])
-
-    @test_throws DimensionMismatch dot(u, Z, v[1:end-1])
-    @test_throws DimensionMismatch dot(u, Z, v[1:end-1])
-end
-
-if VERSION ≥ v"1.5"
-    @testset "print" begin
-        @test stringmime("text/plain", Zeros(3)) == "3-element Zeros{Float64}"
-        @test stringmime("text/plain", Ones(3)) == "3-element Ones{Float64}"
-        @test stringmime("text/plain", Fill(7,2)) == "2-element Fill{$Int}: entries equal to 7"
-        @test stringmime("text/plain", Zeros(3,2)) == "3×2 Zeros{Float64}"
-        @test stringmime("text/plain", Ones(3,2)) == "3×2 Ones{Float64}"
-        @test stringmime("text/plain", Fill(7,2,3)) == "2×3 Fill{$Int}: entries equal to 7"
-        @test stringmime("text/plain", Eye(5)) == "5×5 Eye{Float64}"
-    end
-end
-
-@testset "reshape" begin
-    @test reshape(Fill(2,6),2,3) ≡ reshape(Fill(2,6),(2,3)) ≡ reshape(Fill(2,6),:,3) ≡ reshape(Fill(2,6),2,:) ≡ Fill(2,2,3)
-    @test reshape(Fill(2,6),big(2),3) == reshape(Fill(2,6), (big(2),3)) == reshape(Fill(2,6), big(2),:) == Fill(2,big(2),3)
-    @test_throws DimensionMismatch reshape(Fill(2,6),2,4)
-    @test reshape(Ones(6),2,3) ≡ reshape(Ones(6),(2,3)) ≡ reshape(Ones(6),:,3) ≡ reshape(Ones(6),2,:) ≡ Ones(2,3)
-    @test reshape(Zeros(6),2,3) ≡ Zeros(2,3)
-    @test reshape(Zeros(6),big(2),3) == Zeros(big(2),3)
-    @test reshape(Fill(2,2,3),Val(1)) ≡ Fill(2,6)
-    @test reshape(Fill(2, 2), (2, )) ≡ Fill(2, 2)
-end
-
-@testset "lmul!/rmul!" begin
-    z = Zeros(1_000_000_000_000)
-    @test lmul!(2.0,z) === z
-    @test rmul!(z,2.0) === z
-    @test_throws ArgumentError lmul!(Inf,z)
-    @test_throws ArgumentError rmul!(z,Inf)
-
-    x = Fill([1,2],1_000_000_000_000)
-    @test lmul!(1.0,x) === x
-    @test rmul!(x,1.0) === x
-    @test_throws ArgumentError lmul!(2.0,x)
-    @test_throws ArgumentError rmul!(x,2.0)
-end
-
-@testset "Modified" begin
-    @testset "Diagonal{<:Fill}" begin
-        D = Diagonal(Fill(Fill(0.5,2,2),10))
-        @test @inferred(D[1,1]) === Fill(0.5,2,2)
-        @test @inferred(D[1,2]) === Fill(0.0,2,2)
-        @test axes(D) == (Base.OneTo(10),Base.OneTo(10))
-        D = Diagonal(Fill(Zeros(2,2),10))
-        @test @inferred(D[1,1]) === Zeros(2,2)
-        @test @inferred(D[1,2]) === Zeros(2,2)
-        D = Diagonal([Zeros(1,1), Zeros(2,2)])
-        @test @inferred(D[1,1]) === Zeros(1,1)
-        @test @inferred(D[1,2]) === Zeros(1,2)
-
-        @test_throws ArgumentError Diagonal(Fill(Ones(2,2),10))[1,2]
-    end
-    @testset "Triangular" begin
-        U = UpperTriangular(Ones(3,3))
-        @test U == UpperTriangular(ones(3,3))
-        @test axes(U) == (Base.OneTo(3),Base.OneTo(3))
-    end
-end
-
-@testset "Trues" begin
-    @test Trues(2,3) == Trues((2,3)) == trues(2,3)
-    @test Falses(2,3) == Falses((2,3)) == falses(2,3)
-    dim = (4,5)
-    mask = Trues(dim)
-    x = randn(dim)
-    @test x[mask] == vec(x) # getindex
-    y = similar(x)
-    y[mask] = x # setindex!
-    @test y == x
-    @test_throws BoundsError ones(3)[Trues(2)]
-    @test_throws BoundsError setindex!(ones(3), zeros(3), Trues(2))
-    @test_throws DimensionMismatch setindex!(ones(2), zeros(3), Trues(2))
-end
-
-@testset "FillArray interface" begin
-    @testset "SubArray" begin
-        a = Fill(2.0,5)
-        v = SubArray(a,(1:2,))
-        @test FillArrays.getindex_value(v) == FillArrays.unique_value(v) == 2.0
-        @test convert(Fill, v) ≡ Fill(2.0,2)
-    end
-
-    @testset "views" begin
-        a = Fill(2.0,5)
-        v = view(a,1:2)
-        @test v isa Fill
-        @test FillArrays.getindex_value(v) == FillArrays.unique_value(v) == 2.0
-        @test convert(Fill, v) ≡ Fill(2.0,2)
-        @test view(a,1) ≡ Fill(2.0)
-    end
-
-    @testset "view with bool" begin
-        a = Fill(2.0,5)
-        @test a[[true,false,false,true,false]] ≡ view(a,[true,false,false,true,false])
-        a = Fill(2.0,2,2)
-        @test a[[true false; false true]] ≡ view(a, [true false; false true])
-    end
-
-    @testset "adjtrans" begin
-        a = Fill(2.0,5)
-        @test FillArrays.getindex_value(a') == FillArrays.unique_value(a') == 2.0
-        @test convert(Fill, a') ≡ Fill(2.0,1,5)
-        @test FillArrays.getindex_value(transpose(a)) == FillArrays.unique_value(transpose(a)) == 2.0
-        @test convert(Fill, transpose(a)) ≡ Fill(2.0,1,5)
-    end
-end

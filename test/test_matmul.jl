@@ -20,7 +20,7 @@ import QuasiArrays: apply
         A = QuasiArray(rand(3,3),(0:0.5:1,Base.OneTo(3)))
         B = rand(3,3)
         @test A*B isa QuasiArray
-        @test QuasiArray(A*B) == QuasiArray(A.parent*B,A.axes)
+        @test QuasiArray(A*B) ≈ QuasiArray(A.parent*B,A.axes)
         @test B*A' isa QuasiArray
         @test (A*B)[0.5,1] ≈ (Array(A)*B)[2,1]
     end
