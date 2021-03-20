@@ -299,9 +299,9 @@ end
     
     # Check multiplication by Adjoint vectors works as expected.
     @test QuasiArray(randn(3, 4),ax,bx)' * QuasiZeros(ax) === QuasiZeros(bx)
-    @test QuasiArray(randn(4),bx)' * QuasiZeros(bx) === zero(Float64)
-    @test QuasiArray([1, 2, 3],ax)' * QuasiZeros{Int}(ax) === zero(Int)
-    @test_broken QuasiArray([SVector(1,2)', SVector(2,3)', SVector(3,4)'],ax)' * QuasiZeros{Int}(ax) === SVector(0,0)
+    @test QuasiArray(randn(4),bx)' * QuasiZeros(bx) == zero(Float64)
+    @test QuasiArray([1, 2, 3],ax)' * QuasiZeros{Int}(ax) == zero(Int)
+    @test_broken QuasiArray([SVector(1,2)', SVector(2,3)', SVector(3,4)'],ax)' * QuasiZeros{Int}(ax) == SVector(0,0)
 
 
     @test +(QuasiZeros{Float64}(ax, bx)) === QuasiZeros{Float64}(ax, bx)
