@@ -200,6 +200,7 @@ checkindex(::Type{Bool}, inds::Inclusion{T}, i::T) where T = i ∈ inds
 checkindex(::Type{Bool}, inds::Inclusion, i) = i ⊆ inds
 checkindex(::Type{Bool}, inds::Inclusion, ::Colon) = true
 checkindex(::Type{Bool}, inds::Inclusion, ::Inclusion) = true
+
 function __checkindex(::Type{Bool}, inds::Inclusion, I::AbstractArray)
     @_inline_meta
     b = true

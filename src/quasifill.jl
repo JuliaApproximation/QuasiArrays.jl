@@ -152,9 +152,9 @@ fillsimilar(a::QuasiOnes{T}, axes...) where T = QuasiOnes{T}(axes)
 fillsimilar(a::QuasiZeros{T}, axes...) where T = QuasiZeros{T}(axes)
 fillsimilar(a::AbstractQuasiFill, axes...) = QuasiFill(getindex_value(a), axes)
 
-fillsimilar(a::QuasiOnes{T}, axes::OneTo...) where T = Ones{T}(axes)
-fillsimilar(a::QuasiZeros{T}, axes::OneTo...) where T = Zeros{T}(axes)
-fillsimilar(a::AbstractQuasiFill, axes::OneTo...) = Fill(getindex_value(a), axes)
+fillsimilar(a::QuasiOnes{T}, axes::AbstractUnitRange{Int}...) where T = Ones{T}(axes)
+fillsimilar(a::QuasiZeros{T}, axes::AbstractUnitRange{Int}...) where T = Zeros{T}(axes)
+fillsimilar(a::AbstractQuasiFill, axes::AbstractUnitRange{Int}...) = Fill(getindex_value(a), axes)
 
 
 

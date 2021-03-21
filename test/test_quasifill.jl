@@ -686,4 +686,9 @@ import QuasiArrays: AbstractQuasiFill
         @test fill(2,ax) ≡ QuasiFill(2,(ax,))
         @test fill(2,Base.OneTo(3), ax) ≡ QuasiFill(2,(Base.OneTo(3),ax))
     end
+
+    @testset "Static eval" begin
+        o = QuasiOnes([1,3,4])
+        @test view(o,SVector(1,3)) ≡ o[SVector(1,3)] ≡ Ones((SOneTo(2),))
+    end 
 end

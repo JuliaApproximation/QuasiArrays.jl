@@ -1,5 +1,5 @@
 module QuasiArrays
-using Base, LinearAlgebra, LazyArrays, ArrayLayouts, DomainSets, FillArrays
+using Base, LinearAlgebra, LazyArrays, ArrayLayouts, DomainSets, FillArrays, StaticArrays
 import Base: getindex, size, axes, axes1, length, ==, isequal, iterate, CartesianIndices, LinearIndices,
                 Indices, IndexStyle, getindex, setindex!, parent, vec, convert, similar, copy, copyto!, zero,
                 map, eachindex, eltype, first, last, firstindex, lastindex, in, reshape, permutedims, all,

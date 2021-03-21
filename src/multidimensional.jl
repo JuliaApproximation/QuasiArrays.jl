@@ -9,6 +9,7 @@ module QuasiIteratorsMD
     using Base: IndexLinear, IndexCartesian, AbstractCartesianIndex, fill_to_length, tail
     using Base.Iterators: Reverse
     import QuasiArrays: AbstractQuasiArray, AbstractQuasiVector, domain, AbstractQuasiOrVector
+    import StaticArrays: StaticArray
 
     export QuasiCartesianIndex, QuasiCartesianIndices
 
@@ -423,6 +424,8 @@ to_indices(A::AbstractQuasiArray, I::Tuple{Any}) = (@_inline_meta; to_indices(A,
     _, indstail = IteratorsMD.split(inds, Val(N))
     (to_index(A, I[1]), to_indices(A, indstail, tail(I))...)
 end
+Base.to_indices(A::AbstractQuasiArray, I::Tuple{Vararg{Union{Integer, CartesianIndex, StaticArray{<:Tuple,Int}}}}) =
+    to_indices(A, axes(A), I)
 
 @inline index_shape(A::AbstractQuasiArray, rest...) = (axes(A)..., index_shape(rest...)...)
 
