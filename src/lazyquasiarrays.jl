@@ -79,6 +79,7 @@ MemoryLayout(M::Type{ApplyQuasiArray{T,N,F,Args}}) where {T,N,F,Args} =
 copy(A::Applied{LazyQuasiArrayApplyStyle}) = ApplyQuasiArray(A)
 copy(A::Applied{<:AbstractQuasiArrayApplyStyle}) = QuasiArray(A)
 QuasiArray(A::Applied) = QuasiArray(ApplyQuasiArray(A))
+QuasiArray(A::Applied{<:Any,typeof(inv)}) = inv(QuasiArray(A.args[1]))
 
 
 ####
