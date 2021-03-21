@@ -111,6 +111,9 @@ to_quasi_index(::Type{IND}, I::AbstractQuasiArray{<:AbstractArray}) where IND<:A
 to_quasi_index(A, IND, i) = to_quasi_index(IND,i)
 
 to_indices(A::AbstractQuasiArray, inds, ::Tuple{}) = ()
+# if inds is empty then we are indexing past indices, so array-like
+to_indices(A::AbstractQuasiArray, ::Tuple{}, I::Tuple{Any,Vararg{Any}}) = 
+    (@_inline_meta; (to_index(A, I[1]), to_indices(A, (), tail(I))...))
 to_indices(A::AbstractQuasiArray, inds, I::Tuple{Any,Vararg{Any}}) =
     (@_inline_meta; (to_quasi_index(A, eltype(inds[1]), I[1]), to_indices(A, _maybetail(inds), tail(I))...))
 @inline to_indices(A::AbstractQuasiArray, inds, I::Tuple{CartesianIndex, Vararg{Any}}) =

@@ -7,11 +7,17 @@ ApplyStyle(::typeof(hcat), ::Type{<:AbstractQuasiArray}...) = LazyQuasiArrayAppl
 
 axes(f::ApplyQuasiMatrix{<:Any,typeof(hcat)}) = (axes(f.args[1],1), oneto(sum(size.(f.args,2))))
 
+_vecormat_getindex(A::AbstractQuasiMatrix,k,ξ) = A[k,ξ]
+_vecormat_getindex(A::AbstractQuasiVector,k,ξ) = A[k]
+@inline LazyArrays._view_hcat(a::AbstractQuasiVector, kr, jr::Colon) = view(a, kr)
+# TODO: generalize
+@inline LazyArrays._view_hcat(a::AbstractQuasiVector, kr::Number, jr) = a[kr]
+
 function getindex(f::ApplyQuasiMatrix{T,typeof(hcat)}, k::Number, j::Number) where T
     ξ = j
     for A in f.args
         n = size(A,2)
-        ξ ≤ n && return T(A[k,ξ])::T
+        ξ ≤ n && return T(_vecormat_getindex(A,k,ξ))::T
         ξ -= n
     end
     throw(BoundsError(f, (k,j)))
