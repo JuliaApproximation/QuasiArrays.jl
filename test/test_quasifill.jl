@@ -183,18 +183,18 @@ import QuasiArrays: AbstractQuasiFill
             Z = QuasiZeros(ax,bx)
             @test A[:,2] ≡ A[Inclusion(ax),2] ≡ QuasiFill(2.0,ax)
             @test A[ax,2] ≡ Fill(2.0,3)
-            @test A[1,:] ≡ A[1,Base.IdentityUnitRange(bx)] ≡ QuasiFill(2.0,bx)
+            @test A[1,:] ≡ A[1,Base.IdentityUnitRange(bx)] ≡ Fill(2.0,(Base.IdentityUnitRange(bx),))
 
             @test A[:,:] == A[Inclusion(ax),Base.IdentityUnitRange(bx)] == A[Inclusion(ax),:] == A[:,Base.IdentityUnitRange(bx)] == A
             @test Z[:,2] ≡ Z[Inclusion(ax),2] ≡ QuasiZeros(ax)
-            @test Z[1,:] ≡ Z[1,Base.IdentityUnitRange(bx)] ≡ QuasiZeros(bx)
+            @test Z[1,:] ≡ Z[1,Base.IdentityUnitRange(bx)] ≡ Zeros((Base.IdentityUnitRange(bx),))
             @test Z[:,:] == Z[Inclusion(ax),Base.IdentityUnitRange(bx)] == Z[Inclusion(ax),:] == Z[:,Base.IdentityUnitRange(bx)] == Z
 
             cx = 1:2
             A = QuasiFill(2.0,ax,bx,cx)
             Z = QuasiZeros(ax,bx,cx)
             @test A[:,2,1] ≡ A[Inclusion(ax),2,1] ≡ QuasiFill(2.0,ax)
-            @test A[1,:,1] ≡ A[1,Base.IdentityUnitRange(bx),1] ≡ QuasiFill(2.0,bx)
+            @test A[1,:,1] ≡ A[1,Base.IdentityUnitRange(bx),1] ≡ Fill(2.0,(Base.IdentityUnitRange(bx),))
             @test A[:,:,:] ≡ A[Inclusion(ax),Base.IdentityUnitRange(bx),Base.IdentityUnitRange(cx)] ≡ A[Inclusion(ax),:,Base.IdentityUnitRange(cx)] ≡ A[:,Base.IdentityUnitRange(bx),Base.IdentityUnitRange(cx)] ≡ A
         end
     end
