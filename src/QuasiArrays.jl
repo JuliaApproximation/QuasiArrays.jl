@@ -27,6 +27,7 @@ import Base: Array, Matrix, Vector
 import Base: union, intersect, sort, sort!
 import Base: conj, real, imag
 import Base: sum, cumsum, diff
+import Base: ones, zeros, one, zero, fill
 
 import Base.Broadcast: materialize, materialize!, BroadcastStyle, AbstractArrayStyle, Style, broadcasted, Broadcasted, Unknown,
                         newindex, broadcastable, preprocess, _eachindex, _broadcast_getindex, broadcast_shape,

@@ -462,3 +462,18 @@ copy(M::MulAdd{<:AbstractFillLayout,ZerosLayout,ZerosLayout,<:Any,<:AbstractQuas
 
 
 inv(D::QuasiEye) = D
+
+zero(x::AbstractQuasiArray{T}) where {T} = QuasiZeros{T}(axes(x))
+one(x::AbstractQuasiArray{T}) where {T} = QuasiOnes{T}(axes(x))
+
+zeros(::Type{T}, x::Inclusion, y::Union{OneTo,IdentityUnitRange,Inclusion}...) where T = QuasiZeros{T}((x, y...))
+zeros(x::Inclusion, y::Union{OneTo,IdentityUnitRange,Inclusion}...) = zeros(Float64, x, y...)
+zeros(::Type{T}, x::Union{OneTo,IdentityUnitRange}, y::Inclusion, z::Union{OneTo,IdentityUnitRange,Inclusion}...) where T = QuasiZeros{T}((x, y, z...))
+zeros(x::Union{OneTo,IdentityUnitRange}, y::Inclusion, z::Union{OneTo,IdentityUnitRange,Inclusion}...) = zeros(Float64, x, y, z...)
+ones(::Type{T}, x::Inclusion, y::Union{OneTo,IdentityUnitRange,Inclusion}...) where T = QuasiOnes{T}((x, y...))
+ones(x::Inclusion, y::Union{OneTo,IdentityUnitRange,Inclusion}...) = ones(Float64, x, y...)
+ones(::Type{T}, x::Union{OneTo,IdentityUnitRange}, y::Inclusion, z::Union{OneTo,IdentityUnitRange,Inclusion}...) where T = QuasiOnes{T}((x, y, z...))
+ones(x::Union{OneTo,IdentityUnitRange}, y::Inclusion, z::Union{OneTo,IdentityUnitRange,Inclusion}...) = ones(Float64, x, y, z...)
+fill(c, x::Inclusion, y::Union{OneTo,IdentityUnitRange,Inclusion}...) where T = QuasiFill(c, (x, y...))
+fill(c, x::Union{OneTo,IdentityUnitRange}, y::Inclusion, z::Union{OneTo,IdentityUnitRange,Inclusion}...) where T = QuasiFill(c, (x, y, z...))
+
