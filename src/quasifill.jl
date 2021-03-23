@@ -331,24 +331,24 @@ map(f::Function, r::AbstractQuasiFill) = QuasiFill(f(getindex_value(r)), axes(r)
 
 ### Unary broadcasting
 
-function broadcasted(::DefaultQuasiArrayStyle{N}, op, r::AbstractQuasiFill{T,N}) where {T,N}
+function broadcasted(::AbstractQuasiArrayStyle{N}, op, r::AbstractQuasiFill{T,N}) where {T,N}
     return QuasiFill(op(getindex_value(r)), axes(r))
 end
 
-broadcasted(::DefaultQuasiArrayStyle, ::typeof(+), r::QuasiZeros) = r
-broadcasted(::DefaultQuasiArrayStyle, ::typeof(-), r::QuasiZeros) = r
-broadcasted(::DefaultQuasiArrayStyle, ::typeof(+), r::QuasiOnes) = r
+broadcasted(::AbstractQuasiArrayStyle, ::typeof(+), r::QuasiZeros) = r
+broadcasted(::AbstractQuasiArrayStyle, ::typeof(-), r::QuasiZeros) = r
+broadcasted(::AbstractQuasiArrayStyle, ::typeof(+), r::QuasiOnes) = r
 
-broadcasted(::DefaultQuasiArrayStyle{N}, ::typeof(conj), r::QuasiZeros{T,N}) where {T,N} = r
-broadcasted(::DefaultQuasiArrayStyle{N}, ::typeof(conj), r::QuasiOnes{T,N}) where {T,N} = r
-broadcasted(::DefaultQuasiArrayStyle{N}, ::typeof(real), r::QuasiZeros{T,N}) where {T,N} = QuasiZeros{real(T)}(r.axes)
-broadcasted(::DefaultQuasiArrayStyle{N}, ::typeof(real), r::QuasiOnes{T,N}) where {T,N} = QuasiOnes{real(T)}(r.axes)
-broadcasted(::DefaultQuasiArrayStyle{N}, ::typeof(imag), r::QuasiZeros{T,N}) where {T,N} = QuasiZeros{real(T)}(r.axes)
-broadcasted(::DefaultQuasiArrayStyle{N}, ::typeof(imag), r::QuasiOnes{T,N}) where {T,N} = QuasiZeros{real(T)}(r.axes)
+broadcasted(::AbstractQuasiArrayStyle{N}, ::typeof(conj), r::QuasiZeros{T,N}) where {T,N} = r
+broadcasted(::AbstractQuasiArrayStyle{N}, ::typeof(conj), r::QuasiOnes{T,N}) where {T,N} = r
+broadcasted(::AbstractQuasiArrayStyle{N}, ::typeof(real), r::QuasiZeros{T,N}) where {T,N} = QuasiZeros{real(T)}(r.axes)
+broadcasted(::AbstractQuasiArrayStyle{N}, ::typeof(real), r::QuasiOnes{T,N}) where {T,N} = QuasiOnes{real(T)}(r.axes)
+broadcasted(::AbstractQuasiArrayStyle{N}, ::typeof(imag), r::QuasiZeros{T,N}) where {T,N} = QuasiZeros{real(T)}(r.axes)
+broadcasted(::AbstractQuasiArrayStyle{N}, ::typeof(imag), r::QuasiOnes{T,N}) where {T,N} = QuasiZeros{real(T)}(r.axes)
 
 ### Binary broadcasting
 
-function broadcasted(::DefaultQuasiArrayStyle, op, a::AbstractQuasiFill, b::AbstractQuasiFill)
+function broadcasted(::AbstractQuasiArrayStyle, op, a::AbstractQuasiFill, b::AbstractQuasiFill)
     val = op(getindex_value(a), getindex_value(b))
     return QuasiFill(val, broadcast_shape(axes(a), axes(b)))
 end
