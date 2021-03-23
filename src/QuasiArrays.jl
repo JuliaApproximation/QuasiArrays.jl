@@ -1,5 +1,5 @@
 module QuasiArrays
-using Base, LinearAlgebra, LazyArrays, ArrayLayouts, DomainSets
+using Base, LinearAlgebra, LazyArrays, ArrayLayouts, DomainSets, FillArrays, StaticArrays
 import Base: getindex, size, axes, axes1, length, ==, isequal, iterate, CartesianIndices, LinearIndices,
                 Indices, IndexStyle, getindex, setindex!, parent, vec, convert, similar, copy, copyto!, zero,
                 map, eachindex, eltype, first, last, firstindex, lastindex, in, reshape, permutedims, all,
@@ -8,7 +8,7 @@ import Base: @_inline_meta, DimOrInd, OneTo, @_propagate_inbounds_meta, @_noinli
                 DimsInteger, error_if_canonical_getindex, @propagate_inbounds, _return_type,
                 _maybetail, tail, _getindex, _maybe_reshape, index_ndims, _unsafe_getindex,
                 index_shape, to_shape, unsafe_length, @nloops, @ncall, unalias, _unaliascopy,
-                to_index, to_indices, _to_subscript_indices, _splatmap, dataids, 
+                to_index, to_indices, _to_subscript_indices, _splatmap, dataids,
                 compute_stride1, compute_offset1, fill_to_length
 import Base: Slice, IdentityUnitRange, ScalarIndex, RangeIndex, view, viewindexing, mightalias, ensure_indexable, index_dimsum,
                 check_parent_index_match, reindex, _isdisjoint, unsafe_indices, _unsafe_ind2sub,
@@ -24,19 +24,22 @@ import Base: exp, log, sqrt,
           acos, asin, atan, acsc, asec, acot,
           acosh, asinh, atanh, acsch, asech, acoth
 import Base: Array, Matrix, Vector
-import Base: union, intersect
+import Base: union, intersect, sort, sort!
+import Base: conj, real, imag
+import Base: sum, cumsum, diff
+import Base: ones, zeros, one, zero, fill
 
 import Base.Broadcast: materialize, materialize!, BroadcastStyle, AbstractArrayStyle, Style, broadcasted, Broadcasted, Unknown,
-                        newindex, broadcastable, preprocess, _eachindex, _broadcast_getindex,
-                        DefaultArrayStyle, axistype, throwdm, instantiate, combine_eltypes, eltypes                   
+                        newindex, broadcastable, preprocess, _eachindex, _broadcast_getindex, broadcast_shape,
+                        DefaultArrayStyle, axistype, throwdm, instantiate, combine_eltypes, eltypes
 
 import LinearAlgebra: transpose, adjoint, checkeltype_adjoint, checkeltype_transpose, Diagonal,
                         AbstractTriangular, pinv, inv, promote_leaf_eltypes, power_by_squaring,
-                        integerpow, schurpow, tr, factorize, copy_oftype
+                        integerpow, schurpow, tr, factorize, copy_oftype, rank
 
-import ArrayLayouts: indextype, concretize
+import ArrayLayouts: indextype, concretize, fillzeros, OnesLayout, AbstractFillLayout, FillLayout, ZerosLayout
 import LazyArrays: MemoryLayout, UnknownLayout, Mul, ApplyLayout, BroadcastLayout,
-                    InvOrPInv, ApplyStyle, AbstractLazyLayout, LazyLayout, 
+                    InvOrPInv, ApplyStyle, AbstractLazyLayout, LazyLayout,
                     MulStyle, MulAddStyle, LazyArrayApplyStyle, combine_mul_styles, DefaultArrayApplyStyle,
                     Applied, flatten, _flatten, arguments, _mat_mul_arguments, _vec_mul_arguments, _mul_arguments,
                     rowsupport, colsupport, tuple_type_memorylayouts, applylayout, broadcastlayout,
@@ -50,7 +53,7 @@ export AbstractQuasiArray, AbstractQuasiMatrix, AbstractQuasiVector, materialize
        QuasiArray, QuasiMatrix, QuasiVector, QuasiDiagonal, Inclusion,
        QuasiAdjoint, QuasiTranspose, ApplyQuasiArray, ApplyQuasiMatrix, ApplyQuasiVector,
        BroadcastQuasiArray, BroadcastQuasiMatrix, BroadcastQuasiVector, indextype,
-       QuasiKron, quasikron, UnionVcat, SubQuasiArray
+       QuasiKron, quasikron, UnionVcat, SubQuasiArray, QuasiFill, QuasiZeros, QuasiOnes, QuasiEye
 
 import Base.Broadcast: broadcast_preserving_zero_d
 
@@ -70,6 +73,7 @@ const AbstractQuasiOrArray{T} = Union{AbstractArray{T},AbstractQuasiArray{T}}
 
 
 cardinality(d) = length(d)
+cardinality(d::UnionDomain) = +(cardinality.(d.domains)...)
 
 size(A::AbstractQuasiArray) = map(cardinality, axes(A))
 axes(A::AbstractQuasiArray) = error("Override axes for $(typeof(A))")
@@ -96,6 +100,7 @@ include("matmul.jl")
 include("inv.jl")
 include("quasiadjtrans.jl")
 include("quasidiagonal.jl")
+include("quasifill.jl")
 include("dense.jl")
 
 include("quasikron.jl")

@@ -111,8 +111,13 @@ to_quasi_index(::Type{IND}, I::AbstractQuasiArray{<:AbstractArray}) where IND<:A
 to_quasi_index(A, IND, i) = to_quasi_index(IND,i)
 
 to_indices(A::AbstractQuasiArray, inds, ::Tuple{}) = ()
+# if inds is empty then we are indexing past indices, so array-like
+to_indices(A::AbstractQuasiArray, ::Tuple{}, I::Tuple{Any,Vararg{Any}}) = 
+    (@_inline_meta; (to_index(A, I[1]), to_indices(A, (), tail(I))...))
 to_indices(A::AbstractQuasiArray, inds, I::Tuple{Any,Vararg{Any}}) =
     (@_inline_meta; (to_quasi_index(A, eltype(inds[1]), I[1]), to_indices(A, _maybetail(inds), tail(I))...))
+@inline to_indices(A::AbstractQuasiArray, inds, I::Tuple{CartesianIndex, Vararg{Any}}) =
+    to_indices(A, inds, (I[1].I..., tail(I)...))
 @inline to_indices(A::AbstractQuasiArray, inds, I::Tuple{Colon, Vararg{Any}}) =
     (uncolon(inds, I), to_indices(A, _maybetail(inds), tail(I))...)
 
@@ -177,6 +182,7 @@ size(S::Inclusion) = (cardinality(S.domain),)
 length(S::Inclusion) = cardinality(S.domain)
 unsafe_length(S::Inclusion) = cardinality(S.domain)
 cardinality(S::Inclusion) = cardinality(S.domain)
+measure(x) = cardinality(x) # TODO: Inclusion(0:0.5:1) should have 
 getindex(S::Inclusion{T}, i::T) where T = (@_inline_meta; @boundscheck checkbounds(S, i); convert(T,i))
 getindex(S::Inclusion{T}, i::AbstractArray{T}) where T = (@_inline_meta; @boundscheck checkbounds(S, i); convert(AbstractArray{T},i))
 getindex(S::Inclusion, i::Inclusion) = (@_inline_meta; @boundscheck checkbounds(S, i); copy(S))
@@ -197,6 +203,7 @@ checkindex(::Type{Bool}, inds::Inclusion{T}, i::T) where T = i ∈ inds
 checkindex(::Type{Bool}, inds::Inclusion, i) = i ⊆ inds
 checkindex(::Type{Bool}, inds::Inclusion, ::Colon) = true
 checkindex(::Type{Bool}, inds::Inclusion, ::Inclusion) = true
+
 function __checkindex(::Type{Bool}, inds::Inclusion, I::AbstractArray)
     @_inline_meta
     b = true
@@ -212,9 +219,6 @@ checkindex(::Type{Bool}, inds::Inclusion{T}, I::AbstractArray{T}) where T<:Abstr
     __checkindex(Bool, inds, I)
 checkindex(::Type{Bool}, inds::Inclusion{T}, I::AbstractArray{<:AbstractArray}) where T<:AbstractArray = 
     __checkindex(Bool, inds, convert(AbstractArray{T}, I))
-
-@propagate_inbounds _affine_checkindex(inds, r) = isempty(r) | (checkindex(Bool, inds, Base.to_indices(inds, (first(r),))...) & checkindex(Bool, inds,  Base.to_indices(inds, (last(r),))...))
-@propagate_inbounds checkindex(::Type{Bool}, inds::Inclusion, r::AbstractRange) = _affine_checkindex(inds, r)
 
 
 checkindex(::Type{Bool}, indx::Inclusion, I::AbstractVector{Bool}) = indx == axes1(I)

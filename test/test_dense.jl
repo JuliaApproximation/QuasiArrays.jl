@@ -17,7 +17,7 @@ import LazyArrays: ApplyStyle, MulStyle
         @test V^1 == A
         @test V^2 == A^2
         @test V^3 == A^3
-        @test_broken V^(-1) == inv(A)
+        @test V^(-1) == inv(A)
 
         A = QuasiArray([1 2; 3 4], (0:0.5:0.5, 0:0.5:0.5))
         V = view(A,:,:)
