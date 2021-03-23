@@ -23,6 +23,8 @@ function getindex(f::ApplyQuasiMatrix{T,typeof(hcat)}, k::Number, j::Number) whe
     throw(BoundsError(f, (k,j)))
 end
 
+\(A::AbstractQuasiArray, H::ApplyQuasiMatrix{<:Any,typeof(hcat)}) = hcat((Ref(A) .\ H.args)...)
+
 """
     UnionVcat
 

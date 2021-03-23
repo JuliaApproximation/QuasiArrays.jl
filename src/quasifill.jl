@@ -359,73 +359,73 @@ _broadcasted_ones(f, a, b) = QuasiOnes{Base.Broadcast.combine_eltypes(f, (a, b))
 _broadcasted_nan(f, a, b) = QuasiFill(convert(Base.Broadcast.combine_eltypes(f, (a, b)), NaN), broadcast_shape(axes(a), axes(b)))
 
 
-broadcasted(::DefaultQuasiArrayStyle, ::typeof(+), a::QuasiZeros, b::QuasiZeros) = _broadcasted_zeros(+, a, b)
-broadcasted(::DefaultQuasiArrayStyle, ::typeof(+), a::QuasiOnes, b::QuasiZeros) = _broadcasted_ones(+, a, b)
-broadcasted(::DefaultQuasiArrayStyle, ::typeof(+), a::QuasiZeros, b::QuasiOnes) = _broadcasted_ones(+, a, b)
+broadcasted(::AbstractQuasiArrayStyle, ::typeof(+), a::QuasiZeros, b::QuasiZeros) = _broadcasted_zeros(+, a, b)
+broadcasted(::AbstractQuasiArrayStyle, ::typeof(+), a::QuasiOnes, b::QuasiZeros) = _broadcasted_ones(+, a, b)
+broadcasted(::AbstractQuasiArrayStyle, ::typeof(+), a::QuasiZeros, b::QuasiOnes) = _broadcasted_ones(+, a, b)
 
-broadcasted(::DefaultQuasiArrayStyle, ::typeof(-), a::QuasiZeros, b::QuasiZeros) = _broadcasted_zeros(-, a, b)
-broadcasted(::DefaultQuasiArrayStyle, ::typeof(-), a::QuasiOnes, b::QuasiZeros) = _broadcasted_ones(-, a, b)
-broadcasted(::DefaultQuasiArrayStyle, ::typeof(-), a::QuasiOnes, b::QuasiOnes) = _broadcasted_zeros(-, a, b)
+broadcasted(::AbstractQuasiArrayStyle, ::typeof(-), a::QuasiZeros, b::QuasiZeros) = _broadcasted_zeros(-, a, b)
+broadcasted(::AbstractQuasiArrayStyle, ::typeof(-), a::QuasiOnes, b::QuasiZeros) = _broadcasted_ones(-, a, b)
+broadcasted(::AbstractQuasiArrayStyle, ::typeof(-), a::QuasiOnes, b::QuasiOnes) = _broadcasted_zeros(-, a, b)
 
-broadcasted(::DefaultQuasiArrayStyle{1}, ::typeof(+), a::QuasiZeros{<:Any,1}, b::QuasiZeros{<:Any,1}) = _broadcasted_zeros(+, a, b)
-broadcasted(::DefaultQuasiArrayStyle{1}, ::typeof(+), a::QuasiOnes{<:Any,1}, b::QuasiZeros{<:Any,1}) = _broadcasted_ones(+, a, b)
-broadcasted(::DefaultQuasiArrayStyle{1}, ::typeof(+), a::QuasiZeros{<:Any,1}, b::QuasiOnes{<:Any,1}) = _broadcasted_ones(+, a, b)
+broadcasted(::AbstractQuasiArrayStyle{1}, ::typeof(+), a::QuasiZeros{<:Any,1}, b::QuasiZeros{<:Any,1}) = _broadcasted_zeros(+, a, b)
+broadcasted(::AbstractQuasiArrayStyle{1}, ::typeof(+), a::QuasiOnes{<:Any,1}, b::QuasiZeros{<:Any,1}) = _broadcasted_ones(+, a, b)
+broadcasted(::AbstractQuasiArrayStyle{1}, ::typeof(+), a::QuasiZeros{<:Any,1}, b::QuasiOnes{<:Any,1}) = _broadcasted_ones(+, a, b)
 
-broadcasted(::DefaultQuasiArrayStyle{1}, ::typeof(-), a::QuasiZeros{<:Any,1}, b::QuasiZeros{<:Any,1}) = _broadcasted_zeros(-, a, b)
-broadcasted(::DefaultQuasiArrayStyle{1}, ::typeof(-), a::QuasiOnes{<:Any,1}, b::QuasiZeros{<:Any,1}) = _broadcasted_ones(-, a, b)
+broadcasted(::AbstractQuasiArrayStyle{1}, ::typeof(-), a::QuasiZeros{<:Any,1}, b::QuasiZeros{<:Any,1}) = _broadcasted_zeros(-, a, b)
+broadcasted(::AbstractQuasiArrayStyle{1}, ::typeof(-), a::QuasiOnes{<:Any,1}, b::QuasiZeros{<:Any,1}) = _broadcasted_ones(-, a, b)
 
 
-broadcasted(::DefaultQuasiArrayStyle, ::typeof(*), a::QuasiZeros, b::QuasiZeros) = _broadcasted_zeros(*, a, b)
+broadcasted(::AbstractQuasiArrayStyle, ::typeof(*), a::QuasiZeros, b::QuasiZeros) = _broadcasted_zeros(*, a, b)
 
 # In following, need to restrict to <: Number as otherwise we cannot infer zero from type
 # TODO: generalise to things like SVector
 for op in (:*, :/)
     @eval begin
-        broadcasted(::DefaultQuasiArrayStyle, ::typeof($op), a::QuasiZeros, b::QuasiOnes) = _broadcasted_zeros($op, a, b)
-        broadcasted(::DefaultQuasiArrayStyle, ::typeof($op), a::QuasiZeros, b::QuasiFill{<:Number}) = _broadcasted_zeros($op, a, b)
-        broadcasted(::DefaultQuasiArrayStyle, ::typeof($op), a::QuasiZeros, b::Number) = _broadcasted_zeros($op, a, b)
-        broadcasted(::DefaultQuasiArrayStyle, ::typeof($op), a::QuasiZeros, b::Base.Broadcast.Broadcasted) = _broadcasted_zeros($op, a, b)
-        broadcasted(::DefaultQuasiArrayStyle, ::typeof($op), a::QuasiZeros, b::AbstractQuasiArray{<:Number}) = _broadcasted_zeros($op, a, b)
+        broadcasted(::AbstractQuasiArrayStyle, ::typeof($op), a::QuasiZeros, b::QuasiOnes) = _broadcasted_zeros($op, a, b)
+        broadcasted(::AbstractQuasiArrayStyle, ::typeof($op), a::QuasiZeros, b::QuasiFill{<:Number}) = _broadcasted_zeros($op, a, b)
+        broadcasted(::AbstractQuasiArrayStyle, ::typeof($op), a::QuasiZeros, b::Number) = _broadcasted_zeros($op, a, b)
+        broadcasted(::AbstractQuasiArrayStyle, ::typeof($op), a::QuasiZeros, b::Base.Broadcast.Broadcasted) = _broadcasted_zeros($op, a, b)
+        broadcasted(::AbstractQuasiArrayStyle, ::typeof($op), a::QuasiZeros, b::AbstractQuasiArray{<:Number}) = _broadcasted_zeros($op, a, b)
     end
 end
 
 for op in (:*, :\)
     @eval begin
-        broadcasted(::DefaultQuasiArrayStyle, ::typeof($op), a::QuasiOnes, b::QuasiZeros) = _broadcasted_zeros($op, a, b)
-        broadcasted(::DefaultQuasiArrayStyle, ::typeof($op), a::QuasiFill{<:Number}, b::QuasiZeros) = _broadcasted_zeros($op, a, b)
-        broadcasted(::DefaultQuasiArrayStyle, ::typeof($op), a::Number, b::QuasiZeros) = _broadcasted_zeros($op, a, b)
-        broadcasted(::DefaultQuasiArrayStyle, ::typeof($op), a::Base.Broadcast.Broadcasted, b::QuasiZeros) = _broadcasted_zeros($op, a, b)
-        broadcasted(::DefaultQuasiArrayStyle, ::typeof($op), a::AbstractQuasiArray{<:Number}, b::QuasiZeros) = _broadcasted_zeros($op, a, b)
+        broadcasted(::AbstractQuasiArrayStyle, ::typeof($op), a::QuasiOnes, b::QuasiZeros) = _broadcasted_zeros($op, a, b)
+        broadcasted(::AbstractQuasiArrayStyle, ::typeof($op), a::QuasiFill{<:Number}, b::QuasiZeros) = _broadcasted_zeros($op, a, b)
+        broadcasted(::AbstractQuasiArrayStyle, ::typeof($op), a::Number, b::QuasiZeros) = _broadcasted_zeros($op, a, b)
+        broadcasted(::AbstractQuasiArrayStyle, ::typeof($op), a::Base.Broadcast.Broadcasted, b::QuasiZeros) = _broadcasted_zeros($op, a, b)
+        broadcasted(::AbstractQuasiArrayStyle, ::typeof($op), a::AbstractQuasiArray{<:Number}, b::QuasiZeros) = _broadcasted_zeros($op, a, b)
     end
 end
 
 for op in (:*, :/, :\)
-    @eval broadcasted(::DefaultQuasiArrayStyle, ::typeof($op), a::QuasiOnes, b::QuasiOnes) = _broadcasted_ones($op, a, b)
+    @eval broadcasted(::AbstractQuasiArrayStyle, ::typeof($op), a::QuasiOnes, b::QuasiOnes) = _broadcasted_ones($op, a, b)
 end
 
 for op in (:/, :\)
-    @eval broadcasted(::DefaultQuasiArrayStyle, ::typeof($op), a::QuasiZeros{<:Number}, b::QuasiZeros{<:Number}) = _broadcasted_nan($op, a, b)
+    @eval broadcasted(::AbstractQuasiArrayStyle, ::typeof($op), a::QuasiZeros{<:Number}, b::QuasiZeros{<:Number}) = _broadcasted_nan($op, a, b)
 end
 
 
 for op in (:+, -)
     @eval begin
-        function broadcasted(::DefaultQuasiArrayStyle{1}, ::typeof($op), a::AbstractQuasiVector{T}, b::Zeros{V,1}) where {T,V}
+        function broadcasted(::AbstractQuasiArrayStyle{N}, ::typeof($op), a::AbstractQuasiArray{T,N}, b::QuasiZeros{V,N}) where {T,V,N}
             broadcast_shape(axes(a), axes(b)) == axes(a) || throw(ArgumentError("Cannot broadcast $a and $b. Convert $b to a Vector first."))
             LinearAlgebra.copy_oftype(a, promote_type(T,V))
         end
 
-        broadcasted(::DefaultQuasiArrayStyle{1}, ::typeof($op), a::AbstractQuasiFill{T,1}, b::QuasiZeros{V,1}) where {T,V} = 
+        broadcasted(::AbstractQuasiArrayStyle{1}, ::typeof($op), a::AbstractQuasiFill{T,1}, b::QuasiZeros{V,1}) where {T,V} = 
             Base.invoke(broadcasted, Tuple{DefaultQuasiArrayStyle, typeof($op), AbstractQuasiFill, AbstractQuasiFill}, DefaultQuasiArrayStyle{1}(), $op, a, b)
     end
 end
 
-function broadcasted(::DefaultQuasiArrayStyle{1}, ::typeof(+), a::QuasiZeros{T,1}, b::AbstractQuasiVector{V}) where {T,V}
-    broadcast_shape(axes(a), axes(b))
+function broadcasted(::AbstractQuasiArrayStyle{1}, ::typeof(+), a::QuasiZeros{T,N}, b::AbstractQuasiArray{V,N}) where {T,V,N}
+    broadcast_shape(axes(a), axes(b)) == axes(a) || throw(ArgumentError("Cannot broadcast $a and $b. Convert $a to a Vector first."))
     LinearAlgebra.copy_oftype(b, promote_type(T,V))
 end
 
-broadcasted(::DefaultQuasiArrayStyle{1}, ::typeof(+), a::QuasiZeros{V,1}, b::AbstractQuasiFill{T,1}) where {T,V} = 
+broadcasted(::AbstractQuasiArrayStyle{1}, ::typeof(+), a::QuasiZeros{V,1}, b::AbstractQuasiFill{T,1}) where {T,V} = 
             Base.invoke(broadcasted, Tuple{DefaultQuasiArrayStyle, typeof(+), AbstractQuasiFill, AbstractQuasiFill}, DefaultQuasiArrayStyle{1}(), +, a, b)
 
 # Need to prevent array-valued fills from broadcasting over entry
@@ -433,10 +433,10 @@ _broadcast_getindex_value(a::AbstractQuasiFill{<:Number}) = getindex_value(a)
 _broadcast_getindex_value(a::AbstractQuasiFill) = Ref(getindex_value(a))
 
 
-broadcasted(::DefaultQuasiArrayStyle{N}, op, r::AbstractQuasiFill{T,N}, x::Number) where {T,N} = QuasiFill(op(getindex_value(r),x), axes(r))
-broadcasted(::DefaultQuasiArrayStyle{N}, op, x::Number, r::AbstractQuasiFill{T,N}) where {T,N} = QuasiFill(op(x, getindex_value(r)), axes(r))
-broadcasted(::DefaultQuasiArrayStyle{N}, op, r::AbstractQuasiFill{T,N}, x::Ref) where {T,N} = QuasiFill(op(getindex_value(r),x[]), axes(r))
-broadcasted(::DefaultQuasiArrayStyle{N}, op, x::Ref, r::AbstractQuasiFill{T,N}) where {T,N} = QuasiFill(op(x[], getindex_value(r)), axes(r))
+broadcasted(::AbstractQuasiArrayStyle{N}, op, r::AbstractQuasiFill{T,N}, x::Number) where {T,N} = QuasiFill(op(getindex_value(r),x), axes(r))
+broadcasted(::AbstractQuasiArrayStyle{N}, op, x::Number, r::AbstractQuasiFill{T,N}) where {T,N} = QuasiFill(op(x, getindex_value(r)), axes(r))
+broadcasted(::AbstractQuasiArrayStyle{N}, op, r::AbstractQuasiFill{T,N}, x::Ref) where {T,N} = QuasiFill(op(getindex_value(r),x[]), axes(r))
+broadcasted(::AbstractQuasiArrayStyle{N}, op, x::Ref, r::AbstractQuasiFill{T,N}) where {T,N} = QuasiFill(op(x[], getindex_value(r)), axes(r))
 
 ###
 # Mul
@@ -477,3 +477,5 @@ ones(x::Union{OneTo,IdentityUnitRange}, y::Inclusion, z::Union{OneTo,IdentityUni
 fill(c, x::Inclusion, y::Union{OneTo,IdentityUnitRange,Inclusion}...) where T = QuasiFill(c, (x, y...))
 fill(c, x::Union{OneTo,IdentityUnitRange}, y::Inclusion, z::Union{OneTo,IdentityUnitRange,Inclusion}...) where T = QuasiFill(c, (x, y, z...))
 
+iszero(x::AbstractQuasiFill) = iszero(getindex_value(x))
+isone(x::AbstractQuasiFill) = isone(getindex_value(x))
