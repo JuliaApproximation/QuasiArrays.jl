@@ -8,6 +8,9 @@ import QuasiArrays: ApplyQuasiMatrix, UnionVcat
         @test B isa ApplyQuasiMatrix{Float64,typeof(hcat)}
         @test axes(B) == (axes(A,1), Base.OneTo(4))
         @test B[0.0,1] == B[0.0,3] == A[0.0,1]
+        @test B == B
+        @test B ≠ A
+        @test B ≠ [A A A]
         @test_throws BoundsError B[0.1,1]
         @test_throws BoundsError B[0.0,5]
         @test QuasiArray(B) == B
