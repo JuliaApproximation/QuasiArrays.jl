@@ -224,7 +224,7 @@ axes(A::Applied{<:Any,typeof(^),<:Tuple{<:AbstractQuasiMatrix,<:Number}}) = axes
 eltype(::Applied{<:Any,typeof(^),<:Tuple{<:AbstractQuasiMatrix{T},<:Integer}}) where T = T
 eltype(::Applied{<:Any,typeof(^),<:Tuple{<:AbstractQuasiMatrix{T},<:Number}}) where T = complex(T)
 
-function *(App::ApplyQuasiMatrix{<:Any,typeof(^),<:Tuple{<:AbstractQuasiMatrix{T},<:Integer}}, b::AbstractQuasiMatrix) where T
+function *(App::ApplyQuasiMatrix{<:Any,typeof(^),<:Tuple{<:AbstractQuasiMatrix{T},<:Integer}}, b::AbstractQuasiArray) where T
     A,p = arguments(App)
     p < 0 && return ApplyQuasiMatrix(^,inv(A),-p)*b
     p == 0 && return copy(b)

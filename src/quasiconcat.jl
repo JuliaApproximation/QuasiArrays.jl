@@ -25,6 +25,11 @@ end
 
 \(A::AbstractQuasiArray, H::ApplyQuasiMatrix{<:Any,typeof(hcat)}) = hcat((Ref(A) .\ H.args)...)
 
+function ==(A::ApplyQuasiMatrix{<:Any,typeof(hcat)}, B::ApplyQuasiMatrix{<:Any,typeof(hcat)})
+    axes.(A.args,2) == axes.(B.args,2) && return all(A.args .== B.args)
+    Base.invoke(==, Tuple{AbstractQuasiArray,AbstractQuasiArray}, A, B)
+end
+
 """
     UnionVcat
 
