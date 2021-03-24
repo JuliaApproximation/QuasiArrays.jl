@@ -37,7 +37,7 @@ import LinearAlgebra: transpose, adjoint, checkeltype_adjoint, checkeltype_trans
                         AbstractTriangular, pinv, inv, promote_leaf_eltypes, power_by_squaring,
                         integerpow, schurpow, tr, factorize, copy_oftype, rank
 
-import ArrayLayouts: indextype, concretize, fillzeros, OnesLayout, AbstractFillLayout, FillLayout, ZerosLayout
+import ArrayLayouts: indextype, concretize, fillzeros, OnesLayout, AbstractFillLayout, FillLayout, ZerosLayout, diagonallayout, diagonaldata
 import LazyArrays: MemoryLayout, UnknownLayout, Mul, ApplyLayout, BroadcastLayout,
                     InvOrPInv, ApplyStyle, AbstractLazyLayout, LazyLayout,
                     MulStyle, MulAddStyle, LazyArrayApplyStyle, combine_mul_styles, DefaultArrayApplyStyle,

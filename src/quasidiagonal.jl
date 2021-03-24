@@ -203,3 +203,6 @@ end
 permutedims(D::QuasiDiagonal) = D
 inv(D::QuasiDiagonal) = QuasiDiagonal(inv.(D.diag))
 copy(D::QuasiDiagonal) = QuasiDiagonal(copy(D.diag))
+
+MemoryLayout(::Type{<:QuasiDiagonal{<:Any,V}}) where V = diagonallayout(MemoryLayout(V))
+diagonaldata(D::QuasiDiagonal) = D.diag
