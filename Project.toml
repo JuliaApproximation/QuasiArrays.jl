@@ -12,7 +12,7 @@ LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [compat]
-ArrayLayouts = "0.5, 0.6"
+ArrayLayouts = "0.6.4"
 DomainSets = "0.4"
 FillArrays = "0.11"
 LazyArrays = "0.20, 0.21"
