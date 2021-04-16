@@ -50,7 +50,7 @@ import LazyArrays: MemoryLayout, UnknownLayout, Mul, ApplyLayout, BroadcastLayou
 import Base.IteratorsMD
 
 export AbstractQuasiArray, AbstractQuasiMatrix, AbstractQuasiVector, materialize,
-       QuasiArray, QuasiMatrix, QuasiVector, QuasiDiagonal, Inclusion,
+       QuasiArray, QuasiMatrix, QuasiVector, QuasiDiagonal, Inclusion, domain,
        QuasiAdjoint, QuasiTranspose, ApplyQuasiArray, ApplyQuasiMatrix, ApplyQuasiVector,
        BroadcastQuasiArray, BroadcastQuasiMatrix, BroadcastQuasiVector, indextype,
        QuasiKron, quasikron, UnionVcat, SubQuasiArray, QuasiFill, QuasiZeros, QuasiOnes, QuasiEye
