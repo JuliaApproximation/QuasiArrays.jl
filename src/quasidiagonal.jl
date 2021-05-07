@@ -35,7 +35,7 @@ julia> QuasiDiagonal(A)
 """
 QuasiDiagonal(A::AbstractQuasiMatrix) = QuasiDiagonal(diag(A))
 
-@deprecate Diagonal(A::AbstractQuasiArray) QuasiDiagonal(A)
+@deprecate Diagonal(A::AbstractQuasiArray) diagonal(A)
 
 
 """
