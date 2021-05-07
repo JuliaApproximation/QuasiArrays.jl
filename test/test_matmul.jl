@@ -1,14 +1,18 @@
-using QuasiArrays, Test
+using QuasiArrays, ArrayLayouts, Test
 import QuasiArrays: apply
 
 @testset "Multiplication" begin
     @testset "Diag * Inclusion" begin
         A = QuasiDiagonal(Inclusion(0:0.1:1))
+        @test rowsupport(A,0.1) == colsupport(A,0.1) == 0.1
         b = Inclusion(0:0.1:1)
         Ab = A*b
         @test Ab isa QuasiArray
         @test Ab[0.1] ≈ 0.1^2
         @test_throws DimensionMismatch A*Inclusion(1:2)
+
+        @test A*A isa QuasiDiagonal
+        @test (A*A)[0.1,0.1] ≈ A[0.1,0.1]^2
     end
     @testset "Quasi * Quasi" begin
         A = QuasiArray(rand(3,3),(0:0.5:1,0:0.5:1))

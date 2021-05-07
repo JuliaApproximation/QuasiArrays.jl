@@ -35,7 +35,7 @@ julia> QuasiDiagonal(A)
 """
 QuasiDiagonal(A::AbstractQuasiMatrix) = QuasiDiagonal(diag(A))
 
-@deprecate Diagonal(A::AbstractQuasiArray) QuasiDiagonal(A)
+@deprecate Diagonal(A::AbstractQuasiArray) diagonal(A)
 
 
 """
@@ -203,3 +203,7 @@ end
 permutedims(D::QuasiDiagonal) = D
 inv(D::QuasiDiagonal) = QuasiDiagonal(inv.(D.diag))
 copy(D::QuasiDiagonal) = QuasiDiagonal(copy(D.diag))
+
+MemoryLayout(::Type{<:QuasiDiagonal{<:Any,V}}) where V = diagonallayout(MemoryLayout(V))
+diagonaldata(D::QuasiDiagonal) = D.diag
+diagonal(d::AbstractQuasiVector) = QuasiDiagonal(d)

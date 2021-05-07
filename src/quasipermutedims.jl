@@ -70,6 +70,8 @@ end
 # end
 
 permutedims(A::AbstractQuasiMatrix) = PermutedDimsQuasiArray(A, (2,1))
+permutedims(v::AbstractQuasiVector{<:Real}) = v'
+permutedims(v::AbstractQuasiVector{<:Number}) = transpose(v)
 # permutedims(v::AbstractQuasiVector) = reshape(v, (1, length(v)))
 
 # function Base.showarg(io::IO, A::PermutedDimsQuasiArray{T,N,perm}, toplevel) where {T,N,perm}

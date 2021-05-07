@@ -17,4 +17,10 @@ using QuasiArrays, LinearAlgebra, Test
         D = Diagonal(view(A, 0.0, [1,4]))
         @test permutedims(D) ≡ D
     end
+
+    @testset "vec" begin
+        a = QuasiVector(randn(3),[0,2,3])
+        @test permutedims(a) == a'
+        @test permutedims(a .+ im) == transpose(a .+ im)
+    end
 end
