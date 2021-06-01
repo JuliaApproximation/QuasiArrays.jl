@@ -171,3 +171,8 @@ end
 quasisubbroadcaststyle(::AbstractQuasiArrayStyle{N}, _) where N = DefaultQuasiArrayStyle{N}()
 BroadcastStyle(::Type{<:SubQuasiArray{T,N,P,I}}) where {T,N,P,I} = quasisubbroadcaststyle(BroadcastStyle(P), I)
 BroadcastStyle(::Type{<:SubArray{T,N,P,I}}) where {T,N,P<:AbstractQuasiArray,I} = subbroadcaststyle(BroadcastStyle(P), I)
+
+
+# support (x .* D) * y
+LazyArrays._broadcast_mul_mul((a,B)::Tuple{AbstractQuasiVector,AbstractQuasiMatrix}, C) = a .* (B*C)
+LazyArrays._broadcast_mul_mul((A,b)::Tuple{AbstractQuasiMatrix,AbstractQuasiVector}, C) = b .* (A*C)

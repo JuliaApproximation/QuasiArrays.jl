@@ -201,6 +201,9 @@ _broadcast_mul_arguments(a, B) = __broadcast_mul_arguments(a, _mul_arguments(B).
 _mul_arguments(A::BroadcastQuasiMatrix{<:Any,typeof(*),<:Tuple{AbstractQuasiVector,AbstractQuasiMatrix}}) =
     _broadcast_mul_arguments(A.args...)
 
+broadcasted(::LazyQuasiArrayStyle{2}, ::typeof(*), a::AbstractQuasiVector, B::ApplyQuasiMatrix{<:Any,typeof(*)}) = 
+    *(_broadcast_mul_arguments(a, B)...)
+
 ndims(M::Applied{LazyQuasiArrayApplyStyle,typeof(*)}) = ndims(last(M.args))
 
 call(a::AbstractQuasiArray) = call(MemoryLayout(typeof(a)), a)
