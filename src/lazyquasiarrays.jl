@@ -124,10 +124,10 @@ _BroadcastQuasiArray(bc::Broadcasted) = BroadcastQuasiArray{combine_eltypes(bc.f
 BroadcastQuasiArray(bc::Broadcasted{S}) where S =
     _BroadcastQuasiArray(instantiate(Broadcasted{S}(bc.f, _broadcast2broadcastarray(bc.args...))))
 BroadcastQuasiArray(b::BroadcastQuasiArray) = b
-BroadcastQuasiArray(f, A, As...) = BroadcastQuasiArray(instantiate(broadcasted(f, A, As...)))
+BroadcastQuasiArray(f, A, As...) = BroadcastQuasiArray{combine_eltypes(f, (A, As...))}(f, A, As...)
 BroadcastQuasiVector(f, A, As...) = BroadcastQuasiVector{combine_eltypes(f, (A, As...))}(f, A, As...)
 BroadcastQuasiMatrix(f, A, As...) = BroadcastQuasiMatrix{combine_eltypes(f, (A, As...))}(f, A, As...)
-BroadcastQuasiArray{T}(f, A, As...) where {T} = BroadcastQuasiArray{T}(instantiate(broadcasted(f, A, As...)))
+BroadcastQuasiArray{T}(f, A, As...) where {T} = BroadcastQuasiArray{T,length(axes(broadcasted(f, A, As...)))}(f, A, As...)
 BroadcastQuasiArray{T,N}(f, A, As...) where {T,N} = BroadcastQuasiArray{T,N,typeof(f),typeof((A, As...))}(f, (A, As...))
 
 @inline BroadcastQuasiArray(A::AbstractQuasiArray) = BroadcastQuasiArray(call(A), arguments(A)...)
