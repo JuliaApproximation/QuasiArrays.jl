@@ -14,7 +14,7 @@ import Base: Slice, IdentityUnitRange, ScalarIndex, RangeIndex, view, viewindexi
                 check_parent_index_match, reindex, _isdisjoint, unsafe_indices, _unsafe_ind2sub,
                 _ind2sub, _sub2ind, _ind2sub_recurse, _lookup, SubArray,
                 parentindices, reverse, ndims, checkbounds, uncolon,
-                promote_shape, maybeview, unsafe_view, checkindex, checkbounds_indices,
+                maybeview, unsafe_view, checkindex, checkbounds_indices,
                 throw_boundserror, rdims, replace_in_print_matrix, show, summary,
                 hcat, vcat, hvcat
 import Base: *, /, \, +, -, ^, inv
