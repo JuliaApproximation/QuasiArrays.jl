@@ -45,7 +45,8 @@ import LazyArrays: MemoryLayout, UnknownLayout, Mul, ApplyLayout, BroadcastLayou
                     rowsupport, colsupport, tuple_type_memorylayouts, applylayout, broadcastlayout,
                     LdivStyle, most, InvLayout, PInvLayout, sub_materialize, lazymaterialize,
                     _mul, rowsupport, DiagonalLayout, adjointlayout, transposelayout, conjlayout,
-                    sublayout, call, LazyArrayStyle, layout_getindex, _broadcast2broadcastarray, _applyarray_summary, _broadcastarray_summary
+                    sublayout, call, LazyArrayStyle, layout_getindex, _broadcast2broadcastarray, _applyarray_summary, _broadcastarray_summary,
+                    _broadcasted_mul, simplifiable
 
 import Base.IteratorsMD
 

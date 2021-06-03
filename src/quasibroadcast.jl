@@ -174,10 +174,14 @@ BroadcastStyle(::Type{<:SubArray{T,N,P,I}}) where {T,N,P<:AbstractQuasiArray,I} 
 
 
 # support (x .* D) * y
-LazyArrays._broadcast_mul_mul((a,B)::Tuple{AbstractQuasiVector,AbstractQuasiMatrix}, C) = a .* (B*C)
-LazyArrays._broadcast_mul_mul((A,b)::Tuple{AbstractQuasiMatrix,AbstractQuasiVector}, C) = b .* (A*C)
+__broadcast_mul_mul(::Val{false}, (a,B), C) = ApplyQuasiArray(*, a .* B, C)
+__broadcast_mul_mul(::Val{true}, (a,B)::Tuple{AbstractQuasiVector,AbstractQuasiMatrix}, C) = a .* (B*C)
+__broadcast_mul_mul(::Val{true}, (A,b)::Tuple{AbstractQuasiMatrix,AbstractQuasiVector}, C) = b .* (A*C)
+LazyArrays._broadcast_mul_mul((a,B)::Tuple{AbstractQuasiVector,AbstractQuasiMatrix}, C) = __broadcast_mul_mul(simplifiable(*, B, C), (a,B), C)
+LazyArrays._broadcast_mul_mul((A,b)::Tuple{AbstractQuasiMatrix,AbstractQuasiVector}, C) = __broadcast_mul_mul(simplifiable(*, A, C), (A,b), C)
 
-import LazyArrays: _broadcasted_mul
+
+
 _broadcasted_mul(a::Tuple{Number,Vararg{Any}}, b::AbstractQuasiVector) = (first(a)*sum(b), _broadcasted_mul(tail(a), b)...)
 _broadcasted_mul(a::Tuple{Number,Vararg{Any}}, B::AbstractQuasiMatrix) = (first(a)*sum(B; dims=1), _broadcasted_mul(tail(a), B)...)
 _broadcasted_mul(a::Tuple{AbstractQuasiVector,Vararg{Any}}, b::AbstractQuasiVector) = (first(a)*sum(b), _broadcasted_mul(tail(a), b)...)

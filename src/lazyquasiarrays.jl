@@ -233,3 +233,10 @@ function *(App::ApplyQuasiMatrix{<:Any,typeof(^),<:Tuple{<:AbstractQuasiMatrix{T
     p == 0 && return copy(b)
     return A*(ApplyQuasiMatrix(^,A,p-1)*b)
 end
+
+function simplifiable(::typeof(*), App::ApplyQuasiMatrix{<:Any,typeof(^),<:Tuple{<:AbstractQuasiMatrix{T},<:Integer}}, b::AbstractQuasiArray) where T
+    A,p = arguments(App)
+    simplifiable(*, A, b)
+end
+
+
