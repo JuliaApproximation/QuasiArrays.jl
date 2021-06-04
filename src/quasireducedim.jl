@@ -355,5 +355,9 @@ function __sum(LAY::ApplyLayout{typeof(*)}, V::AbstractQuasiMatrix, d::Int)
         *(most(a)..., sum(last(a); dims=2))
     end
 end
+function __sum(LAY::ApplyLayout{typeof(*)}, V::AbstractQuasiVector, ::Colon)
+    a = arguments(LAY, V)
+    first(apply(*, sum(a[1]; dims=1), tail(a)...))
+end
 
 __sum(_, A, dims) = _sum(identity, A, dims)
