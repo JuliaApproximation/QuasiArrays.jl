@@ -26,7 +26,10 @@ import Base: exp, log, sqrt,
 import Base: Array, Matrix, Vector
 import Base: union, intersect, sort, sort!
 import Base: conj, real, imag
-import Base: sum, cumsum, diff
+# reducedim.jl imports
+import Base: prod, sum, cumsum, diff, add_sum, mul_prod, mapreduce, max, min, count, any, all, _sum, _mapreduce, reduced_index, check_reducedims
+import Base: BitInteger, IEEEFloat, uniontypes, _InitialValue, safe_tail, reducedim1
+
 import Base: ones, zeros, one, zero, fill
 
 import Base.Broadcast: materialize, materialize!, BroadcastStyle, AbstractArrayStyle, Style, broadcasted, Broadcasted, Unknown,
@@ -46,7 +49,7 @@ import LazyArrays: MemoryLayout, UnknownLayout, Mul, ApplyLayout, BroadcastLayou
                     LdivStyle, most, InvLayout, PInvLayout, sub_materialize, lazymaterialize,
                     _mul, rowsupport, DiagonalLayout, adjointlayout, transposelayout, conjlayout,
                     sublayout, call, LazyArrayStyle, layout_getindex, _broadcast2broadcastarray, _applyarray_summary, _broadcastarray_summary,
-                    _broadcasted_mul, simplifiable
+                    _broadcasted_mul, simplifiable, simplify
 
 import Base.IteratorsMD
 
@@ -87,6 +90,7 @@ include("quasireshapedarray.jl")
 include("quasipermutedims.jl")
 include("quasibroadcast.jl")
 include("abstractquasiarraymath.jl")
+include("quasireducedim.jl")
 
 include("quasiarray.jl")
 include("quasiarraymath.jl")

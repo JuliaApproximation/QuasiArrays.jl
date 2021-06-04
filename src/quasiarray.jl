@@ -33,6 +33,8 @@ QuasiVector(par::AbstractVector{T}, axes::Tuple{AbstractVector}) where T =
 
 QuasiArray{T}(par::AbstractArray{<:Any,N}, axes::NTuple{N,AbstractVector}) where {T,N} = 
     QuasiArray{T,N,typeof(axes)}(par, axes)
+QuasiArray{T}(par::AbstractArray{T,N}, axes::NTuple{N,AbstractVector}) where {T,N} = 
+    QuasiArray{T,N,typeof(axes)}(par, axes)
 QuasiMatrix{T}(par::AbstractMatrix, axes::NTuple{2,AbstractVector}) where T = 
     QuasiMatrix{T,typeof(axes)}(par, axes)
 QuasiVector{T}(par::AbstractVector, axes::Tuple{AbstractVector}) where T = 
@@ -81,7 +83,7 @@ QuasiVector(par::AbstractVector{T}, axes::AbstractArray) where {T} =
     QuasiVector(par, (axes,))
     
 
-QuasiArray(a::AbstractQuasiArray) = QuasiArray(a[map(collect,axes(a))...], axes(a))
+QuasiArray(a::AbstractQuasiArray{T}) where T = QuasiArray{T}(a[map(collect,axes(a))...], axes(a))
 QuasiArray{T}(a::AbstractQuasiArray) where T = QuasiArray(convert(AbstractArray{T},a[map(collect,axes(a))...]), axes(a))
 QuasiArray{T,N}(a::AbstractQuasiArray{<:Any,N}) where {T,N} = QuasiArray(convert(AbstractArray{T,N},a[map(collect,axes(a))...]), axes(a))
 QuasiArray{T,N,AXES}(a::AbstractQuasiArray{<:Any,N}) where {T,N,AXES} = QuasiArray{T,N,AXES}(Array{T}(a), axes(a))
@@ -134,3 +136,9 @@ end
     axes(A) == axes(B) && A.parent == B
 ==(B::AbstractArray{V,N}, A::QuasiArray{T,N,NTuple{N,OneTo{Int}}}) where {T,V,N} =
     A == B
+
+
+function reshape(A::QuasiVector, ax::Tuple{Any,OneTo{Int}})
+    @assert ax == (axes(A,1),Base.OneTo(1))
+    QuasiMatrix(reshape(A.parent,size(A.parent,1),1), (A.axes[1], Base.OneTo(1)))
+end

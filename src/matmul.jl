@@ -99,6 +99,12 @@ copy(M::Mul{<:Any,QuasiArrayLayout}) = _quasi_mul(M, axes(M))
 copy(M::Mul{<:AbstractLazyLayout,QuasiArrayLayout}) = ApplyQuasiArray(M)
 copy(M::Mul{ApplyLayout{typeof(\)},QuasiArrayLayout}) = ApplyQuasiArray(M)
 copy(M::Mul{QuasiArrayLayout,<:AbstractLazyLayout}) = ApplyQuasiArray(M)
+for op in (:+, :-)
+    @eval begin
+        copy(M::Mul{BroadcastLayout{typeof($op)},QuasiArrayLayout}) = simplify(M)
+        copy(M::Mul{QuasiArrayLayout,BroadcastLayout{typeof($op)}}) = simplify(M)
+    end
+end
 
 
 LazyArrays._vec_mul_view(a::AbstractQuasiVector, kr, ::Colon) = view(a, kr)
