@@ -8,8 +8,6 @@ _mapreduce(f, op, ::IndexCartesian, A::AbstractQuasiArray) = mapfoldl(f, op, A)
 reduced_index(i::Inclusion) = Base.OneTo(1)
 reduced_indices(a::AbstractQuasiArray, region) = reduced_indices(axes(a), region)
 
-# for reductions that keep 0 dims as 0
-reduced_indices0(a::AbstractQuasiArray, region) = reduced_indices0(axes(a), region)
 
 function reduced_indices(inds::NTuple{N,Any}, d::Int) where N
     d < 1 && throw(ArgumentError("dimension must be ≥ 1, got $d"))
@@ -22,65 +20,9 @@ function reduced_indices(inds::NTuple{N,Any}, d::Int) where N
     end
 end
 
-function reduced_indices0(inds::NTuple{N,Any}, d::Int) where N
-    d < 1 && throw(ArgumentError("dimension must be ≥ 1, got $d"))
-    if d <= N
-        ind = inds[d]
-        rd = isempty(ind) ? ind : reduced_index(inds[d])
-        if d == 1
-            return (rd, tail(inds)...)::typeof(inds)
-        else
-            return tuple(inds[1:d-1]..., oftype(inds[d], rd), inds[d+1:N]...)::typeof(inds)
-        end
-    else
-        return inds
-    end
-end
 
-function reduced_indices(inds::NTuple{N,Any}, region) where N
-    rinds = [inds...]
-    for i in region
-        isa(i, Integer) || throw(ArgumentError("reduced dimension(s) must be integers"))
-        d = Int(i)
-        if d < 1
-            throw(ArgumentError("region dimension(s) must be ≥ 1, got $d"))
-        elseif d <= N
-            rinds[d] = reduced_index(rinds[d])
-        end
-    end
-    tuple(rinds...)::typeof(inds)
-end
-
-function reduced_indices0(inds::NTuple{N,Any}, region) where N
-    rinds = [inds...]
-    for i in region
-        isa(i, Integer) || throw(ArgumentError("reduced dimension(s) must be integers"))
-        d = Int(i)
-        if d < 1
-            throw(ArgumentError("region dimension(s) must be ≥ 1, got $d"))
-        elseif d <= N
-            rind = rinds[d]
-            rinds[d] = isempty(rind) ? rind : reduced_index(rind)
-        end
-    end
-    tuple(rinds...)::typeof(inds)
-end
 
 ###### Generic reduction functions #####
-
-## initialization
-# initarray! is only called by sum!, prod!, etc.
-for (Op, initfun) in ((:(typeof(add_sum)), :zero), (:(typeof(mul_prod)), :one))
-    @eval initarray!(a::AbstractQuasiArray{T}, ::$(Op), init::Bool, src::AbstractQuasiArray) where {T} = (init && fill!(a, $(initfun)(T)); a)
-end
-
-for Op in (:(typeof(max)), :(typeof(min)))
-    @eval initarray!(a::AbstractQuasiArray{T}, ::$(Op), init::Bool, src::AbstractQuasiArray) where {T} = (init && copyfirst!(a, src); a)
-end
-
-for (Op, initval) in ((:(typeof(&)), true), (:(typeof(|)), false))
-    @eval initarray!(a::AbstractQuasiArray, ::$(Op), init::Bool, src::AbstractQuasiArray) = (init && fill!(a, $initval); a)
-end
 
 # reducedim_initarray is called by
 reducedim_initarray(A::AbstractQuasiArray, region, init, ::Type{R}) where {R} = fill!(similar(A,R,reduced_indices(A,region)), init)
@@ -94,49 +36,49 @@ function reducedim_init(f, op::Union{typeof(*),typeof(mul_prod)}, A::AbstractQua
     _reducedim_init(f, op, one, prod, A, region)
 end
 
-# initialization when computing minima and maxima requires a little care
-for (f1, f2, initval, typeextreme) in ((:min, :max, :Inf, :typemax), (:max, :min, :(-Inf), :typemin))
-    @eval function reducedim_init(f, op::typeof($f1), A::AbstractQuasiArray, region)
-        # First compute the reduce indices. This will throw an ArgumentError
-        # if any region is invalid
-        ri = reduced_indices(A, region)
+# # initialization when computing minima and maxima requires a little care
+# for (f1, f2, initval, typeextreme) in ((:min, :max, :Inf, :typemax), (:max, :min, :(-Inf), :typemin))
+#     @eval function reducedim_init(f, op::typeof($f1), A::AbstractQuasiArray, region)
+#         # First compute the reduce indices. This will throw an ArgumentError
+#         # if any region is invalid
+#         ri = reduced_indices(A, region)
 
-        # Next, throw if reduction is over a region with length zero
-        any(i -> isempty(axes(A, i)), region) && _empty_reduce_error()
+#         # Next, throw if reduction is over a region with length zero
+#         any(i -> isempty(axes(A, i)), region) && _empty_reduce_error()
 
-        # Make a view of the first slice of the region
-        A1 = view(A, ri...)
+#         # Make a view of the first slice of the region
+#         A1 = view(A, ri...)
 
-        if isempty(A1)
-            # If the slice is empty just return non-view version as the initial array
-            return copy(A1)
-        else
-            # otherwise use the min/max of the first slice as initial value
-            v0 = mapreduce(f, $f2, A1)
+#         if isempty(A1)
+#             # If the slice is empty just return non-view version as the initial array
+#             return copy(A1)
+#         else
+#             # otherwise use the min/max of the first slice as initial value
+#             v0 = mapreduce(f, $f2, A1)
 
-            T = _realtype(f, promote_union(eltype(A)))
-            Tr = v0 isa T ? T : typeof(v0)
+#             T = _realtype(f, promote_union(eltype(A)))
+#             Tr = v0 isa T ? T : typeof(v0)
 
-            # but NaNs and missing need to be avoided as initial values
-            if (v0 == v0) === false
-                # v0 is NaN
-                v0 = $initval
-            elseif isunordered(v0)
-                # v0 is missing or a third-party unordered value
-                Tnm = nonmissingtype(Tr)
-                # TODO: Some types, like BigInt, don't support typemin/typemax.
-                # So a Matrix{Union{BigInt, Missing}} can still error here.
-                v0 = $typeextreme(Tnm)
-            end
-            # v0 may have changed type.
-            Tr = v0 isa T ? T : typeof(v0)
+#             # but NaNs and missing need to be avoided as initial values
+#             if (v0 == v0) === false
+#                 # v0 is NaN
+#                 v0 = $initval
+#             elseif isunordered(v0)
+#                 # v0 is missing or a third-party unordered value
+#                 Tnm = nonmissingtype(Tr)
+#                 # TODO: Some types, like BigInt, don't support typemin/typemax.
+#                 # So a Matrix{Union{BigInt, Missing}} can still error here.
+#                 v0 = $typeextreme(Tnm)
+#             end
+#             # v0 may have changed type.
+#             Tr = v0 isa T ? T : typeof(v0)
 
-            return reducedim_initarray(A, region, v0, Tr)
-        end
-    end
-end
-reducedim_init(f::Union{typeof(abs),typeof(abs2)}, op::typeof(max), A::AbstractQuasiArray{T}, region) where {T} =
-    reducedim_initarray(A, region, zero(f(zero(T))), _realtype(f, T))
+#             return reducedim_initarray(A, region, v0, Tr)
+#         end
+#     end
+# end
+# reducedim_init(f::Union{typeof(abs),typeof(abs2)}, op::typeof(max), A::AbstractQuasiArray{T}, region) where {T} =
+#     reducedim_initarray(A, region, zero(f(zero(T))), _realtype(f, T))
 
 reducedim_init(f, op::typeof(&), A::AbstractQuasiArray, region) = reducedim_initarray(A, region, true)
 reducedim_init(f, op::typeof(|), A::AbstractQuasiArray, region) = reducedim_initarray(A, region, false)
