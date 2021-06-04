@@ -253,6 +253,8 @@ for (fname, _fname, op) in [(:sum,     :_sum,     :add_sum), (:prod,    :_prod, 
     end
 end
 
+
+
 any(a::AbstractQuasiArray; dims=:)              = _any(a, dims)
 any(f::Function, a::AbstractQuasiArray; dims=:) = _any(f, a, dims)
 all(a::AbstractQuasiArray; dims=:)              = _all(a, dims)
@@ -337,3 +339,21 @@ end
 findmax(A::AbstractQuasiArray; dims=:) = _findmax(A, dims)
 argmin(A::AbstractQuasiArray; dims=:) = findmin(A; dims=dims)[2]
 argmax(A::AbstractQuasiArray; dims=:) = findmax(A; dims=dims)[2]
+
+
+# support overloading sum by MemoryLayout
+_sum(V::AbstractQuasiArray, dims) = __sum(MemoryLayout(typeof(V)), V, dims)
+_sum(V::AbstractQuasiArray, ::Colon) = __sum(MemoryLayout(typeof(V)), V, :)
+
+# sum is equivalent to hitting by ones(n) on the left or rifght
+function __sum(LAY::ApplyLayout{typeof(*)}, V::AbstractQuasiMatrix, d::Int)
+    a = arguments(LAY, V)
+    if d == 1
+        *(sum(first(a); dims=1), tail(a)...)
+    else
+        @assert d == 2
+        *(most(a)..., sum(last(a); dims=2))
+    end
+end
+
+__sum(_, A, dims) = _sum(identity, A, dims)
