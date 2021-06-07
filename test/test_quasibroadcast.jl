@@ -76,7 +76,7 @@ import QuasiArrays: QuasiCartesianIndex, QuasiCartesianIndices, DefaultQuasiArra
         v = QuasiVector(1:10, range(0; stop=1,length=10))
         @test (x->x+1).((x->x+2).((x->x+3).(v))) == QuasiVector(7:16,range(0; stop=1,length=10))
         let A = QuasiArray([sqrt(i)+j for i = 1:3, j=1:4], (0:0.5:1,0:0.5:1.5))
-            @test_broken atan.(log.(A), sum(A, dims=1)) == broadcast(atan, broadcast(log, A), sum(A, dims=1))
+            @test atan.(log.(A), sum(A, dims=1)) == broadcast(atan, broadcast(log, A), sum(A, dims=1))
         end
         let x = sin.(v)
             @test atan.((x->x+1).(x), (x->x+2).(x)) == broadcast(atan, x.+1, x.+2)
@@ -203,5 +203,76 @@ import QuasiArrays: QuasiCartesianIndex, QuasiCartesianIndices, DefaultQuasiArra
         B = QuasiMatrix(randn(6,6), (0:0.5:2.5, 0:0.5:2.5))
         aB = BroadcastQuasiArray(*, a, ApplyQuasiArray(*, B, B))
         @test QuasiArrays.flatten(aB).args == (a .* B, B)
+    end
+
+    @testset "Broadcast add" begin
+        A = QuasiMatrix(randn(6,6), (0:0.5:2.5, 0:0.5:2.5))
+        a = QuasiVector(randn(6), 0:0.5:2.5)
+        ã = QuasiMatrix(randn(6,1), (axes(a,1),Base.OneTo(1)))
+        b = QuasiVector(randn(6), 0:0.5:2.5)
+        c = 2.3
+
+        for op in (+, -)
+            @testset "$op" begin
+                @testset "vec .$op mat" begin
+                    B = BroadcastQuasiArray(op, a, A)
+                    @test (B * b) isa QuasiVector
+                    @test (B * A) isa QuasiMatrix
+                    @test (A * B) isa QuasiMatrix
+                    @test B * B isa QuasiMatrix
+                    @test B * b ≈ op.(a, A) * b
+                    @test B * A ≈ op.(a, A) * A
+                    @test A * B ≈ A * op.(a, A)
+                    @test B * B ≈ op.(a, A) * op.(a, A)
+                end
+                @testset "mat .$op vec" begin
+                    B = BroadcastQuasiArray(op, A, a)
+                    @test B * b ≈ op.(A, a) * b
+                    @test B * A ≈ op.(A, a) * A
+                    @test A * B ≈ A * op.(A, a)
+                end
+                @testset "mat .$op mat" begin
+                    B = BroadcastQuasiArray(op, A, 2A)
+                    @test B * b ≈ op.(A, 2A) * b
+                    @test B * A ≈ op.(A, 2A) * A
+                    @test A * B ≈ A * op.(A, 2A)
+                end
+                @testset "vecmat .$op mat" begin
+                    B = BroadcastQuasiArray(op, ã, A)
+                    @test B * b ≈ op.(ã, A) * b
+                    @test B * A ≈ op.(ã, A) * A
+                    @test A * B ≈ A * op.(ã, A)
+                end
+                @testset "mat .$op vecmat" begin
+                    B = BroadcastQuasiArray(op, A, ã)
+                    @test B * b ≈ op.(A, ã) * b
+                    @test B * A ≈ op.(A, ã) * A
+                    @test A * B ≈ A * op.(A, ã)
+                end
+                @testset "rowvec .$op mat" begin
+                    B = BroadcastQuasiArray(op, a', A)
+                    @test B * b ≈ op.(a', A) * b
+                    @test B * A ≈ op.(a', A) * A
+                    @test A * B ≈ A * op.(a', A)
+                end
+                @testset "constvec .$op mat" begin
+                    B = BroadcastQuasiArray(op, c, A)
+                    @test B * b ≈ op.(c, A) * b 
+                    @test B * A ≈ op.(c, A) * A
+                    @test A * B ≈ A * op.(c, A)
+                end
+                @testset "constvec .$op vec" begin
+                    B = BroadcastQuasiArray(op, c, b)
+                    @test B * permutedims(b) ≈ op.(c, b) * permutedims(b)
+                end
+            end
+        end
+
+        @testset "Mixed" begin
+            B = BroadcastQuasiArray(+, A, 2A)
+            C = BroadcastQuasiArray(-, A, 2A)
+            @test B*C ≈ 3A * (-A)
+            @test C*B ≈ (-A) * 3A 
+        end
     end
 end

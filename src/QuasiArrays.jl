@@ -14,7 +14,7 @@ import Base: Slice, IdentityUnitRange, ScalarIndex, RangeIndex, view, viewindexi
                 check_parent_index_match, reindex, _isdisjoint, unsafe_indices, _unsafe_ind2sub,
                 _ind2sub, _sub2ind, _ind2sub_recurse, _lookup, SubArray,
                 parentindices, reverse, ndims, checkbounds, uncolon,
-                promote_shape, maybeview, unsafe_view, checkindex, checkbounds_indices,
+                maybeview, unsafe_view, checkindex, checkbounds_indices,
                 throw_boundserror, rdims, replace_in_print_matrix, show, summary,
                 hcat, vcat, hvcat
 import Base: *, /, \, +, -, ^, inv
@@ -26,7 +26,10 @@ import Base: exp, log, sqrt,
 import Base: Array, Matrix, Vector
 import Base: union, intersect, sort, sort!
 import Base: conj, real, imag
-import Base: sum, cumsum, diff
+# reducedim.jl imports
+import Base: prod, sum, cumsum, diff, add_sum, mul_prod, mapreduce, max, min, count, _count, any, _any, all, _all, _sum, _prod, _mapreduce, reduced_index, check_reducedims
+import Base: BitInteger, IEEEFloat, uniontypes, _InitialValue, safe_tail, reducedim1, _simple_count
+
 import Base: ones, zeros, one, zero, fill
 
 import Base.Broadcast: materialize, materialize!, BroadcastStyle, AbstractArrayStyle, Style, broadcasted, Broadcasted, Unknown,
@@ -45,7 +48,8 @@ import LazyArrays: MemoryLayout, UnknownLayout, Mul, ApplyLayout, BroadcastLayou
                     rowsupport, colsupport, tuple_type_memorylayouts, applylayout, broadcastlayout,
                     LdivStyle, most, InvLayout, PInvLayout, sub_materialize, lazymaterialize,
                     _mul, rowsupport, DiagonalLayout, adjointlayout, transposelayout, conjlayout,
-                    sublayout, call, LazyArrayStyle, layout_getindex, _broadcast2broadcastarray, _applyarray_summary, _broadcastarray_summary
+                    sublayout, call, LazyArrayStyle, layout_getindex, _broadcast2broadcastarray, _applyarray_summary, _broadcastarray_summary,
+                    _broadcasted_mul, simplifiable, simplify
 
 import Base.IteratorsMD
 
@@ -86,6 +90,7 @@ include("quasireshapedarray.jl")
 include("quasipermutedims.jl")
 include("quasibroadcast.jl")
 include("abstractquasiarraymath.jl")
+include("quasireducedim.jl")
 
 include("quasiarray.jl")
 include("quasiarraymath.jl")
