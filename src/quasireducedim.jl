@@ -29,12 +29,12 @@ reducedim_initarray(A::AbstractQuasiArray, region, init, ::Type{R}) where {R} = 
 reducedim_initarray(A::AbstractQuasiArray, region, init::T) where {T} = reducedim_initarray(A, region, init, T)
 
 
-function reducedim_init(f, op::Union{typeof(+),typeof(add_sum)}, A::AbstractQuasiArray, region)
-    _reducedim_init(f, op, zero, sum, A, region)
-end
-function reducedim_init(f, op::Union{typeof(*),typeof(mul_prod)}, A::AbstractQuasiArray, region)
-    _reducedim_init(f, op, one, prod, A, region)
-end
+# function reducedim_init(f, op::Union{typeof(+),typeof(add_sum)}, A::AbstractQuasiArray, region)
+#     _reducedim_init(f, op, zero, sum, A, region)
+# end
+# function reducedim_init(f, op::Union{typeof(*),typeof(mul_prod)}, A::AbstractQuasiArray, region)
+#     _reducedim_init(f, op, one, prod, A, region)
+# end
 
 # # initialization when computing minima and maxima requires a little care
 # for (f1, f2, initval, typeextreme) in ((:min, :max, :Inf, :typemax), (:max, :min, :(-Inf), :typemin))
@@ -103,31 +103,10 @@ end
 
 ## generic (map)reduction
 
-has_fast_linear_indexing(a::AbstractQuasiArray) = false
-
-
-copyfirst!(R::AbstractQuasiArray, A::AbstractQuasiArray) = mapfirst!(identity, R, A)
-
-function mapfirst!(f::F, R::AbstractQuasiArray, A::AbstractQuasiArray{<:Any,N}) where {N, F}
-    lsiz = check_reducedims(R, A)
-    t = _firstreducedslice(axes(R), axes(A))
-    map!(f, R, view(A, t...))
-end
-
 function _mapreducedim!(f, op, R::AbstractQuasiArray, A::AbstractQuasiArray)
     lsiz = check_reducedims(R,A)
     isempty(A) && return R
 
-    if has_fast_linear_indexing(A) && lsiz > 16
-        # use mapreduce_impl, which is probably better tuned to achieve higher performance
-        nslices = div(length(A), lsiz)
-        ibase = first(LinearIndices(A))-1
-        for i = 1:nslices
-            @inbounds R[i] = op(R[i], mapreduce_impl(f, op, A, ibase+1, ibase+lsiz))
-            ibase += lsiz
-        end
-        return R
-    end
     indsAt, indsRt = safe_tail(axes(A)), safe_tail(axes(R)) # handle d=1 manually
     keep, Idefault = Broadcast.shapeindexer(indsRt)
     if reducedim1(R, A)
@@ -214,78 +193,78 @@ for (fname, op) in [(:sum, :add_sum), (:prod, :mul_prod),
     end
 end
 
-##### findmin & findmax #####
-# The initial values of Rval are not used if the corresponding indices in Rind are 0.
-#
-function findminmax!(f, Rval, Rind, A::AbstractQuasiArray{T,N}) where {T,N}
-    (isempty(Rval) || isempty(A)) && return Rval, Rind
-    lsiz = check_reducedims(Rval, A)
-    for i = 1:N
-        axes(Rval, i) == axes(Rind, i) || throw(DimensionMismatch("Find-reduction: outputs must have the same indices"))
-    end
-    # If we're reducing along dimension 1, for efficiency we can make use of a temporary.
-    # Otherwise, keep the result in Rval/Rind so that we traverse A in storage order.
-    indsAt, indsRt = safe_tail(axes(A)), safe_tail(axes(Rval))
-    keep, Idefault = Broadcast.shapeindexer(indsRt)
-    ks = keys(A)
-    y = iterate(ks)
-    zi = zero(eltype(ks))
-    if reducedim1(Rval, A)
-        i1 = first(axes1(Rval))
-        @inbounds for IA in CartesianIndices(indsAt)
-            IR = Broadcast.newindex(IA, keep, Idefault)
-            tmpRv = Rval[i1,IR]
-            tmpRi = Rind[i1,IR]
-            for i in axes(A,1)
-                k, kss = y::Tuple
-                tmpAv = A[i,IA]
-                if tmpRi == zi || f(tmpRv, tmpAv)
-                    tmpRv = tmpAv
-                    tmpRi = k
-                end
-                y = iterate(ks, kss)
-            end
-            Rval[i1,IR] = tmpRv
-            Rind[i1,IR] = tmpRi
-        end
-    else
-        @inbounds for IA in CartesianIndices(indsAt)
-            IR = Broadcast.newindex(IA, keep, Idefault)
-            for i in axes(A, 1)
-                k, kss = y::Tuple
-                tmpAv = A[i,IA]
-                tmpRv = Rval[i,IR]
-                tmpRi = Rind[i,IR]
-                if tmpRi == zi || f(tmpRv, tmpAv)
-                    Rval[i,IR] = tmpAv
-                    Rind[i,IR] = k
-                end
-                y = iterate(ks, kss)
-            end
-        end
-    end
-    Rval, Rind
-end
+# ##### findmin & findmax #####
+# # The initial values of Rval are not used if the corresponding indices in Rind are 0.
+# #
+# function findminmax!(f, Rval, Rind, A::AbstractQuasiArray{T,N}) where {T,N}
+#     (isempty(Rval) || isempty(A)) && return Rval, Rind
+#     lsiz = check_reducedims(Rval, A)
+#     for i = 1:N
+#         axes(Rval, i) == axes(Rind, i) || throw(DimensionMismatch("Find-reduction: outputs must have the same indices"))
+#     end
+#     # If we're reducing along dimension 1, for efficiency we can make use of a temporary.
+#     # Otherwise, keep the result in Rval/Rind so that we traverse A in storage order.
+#     indsAt, indsRt = safe_tail(axes(A)), safe_tail(axes(Rval))
+#     keep, Idefault = Broadcast.shapeindexer(indsRt)
+#     ks = keys(A)
+#     y = iterate(ks)
+#     zi = zero(eltype(ks))
+#     if reducedim1(Rval, A)
+#         i1 = first(axes1(Rval))
+#         @inbounds for IA in CartesianIndices(indsAt)
+#             IR = Broadcast.newindex(IA, keep, Idefault)
+#             tmpRv = Rval[i1,IR]
+#             tmpRi = Rind[i1,IR]
+#             for i in axes(A,1)
+#                 k, kss = y::Tuple
+#                 tmpAv = A[i,IA]
+#                 if tmpRi == zi || f(tmpRv, tmpAv)
+#                     tmpRv = tmpAv
+#                     tmpRi = k
+#                 end
+#                 y = iterate(ks, kss)
+#             end
+#             Rval[i1,IR] = tmpRv
+#             Rind[i1,IR] = tmpRi
+#         end
+#     else
+#         @inbounds for IA in CartesianIndices(indsAt)
+#             IR = Broadcast.newindex(IA, keep, Idefault)
+#             for i in axes(A, 1)
+#                 k, kss = y::Tuple
+#                 tmpAv = A[i,IA]
+#                 tmpRv = Rval[i,IR]
+#                 tmpRi = Rind[i,IR]
+#                 if tmpRi == zi || f(tmpRv, tmpAv)
+#                     Rval[i,IR] = tmpAv
+#                     Rind[i,IR] = k
+#                 end
+#                 y = iterate(ks, kss)
+#             end
+#         end
+#     end
+#     Rval, Rind
+# end
 
-function findmin!(rval::AbstractQuasiArray, rind::AbstractQuasiArray, A::AbstractQuasiArray;
-                  init::Bool=true)
-    findminmax!(isgreater, init && !isempty(A) ? fill!(rval, first(A)) : rval, fill!(rind,zero(eltype(keys(A)))), A)
-end
+# function findmin!(rval::AbstractQuasiArray, rind::AbstractQuasiArray, A::AbstractQuasiArray;
+#                   init::Bool=true)
+#     findminmax!(isgreater, init && !isempty(A) ? fill!(rval, first(A)) : rval, fill!(rind,zero(eltype(keys(A)))), A)
+# end
 
-findmin(A::AbstractQuasiArray; dims=:) = _findmin(A, dims)
+# findmin(A::AbstractQuasiArray; dims=:) = _findmin(A, dims)
 
-function findmax!(rval::AbstractQuasiArray, rind::AbstractQuasiArray, A::AbstractQuasiArray;
-                  init::Bool=true)
-    findminmax!(isless, init && !isempty(A) ? fill!(rval, first(A)) : rval, fill!(rind,zero(eltype(keys(A)))), A)
-end
-findmax(A::AbstractQuasiArray; dims=:) = _findmax(A, dims)
-argmin(A::AbstractQuasiArray; dims=:) = findmin(A; dims=dims)[2]
-argmax(A::AbstractQuasiArray; dims=:) = findmax(A; dims=dims)[2]
+# function findmax!(rval::AbstractQuasiArray, rind::AbstractQuasiArray, A::AbstractQuasiArray;
+#                   init::Bool=true)
+#     findminmax!(isless, init && !isempty(A) ? fill!(rval, first(A)) : rval, fill!(rind,zero(eltype(keys(A)))), A)
+# end
+# findmax(A::AbstractQuasiArray; dims=:) = _findmax(A, dims)
+# argmin(A::AbstractQuasiArray; dims=:) = findmin(A; dims=dims)[2]
+# argmax(A::AbstractQuasiArray; dims=:) = findmax(A; dims=dims)[2]
 
 
 # support overloading sum by MemoryLayout
-_sum(V::AbstractQuasiArray, dims) = __sum(MemoryLayout(typeof(V)), V, dims)
-_sum(V::AbstractQuasiArray, ::Colon) = __sum(MemoryLayout(typeof(V)), V, :)
+_sum(V::AbstractQuasiArray, dims) = __sum(MemoryLayout(V), V, dims)
+_sum(V::AbstractQuasiArray, ::Colon) = __sum(MemoryLayout(V), V, :)
 
 # sum is equivalent to hitting by ones(n) on the left or rifght
 function __sum(LAY::ApplyLayout{typeof(*)}, V::AbstractQuasiMatrix, d::Int)
