@@ -75,6 +75,8 @@ Base.getindex(A::MyQuasiLazyMatrix, x::Float64, y::Float64) = A.A[x,y]
             @test BroadcastQuasiArray(*, x, A) * y ≈ BroadcastQuasiArray(*, x, Ã) * y ≈ (x .* A) * y
             @test BroadcastQuasiArray(*, A, x) * y ≈ BroadcastQuasiArray(*, Ã, x) * y ≈ (x .* A) * y
             @test BroadcastQuasiArray(*, A, x)^2 ≈ (x .* A)^2
+
+            @test BroadcastQuasiArray(*, x, ApplyQuasiArray(^, A, 2)) * y ≈ (x .* A^2) * y
         end
     end
     @testset "\\" begin
