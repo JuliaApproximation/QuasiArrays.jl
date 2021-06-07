@@ -105,6 +105,7 @@ for op in (:+, :-)
         copy(M::Mul{QuasiArrayLayout,BroadcastLayout{typeof($op)}}) = simplify(M)
     end
 end
+@inline copy(M::Mul{BroadcastLayout{typeof(*)},QuasiArrayLayout}) = copy(Mul{BroadcastLayout{typeof(*)},UnknownLayout}(M.A,M.B))
 
 
 LazyArrays._vec_mul_view(a::AbstractQuasiVector, kr, ::Colon) = view(a, kr)
