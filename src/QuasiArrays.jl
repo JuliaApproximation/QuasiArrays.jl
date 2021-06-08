@@ -61,11 +61,7 @@ export AbstractQuasiArray, AbstractQuasiMatrix, AbstractQuasiVector, materialize
 
 import Base.Broadcast: broadcast_preserving_zero_d
 
-if VERSION < v"1.6-"
-    oneto(n) = Base.OneTo(n)
-else
-    import Base: oneto
-end
+import Base: oneto
 
 abstract type AbstractQuasiArray{T,N} end
 AbstractQuasiVector{T} = AbstractQuasiArray{T,1}
