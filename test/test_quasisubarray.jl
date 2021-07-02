@@ -302,4 +302,17 @@ using QuasiArrays, Base64, Test
         v = view(a, :)
         @test stringmime("text/plain", v) == "view(QuasiVector{Float64, Tuple{StepRangeLen{Float64, Base.TwicePrecision{Float64}, Base.TwicePrecision{Float64}}}}, Inclusion(0.0:0.5:1.0)) with eltype Float64"
     end
+
+    @testset "==" begin
+        A = QuasiArray(randn(3,3),(0:0.5:1,1:0.5:2))
+        B = QuasiArray(randn(4,3),(0:0.5:1.5,1:0.5:2))
+        @test A == view(A,:,:)
+        @test view(A,:,:) == A
+        @test view(A,:,:) == view(A,:,:)
+        @test A ≠ view(A,Inclusion(0:0.5:0.5),:)
+        @test view(A,Inclusion(0:0.5:0.5),:) ≠ A
+        @test A ≠ view(B,Inclusion(0:0.5:1),:)
+        @test view(B,Inclusion(0:0.5:1),:) ≠ A
+        @test view(B,Inclusion(0:0.5:1),:) ≠ view(A,Inclusion(0:0.5:0.5),:)
+    end
 end

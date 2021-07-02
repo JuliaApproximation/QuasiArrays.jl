@@ -341,3 +341,18 @@ function summary(io::IO, v::SubQuasiArray)
     print(io, " with eltype ", eltype(v))
 end
 
+function (==)(A::SubQuasiArray, B::AbstractQuasiArray)
+    parentindices(A) == axes(parent(A)) && return parent(A) == B
+    Base.invoke(==, NTuple{2,AbstractQuasiArray}, A, B)
+end
+
+function (==)(A::AbstractQuasiArray, B::SubQuasiArray)
+    parentindices(B) == axes(parent(B)) && return A == parent(B)
+    Base.invoke(==, NTuple{2,AbstractQuasiArray}, A, B)
+end
+
+function (==)(A::SubQuasiArray, B::SubQuasiArray)
+    parentindices(A) == axes(parent(A)) && return parent(A) == B
+    parentindices(B) == axes(parent(B)) && return A == parent(B)
+    Base.invoke(==, NTuple{2,AbstractQuasiArray}, A, B)
+end
