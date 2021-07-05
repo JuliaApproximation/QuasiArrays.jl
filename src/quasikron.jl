@@ -25,7 +25,7 @@ _kronaxes(::Tuple{}...) = ()
 _kronaxes(a::Tuple...) = (quasikron(map(first,a)...), _kronaxes(map(tail,a)...)...)
 axes(K::QuasiKron) = _kronaxes(map(axes,K.args)...)
 
-function getindex(K::QuasiKron{<:Any,1}, i::Tuple)
-    @boundscheck checkbounds(K, i)
-    prod(getindex.(K.args,i))
+function _getindex(::Type{IND}, K::QuasiKron{<:Any,1}, i::IND) where IND
+    @boundscheck checkbounds(K, i...)
+    prod(getindex.(K.args,i...))
 end
