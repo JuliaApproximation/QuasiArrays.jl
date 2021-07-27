@@ -175,9 +175,9 @@ BroadcastStyle(::Type{<:SubArray{T,N,P,I}}) where {T,N,P<:AbstractQuasiArray,I} 
 
 # support (x .* D) * y
 __broadcast_mul_mul(::Val{false}, (a,B), C) = ApplyQuasiArray(*, a .* B, C)
-__broadcast_mul_mul(::Val{true}, (a,B)::Tuple{AbstractQuasiVector,AbstractQuasiMatrix}, C) = a .* (B*C)
+__broadcast_mul_mul(::Val{true}, (a,B)::Tuple{Union{AbstractQuasiVector,Number},AbstractQuasiMatrix}, C) = a .* (B*C)
 __broadcast_mul_mul(::Val{true}, (A,b)::Tuple{AbstractQuasiMatrix,AbstractQuasiVector}, C) = b .* (A*C)
-LazyArrays._broadcast_mul_mul((a,B)::Tuple{AbstractQuasiVector,AbstractQuasiMatrix}, C) = __broadcast_mul_mul(simplifiable(*, B, C), (a,B), C)
+LazyArrays._broadcast_mul_mul((a,B)::Tuple{Union{AbstractQuasiVector,Number},AbstractQuasiMatrix}, C) = __broadcast_mul_mul(simplifiable(*, B, C), (a,B), C)
 LazyArrays._broadcast_mul_mul((A,b)::Tuple{AbstractQuasiMatrix,AbstractQuasiVector}, C) = __broadcast_mul_mul(simplifiable(*, A, C), (A,b), C)
 
 
