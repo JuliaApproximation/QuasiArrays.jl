@@ -157,7 +157,7 @@ import QuasiArrays: AbstractQuasiFill
         @test A[[1,3],1] ≡ Ones{Int}(2)
         @test A[[1,3],[3,4]] ≡ Ones{Int}(2,2)
         @test_throws BoundsError A[1:26]
-        
+
         A = QuasiZeros{Int}(ax,ax)
         @test A[[1,3],1] ≡ Zeros{Int}(2)
         @test A[[1,3],[3,4]] ≡ Zeros{Int}(2,2)
@@ -297,7 +297,7 @@ import QuasiArrays: AbstractQuasiFill
         @test QuasiZeros(ax,bx) * A isa QuasiZeros
         @test B * QuasiZeros(bx,cx) isa QuasiZeros
         @test_throws DimensionMismatch B * QuasiZeros(ax, ax)
-        
+
         # Check multiplication by Adjoint vectors works as expected.
         @test QuasiArray(randn(3, 4),ax,bx)' * QuasiZeros(ax) === QuasiZeros(bx)
         @test QuasiArray(randn(4),bx)' * QuasiZeros(bx) == zero(Float64)
@@ -690,5 +690,18 @@ import QuasiArrays: AbstractQuasiFill
     @testset "Static eval" begin
         o = QuasiOnes([1,3,4])
         @test view(o,SVector(1,3)) ≡ o[SVector(1,3)] ≡ Ones((SOneTo(2),))
-    end 
+    end
+
+    @testset "UniformScaling" begin
+        A = QuasiArray(randn(3,3), 0:0.5:1,0:0.5:1)
+        @test A+2I ≈ 2I+A ≈ QuasiArray(A.parent+2I, 0:0.5:1,0:0.5:1)
+        @test A-2I ≈ -(2I-A) ≈ QuasiArray(A.parent-2I, 0:0.5:1,0:0.5:1)
+        @test A*(2I) ≈ (2I)*A ≈ 2A
+        @test A/(2I) ≈ (2I)\A ≈ A/2
+
+        B = QuasiArray(randn(3,3), 0:0.5:1,1:0.5:2)
+        @test_throws DimensionMismatch B+I
+        @test_throws DimensionMismatch I+B
+        @test B*I ≈ I*B ≈ B
+    end
 end

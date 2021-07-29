@@ -181,6 +181,15 @@ isone(::QuasiEye) = true
 @inline QuasiEye{T}(A::AbstractQuasiMatrix) where T = QuasiEye{T}(axes(A))
 @inline QuasiEye(A::AbstractQuasiMatrix) = QuasiEye{eltype(A)}(axes(A))
 
+quasiscaling(J, ax) = QuasiDiagonal(QuasiFill(J.λ, ax))
+
+for op in (:+, :-, :*, :/, :\)
+    @eval begin
+        $op(A::AbstractQuasiMatrix, J::UniformScaling) = $op(A, quasiscaling(J, axes(A,2)))
+        $op(J::UniformScaling, A::AbstractQuasiMatrix) = $op(quasiscaling(J, axes(A,1)), A)
+    end
+end
+
 
 #########
 #  Special matrix types
