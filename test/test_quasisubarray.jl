@@ -300,7 +300,11 @@ using QuasiArrays, Base64, Test
     @testset "Show" begin
         a = QuasiVector(randn(3), 0:0.5:1)
         v = view(a, :)
-        @test stringmime("text/plain", v) == "view(QuasiVector{Float64, Tuple{StepRangeLen{Float64, Base.TwicePrecision{Float64}, Base.TwicePrecision{Float64}}}}, Inclusion(0.0:0.5:1.0)) with eltype Float64"
+        if VERSION < v"1.7-"
+            @test stringmime("text/plain", v) == "view(QuasiVector{Float64, Tuple{StepRangeLen{Float64, Base.TwicePrecision{Float64}, Base.TwicePrecision{Float64}}}}, Inclusion(0.0:0.5:1.0)) with eltype Float64"
+        else
+            @test stringmime("text/plain", v) == "view(QuasiVector{Float64, Tuple{StepRangeLen{Float64, Base.TwicePrecision{Float64}, Base.TwicePrecision{Float64}, $Int}}}, Inclusion(0.0:0.5:1.0)) with eltype Float64"
+        end
     end
 
     @testset "==" begin
