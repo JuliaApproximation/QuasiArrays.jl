@@ -166,17 +166,17 @@ copy(d::Inclusion) = d
 domain(A::Inclusion) = A.domain
 domain(A::AbstractUnitRange) = A
 axes(S::Inclusion) = (S,)
-unsafe_indices(S::Inclusion) = (S,)
 axes1(S::Inclusion) = S
 axes(S::Inclusion{<:Any,<:OneTo}) = (S.domain,)
-unsafe_indices(S::Inclusion{<:Any,<:OneTo}) = (S.domain,)
 axes1(S::Inclusion{<:Any,<:OneTo}) = S.domain
 
 first(S::Inclusion) = first(S.domain)
 last(S::Inclusion) = last(S.domain)
 size(S::Inclusion) = (cardinality(S.domain),)
 length(S::Inclusion) = cardinality(S.domain)
-unsafe_length(S::Inclusion) = cardinality(S.domain)
+if VERSION < v"1.7-"
+    Base.unsafe_length(S::Inclusion) = length(S)
+end
 cardinality(S::Inclusion) = cardinality(S.domain)
 measure(x) = cardinality(x) # TODO: Inclusion(0:0.5:1) should have 
 getindex(S::Inclusion{T}, i::T) where T = (@_inline_meta; @boundscheck checkbounds(S, i); convert(T,i))

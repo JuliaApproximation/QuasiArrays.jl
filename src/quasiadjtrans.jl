@@ -9,17 +9,9 @@
 # user-defined such objects. so do not restrict the wrapped type.
 struct QuasiAdjoint{T,S} <: AbstractQuasiMatrix{T}
     parent::S
-    function QuasiAdjoint{T,S}(A::S) where {T,S}
-        checkeltype_adjoint(T, eltype(A))
-        new(A)
-    end
 end
 struct QuasiTranspose{T,S} <: AbstractQuasiMatrix{T}
     parent::S
-    function QuasiTranspose{T,S}(A::S) where {T,S}
-        checkeltype_transpose(T, eltype(A))
-        new(A)
-    end
 end
 
 # basic outer constructors

@@ -7,11 +7,11 @@ import Base: getindex, size, axes, axes1, length, ==, isequal, iterate, Cartesia
 import Base: @_inline_meta, DimOrInd, OneTo, @_propagate_inbounds_meta, @_noinline_meta,
                 DimsInteger, error_if_canonical_getindex, @propagate_inbounds, _return_type,
                 _maybetail, tail, _getindex, _maybe_reshape, index_ndims, _unsafe_getindex,
-                index_shape, to_shape, unsafe_length, @nloops, @ncall, unalias, _unaliascopy,
+                index_shape, to_shape, @nloops, @ncall, unalias, _unaliascopy,
                 to_index, to_indices, _to_subscript_indices, _splatmap, dataids,
                 compute_stride1, compute_offset1, fill_to_length
 import Base: Slice, IdentityUnitRange, ScalarIndex, RangeIndex, view, viewindexing, mightalias, ensure_indexable, index_dimsum,
-                check_parent_index_match, reindex, _isdisjoint, unsafe_indices, _unsafe_ind2sub,
+                check_parent_index_match, reindex, _isdisjoint, _unsafe_ind2sub,
                 _ind2sub, _sub2ind, _ind2sub_recurse, _lookup, SubArray,
                 parentindices, reverse, ndims, checkbounds, uncolon,
                 maybeview, unsafe_view, checkindex, checkbounds_indices,

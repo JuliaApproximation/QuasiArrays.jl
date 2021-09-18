@@ -194,11 +194,11 @@ _quasi_indices_sub(axs::Tuple{AbstractVector{IND},Vararg{Any}}, inds::Tuple{IND,
 _quasi_indices_sub(::Tuple{}, ::Tuple{}) = ()
 function _quasi_indices_sub(axs::Tuple{AbstractQuasiVector{IND},Vararg{Any}}, inds::Tuple{AbstractArray{IND},Vararg{Any}}) where IND
     @_inline_meta
-    (unsafe_indices(inds[1])..., _quasi_indices_sub(tail(axs), tail(inds))...)
+    (axes(inds[1])..., _quasi_indices_sub(tail(axs), tail(inds))...)
 end
 function _quasi_indices_sub(axs::Tuple{AbstractVector{IND},Vararg{Any}}, inds::Tuple{AbstractArray{IND},Vararg{Any}}) where IND
     @_inline_meta
-    (unsafe_indices(inds[1])..., _quasi_indices_sub(tail(axs), tail(inds))...)
+    (axes(inds[1])..., _quasi_indices_sub(tail(axs), tail(inds))...)
 end
 
 quasi_reindex(axs::Tuple{AbstractQuasiOrVector{IND}, Vararg{Any}}, idxs::Tuple{IND, Vararg{Any}}, subidxs::Tuple{Vararg{Any}}) where IND =
@@ -275,12 +275,12 @@ end
 function compute_linindex(f, s, IP::Tuple, I::Tuple{ScalarIndex, Vararg{Any}})
     @_inline_meta
     Δi = I[1]-first(IP[1])
-    compute_linindex(f + Δi*s, s*unsafe_length(IP[1]), tail(IP), tail(I))
+    compute_linindex(f + Δi*s, s*length(IP[1]), tail(IP), tail(I))
 end
 function compute_linindex(f, s, IP::Tuple, I::Tuple{Any, Vararg{Any}})
     @_inline_meta
     Δi = first(I[1])-first(IP[1])
-    compute_linindex(f + Δi*s, s*unsafe_length(IP[1]), tail(IP), tail(I))
+    compute_linindex(f + Δi*s, s*length(IP[1]), tail(IP), tail(I))
 end
 compute_linindex(f, s, IP::Tuple, I::Tuple{}) = f
 
@@ -307,7 +307,7 @@ _indices_sub(S::SubQuasiArray) = ()
 _indices_sub(S::SubQuasiArray, ::Number, I...) = (@_inline_meta; _indices_sub(S, I...))
 function _indices_sub(S::SubQuasiArray, i1::Union{AbstractQuasiArray,AbstractArray}, I...)
     @_inline_meta
-    (unsafe_indices(i1)..., _indices_sub(S, I...)...)
+    (axes(i1)..., _indices_sub(S, I...)...)
 end
 
 @propagate_inbounds maybeview(A::AbstractQuasiArray, args...) = view(A, args...)

@@ -8,16 +8,6 @@ import QuasiArrays: MemoryLayout
 @testset "QuasiAdjoint/Transpose" begin
     @testset "Adjoint and Transpose inner constructor basics" begin
         intvec, intmat = QuasiVector([1, 2],0:0.5:0.5), QuasiArray([1 2; 3 4],(0:0.5:0.5,0:0.5:0.5))
-        # Adjoint/Transpose eltype must match the type of the Adjoint/Transpose of the input eltype
-        @test_throws ErrorException QuasiAdjoint{Float64,typeof(intvec)}(intvec)
-        @test_throws ErrorException QuasiAdjoint{Float64,typeof(intmat)}(intmat)
-        @test_throws ErrorException QuasiTranspose{Float64,typeof(intvec)}(intvec)
-        @test_throws ErrorException QuasiTranspose{Float64,typeof(intmat)}(intmat)
-        # Adjoint/Transpose wrapped array type must match the input array type
-        @test_throws MethodError QuasiAdjoint{Int,Vector{Float64}}(intvec)
-        @test_throws MethodError QuasiAdjoint{Int,Matrix{Float64}}(intmat)
-        @test_throws MethodError QuasiTranspose{Int,Vector{Float64}}(intvec)
-        @test_throws MethodError QuasiTranspose{Int,Matrix{Float64}}(intmat)
         # Adjoint/Transpose inner constructor basic functionality, concrete scalar eltype
         @test (QuasiAdjoint{Int,typeof(intvec)}(intvec)::QuasiAdjoint{Int,typeof(intvec)}).parent === intvec
         @test (QuasiAdjoint{Int,typeof(intmat)}(intmat)::QuasiAdjoint{Int,typeof(intmat)}).parent === intmat
