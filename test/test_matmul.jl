@@ -1,4 +1,4 @@
-using QuasiArrays, ArrayLayouts, Test
+using QuasiArrays, ArrayLayouts, LinearAlgebra, Test
 import QuasiArrays: apply
 
 @testset "Multiplication" begin
@@ -34,5 +34,13 @@ import QuasiArrays: apply
         @test A isa QuasiArray
         @test Array(A*A) ≈ Array(A)^2
         @test Array(A*A*A) ≈ Array(A)^3
+    end
+
+    @testset "absvec" begin
+        a = QuasiArray(rand(3),(0:0.5:1,))
+        c = QuasiArray(rand(3) .+ im .* randn(3),(0:0.5:1,))
+        @test a'a ≈ transpose(a)a ≈ dot(a,a)
+        @test c'c ≈ dot(c,c)
+        @test transpose(c)c ≈ transpose(c.parent)*c.parent
     end
 end

@@ -180,9 +180,8 @@ end
 *(u::QuasiAdjointAbsVec, v::AbstractQuasiVector) = dot(u.parent, v)
 *(u::QuasiTransposeAbsVec{T}, v::AbstractQuasiVector{T}) where {T<:Real} = dot(u.parent, v)
 function *(u::QuasiTransposeAbsVec, v::AbstractQuasiVector)
-    @assert !has_offset_axes(u, v)
-    @boundscheck length(u) == length(v) || throw(DimensionMismatch())
-    return sum(@inbounds(u[k]*v[k]) for k in 1:length(u))
+    @boundscheck axes(u,2) == axes(v,1) || throw(DimensionMismatch())
+    return sum(@inbounds(u.parent[k]*v[k]) for k in axes(v,1))
 end
 # vector * QuasiAdjoint/QuasiTranspose-vector
 *(u::AbstractQuasiVector, v::AdjOrTransAbsVec) = broadcast(*, u, v)
