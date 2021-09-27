@@ -38,7 +38,7 @@ import Base.Broadcast: materialize, materialize!, BroadcastStyle, AbstractArrayS
 
 import LinearAlgebra: transpose, adjoint, checkeltype_adjoint, checkeltype_transpose, Diagonal,
                         AbstractTriangular, pinv, inv, promote_leaf_eltypes, power_by_squaring,
-                        integerpow, schurpow, tr, factorize, copy_oftype, rank
+                        integerpow, schurpow, tr, factorize, copy_oftype, rank, dot
 
 import ArrayLayouts: indextype, concretize, fillzeros, OnesLayout, AbstractFillLayout, FillLayout, ZerosLayout, diagonallayout, diagonaldata, diagonal
 import LazyArrays: MemoryLayout, UnknownLayout, Mul, ApplyLayout, BroadcastLayout,

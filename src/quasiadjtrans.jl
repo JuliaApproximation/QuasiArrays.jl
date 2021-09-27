@@ -167,12 +167,21 @@ map(f, tvs::QuasiTransposeAbsVec...) = transpose(map((xs...) -> transpose(f(tran
 ## multiplication *
 
 # QuasiAdjoint/QuasiTranspose-vector * vector
+
+# allow re-expansion using Legendre
+_dot(ax, a, b) = Base.invoke(dot, NTuple{2,Any}, a, b)
+
+function dot(a::AbstractQuasiArray, b::AbstractQuasiArray)
+    ax = axes(a,1)
+    ax == axes(b,1) || throw(DimensionMismatch())
+    _dot(ax, a, b)
+end
+
 *(u::QuasiAdjointAbsVec, v::AbstractQuasiVector) = dot(u.parent, v)
 *(u::QuasiTransposeAbsVec{T}, v::AbstractQuasiVector{T}) where {T<:Real} = dot(u.parent, v)
 function *(u::QuasiTransposeAbsVec, v::AbstractQuasiVector)
-    @assert !has_offset_axes(u, v)
-    @boundscheck length(u) == length(v) || throw(DimensionMismatch())
-    return sum(@inbounds(u[k]*v[k]) for k in 1:length(u))
+    @boundscheck axes(u,2) == axes(v,1) || throw(DimensionMismatch())
+    return sum(@inbounds(u.parent[k]*v[k]) for k in axes(v,1))
 end
 # vector * QuasiAdjoint/QuasiTranspose-vector
 *(u::AbstractQuasiVector, v::AdjOrTransAbsVec) = broadcast(*, u, v)
@@ -230,3 +239,17 @@ arguments(LAY::ApplyLayout{typeof(*)}, V::QuasiTranspose) = reverse(transpose.(a
 # This is used in ContinuumArrays.jl to ensure x' is lazy
 BroadcastStyle(::Type{<:QuasiAdjoint{<:Any,<:Inclusion}}) = LazyQuasiArrayStyle{2}()
 BroadcastStyle(::Type{<:QuasiTranspose{<:Any,<:Inclusion}}) = LazyQuasiArrayStyle{2}()
+
+
+
+###
+# adjoint concat support
+###
+
+arguments(::ApplyLayout{typeof(vcat)}, A::QuasiAdjoint) = map(adjoint, arguments(ApplyLayout{typeof(hcat)}(), parent(A)))
+arguments(::ApplyLayout{typeof(hcat)}, A::QuasiAdjoint) = map(adjoint, arguments(ApplyLayout{typeof(vcat)}(), parent(A)))
+arguments(::ApplyLayout{typeof(vcat)}, A::QuasiTranspose) = map(transpose, arguments(ApplyLayout{typeof(hcat)}(), parent(A)))
+arguments(::ApplyLayout{typeof(hcat)}, A::QuasiTranspose) = map(transpose, arguments(ApplyLayout{typeof(vcat)}(), parent(A)))
+
+
+copy(M::Mul{ApplyLayout{typeof(vcat)},QuasiArrayLayout}) = vcat((arguments(vcat, M.A) .* Ref(M.B))...)
