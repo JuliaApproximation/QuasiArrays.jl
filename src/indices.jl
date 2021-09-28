@@ -193,8 +193,8 @@ Base.issubset(S::Inclusion, d::Inclusion) = S.domain ⊆ d.domain
 
 intersect(x::Inclusion...) = Inclusion{mapreduce(eltype,promote_type,x)}(intersect(map(domain,x)...))
 # use UnionDomain to support intervals
-_union(a...) = UnionDomain(a...)
-_union(a::ChebyshevInterval...) = union(a...)
+_union(a::ClosedInterval...) = UnionDomain(a...)
+_union(a...) = union(a...)
 union(x::Inclusion...) = Inclusion{mapreduce(eltype,promote_type,x)}(_union(map(domain,x)...))
 
 checkindex(::Type{Bool}, inds::Inclusion{T}, i::T) where T = i ∈ inds
