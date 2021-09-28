@@ -27,7 +27,7 @@ import Base: Array, Matrix, Vector
 import Base: union, intersect, sort, sort!
 import Base: conj, real, imag
 # reducedim.jl imports
-import Base: prod, sum, cumsum, diff, add_sum, mul_prod, mapreduce, max, min, count, _count, any, _any, all, _all, _sum, _prod, _mapreduce, reduced_index, check_reducedims
+import Base: prod, sum, cumsum, diff, add_sum, mul_prod, mapreduce, max, min, count, _count, any, _any, all, _all, _sum, _prod, _mapreduce, reduced_index, check_reducedims, mapfoldl_impl
 import Base: BitInteger, IEEEFloat, uniontypes, _InitialValue, safe_tail, reducedim1, _simple_count
 
 import Base: ones, zeros, one, zero, fill
@@ -107,7 +107,7 @@ include("dense.jl")
 include("quasikron.jl")
 
 promote_leaf_eltypes(x::AbstractQuasiArray{T}) where {T<:Number} = T
-promote_leaf_eltypes(x::AbstractQuasiArray) = mapreduce(promote_leaf_eltypes, promote_type, x; init=Bool)
+promote_leaf_eltypes(x::AbstractQuasiArray) = eltype(eltype(x)) #mapreduce(promote_leaf_eltypes, promote_type, x; init=Bool)
 
 
 function isapprox(x::AbstractQuasiArray, y::AbstractQuasiArray;
