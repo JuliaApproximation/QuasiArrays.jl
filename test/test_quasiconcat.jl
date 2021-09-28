@@ -35,7 +35,7 @@ import QuasiArrays: ApplyQuasiMatrix, UnionVcat
             a = QuasiVector(randn(5), 0:0.5:2)
             b = QuasiVector([5,6,8], [1,3,4])
             c = UnionVcat(a,b)
-            @test axes(c,1) == Inclusion(UnionDomain(0:0.5:2, [1,3,4]))
+            @test axes(c,1) == Inclusion(union(0:0.5:2, [1,3,4]))
             @test c[0.5] ≡ a[0.5]
             @test c[3] ≡ c[3.0] ≡ 6.0
             @test_throws BoundsError c[2.5]
