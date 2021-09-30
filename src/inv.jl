@@ -53,5 +53,5 @@ pinv(A::PInvQuasiMatrix) = first(A.args)
 ## QuasiArray special case
 inv(A::QuasiMatrix) = QuasiArray(inv(A.parent), reverse(A.axes))
 
-_factorize(_, A) = error("Overload for $(typeof(A))")
-factorize(A::AbstractQuasiArray) = _factorize(MemoryLayout(A), A)
+_factorize(lay, A, dims...; kws...) = error("Overload for $(typeof(A))")
+factorize(A::AbstractQuasiArray, dims...; kws...) = _factorize(MemoryLayout(A), A, dims...; kws...)

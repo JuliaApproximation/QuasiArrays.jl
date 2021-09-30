@@ -172,6 +172,15 @@ import QuasiArrays: QuasiCartesianIndex, QuasiCartesianIndices, DefaultQuasiArra
             @test stringmime("text/plain", x ./ x) == "Inclusion(0.0:0.5:1.0) ./ Inclusion(0.0:0.5:1.0)"
             @test stringmime("text/plain", x .\ x) == "Inclusion(0.0:0.5:1.0) .\\ Inclusion(0.0:0.5:1.0)"
         end
+
+        @testset "x .* (1:10)'" begin
+            x = Inclusion([0.1,0.2])
+            B = x .* (1:10)'
+            @test B[0.1,2] == 0.2
+            @test B[0.1,1:3] == 0.1*(1:3)
+            @test B[[0.1,0.2],2] == 2*[0.1,0.2]
+            @test B[[0.1,0.2],2:3] == [0.1,0.2] * (2:3)'
+        end
     end
 
     @testset "SubQuasi Broadcast" begin

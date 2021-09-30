@@ -81,6 +81,8 @@ BroadcastStyle(a::AbstractQuasiArrayStyle{N}, ::DefaultArrayStyle{0}) where N = 
 BroadcastStyle(a::AbstractQuasiArrayStyle{N}, ::DefaultQuasiArrayStyle{N}) where N = a
 BroadcastStyle(a::AbstractQuasiArrayStyle{M}, ::DefaultQuasiArrayStyle{N}) where {M,N} =
     typeof(a)(Val(max(M, N)))
+BroadcastStyle(a::AbstractQuasiArrayStyle{M}, ::AbstractArrayStyle{N}) where {M,N} =
+    typeof(a)(Val(max(M, N)))
 
 Base.similar(bc::Broadcasted{DefaultQuasiArrayStyle{N}}, ::Type{ElType}) where {N,ElType} =
     similar(QuasiArray{ElType}, axes(bc))
