@@ -1,4 +1,4 @@
-using QuasiArrays, IntervalSets, Test
+using QuasiArrays, IntervalSets, DomainSets, Test
 import QuasiArrays: ApplyQuasiArray
 
 @testset "Continuous" begin
@@ -32,6 +32,12 @@ import QuasiArrays: ApplyQuasiArray
         @test findfirst(isequal(2.3), Inclusion(0.0..1)) ≡ findlast(isequal(2.3), Inclusion(0..1)) ≡ nothing
         @test findall(isequal(0.1), Inclusion(0.0..1)) == [0.1]
         @test findall(isequal(2.3), Inclusion(0.0..1)) == Float64[]
+
+        @test 2.3 in union(x, Inclusion(2..3))
+        y = Inclusion(ChebyshevInterval())
+        @test union(y,y) ≡ y
+        z = Inclusion(UnitInterval())
+        @test union(z,z) ≡ z
     end
 
     @testset "QuasiDiagonal" begin

@@ -23,7 +23,7 @@ function getindex(f::ApplyQuasiMatrix{T,typeof(hcat)}, k::Number, j::Number) whe
     throw(BoundsError(f, (k,j)))
 end
 
-\(A::AbstractQuasiArray, H::ApplyQuasiMatrix{<:Any,typeof(hcat)}) = hcat((Ref(A) .\ H.args)...)
+# \(A::AbstractQuasiArray, H::ApplyQuasiMatrix{<:Any,typeof(hcat)}) = hcat((Ref(A) .\ H.args)...)
 
 function ==(A::ApplyQuasiMatrix{<:Any,typeof(hcat)}, B::ApplyQuasiMatrix{<:Any,typeof(hcat)})
     axes.(A.args,2) == axes.(B.args,2) && return all(A.args .== B.args)

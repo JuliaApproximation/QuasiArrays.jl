@@ -414,13 +414,17 @@ end
 to_indices(A::AbstractQuasiArray, I::Tuple{Any}) = (@_inline_meta; to_indices(A, axes(A), I))
 # But some index types require more context spanning multiple indices
 # QuasiCartesianIndexes are simple; they just splat out
-@inline to_indices(A::AbstractQuasiArray, inds, I::Tuple{QuasiCartesianIndex, Vararg{Any}}) =
-    to_indices(A, inds, (I[1].I..., tail(I)...))
+@inline to_indices(A, inds, I::Tuple{QuasiCartesianIndex, Vararg{Any}}) = to_indices(A, inds, (I[1].I..., tail(I)...))
+@inline to_indices(A::AbstractQuasiArray, inds, I::Tuple{QuasiCartesianIndex, Vararg{Any}}) = to_indices(A, inds, (I[1].I..., tail(I)...))
 @inline to_indices(A::AbstractQuasiArray, I::Tuple{Vararg{Union{Integer, CartesianIndex}}}) = to_indices(A, axes(A), I)
 @inline to_indices(A::AbstractQuasiArray, I::Tuple{Vararg{Integer}}) = to_indices(A, axes(A), I)
 @inline to_indices(A::AbstractQuasiArray, I::Tuple{Vararg{Int}}) = to_indices(A, axes(A), I)
 # But for arrays of QuasiCartesianIndex, we just skip the appropriate number of inds
 @inline function to_indices(A::AbstractQuasiArray, inds, I::Tuple{AbstractArray{QuasiCartesianIndex{N}}, Vararg{Any}}) where N
+    _, indstail = IteratorsMD.split(inds, Val(N))
+    (to_index(A, I[1]), to_indices(A, indstail, tail(I))...)
+end
+@inline function to_indices(A, inds, I::Tuple{AbstractArray{QuasiCartesianIndex{N}}, Vararg{Any}}) where N
     _, indstail = IteratorsMD.split(inds, Val(N))
     (to_index(A, I[1]), to_indices(A, indstail, tail(I))...)
 end

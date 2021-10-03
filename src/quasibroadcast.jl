@@ -81,6 +81,8 @@ BroadcastStyle(a::AbstractQuasiArrayStyle{N}, ::DefaultArrayStyle{0}) where N = 
 BroadcastStyle(a::AbstractQuasiArrayStyle{N}, ::DefaultQuasiArrayStyle{N}) where N = a
 BroadcastStyle(a::AbstractQuasiArrayStyle{M}, ::DefaultQuasiArrayStyle{N}) where {M,N} =
     typeof(a)(Val(max(M, N)))
+BroadcastStyle(a::AbstractQuasiArrayStyle{M}, ::AbstractArrayStyle{N}) where {M,N} =
+    typeof(a)(Val(max(M, N)))
 
 Base.similar(bc::Broadcasted{DefaultQuasiArrayStyle{N}}, ::Type{ElType}) where {N,ElType} =
     similar(QuasiArray{ElType}, axes(bc))
@@ -191,3 +193,6 @@ _broadcasted_mul(A::Tuple{AbstractQuasiMatrix,Vararg{Any}}, B::AbstractQuasiMatr
 _broadcasted_mul(A::AbstractQuasiMatrix, b::Tuple{Number,Vararg{Any}}) = (sum(A; dims=2)*first(b)[1], _broadcasted_mul(A, tail(b))...)
 _broadcasted_mul(A::AbstractQuasiMatrix, b::Tuple{AbstractQuasiVector,Vararg{Any}}) = (size(first(b),1) == 1 ? (sum(A; dims=2)*first(b)[1]) : (A*first(b)), _broadcasted_mul(A, tail(b))...)
 _broadcasted_mul(A::AbstractQuasiMatrix, B::Tuple{AbstractQuasiMatrix,Vararg{Any}}) = (size(first(B),1) == 1 ? (sum(A; dims=2) * first(B)) : (A * first(B)), _broadcasted_mul(A, tail(B))...)
+
+
+LazyArrays.converteltype(::Type{T}, A::AbstractQuasiArray) where T = convert(AbstractQuasiArray{T}, A)
