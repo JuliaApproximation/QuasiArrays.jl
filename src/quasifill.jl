@@ -97,7 +97,15 @@ copy(F::QuasiFill) = QuasiFill(F.value, F.axes)
 # ambiguity fix
 convert(::Type{T}, F::T) where T<:QuasiFill = F
 
-
+function summary(io::IO, F::QuasiOnes)
+    print(io, "ones(")
+    summary(io, F.axes[1])
+    for a in tail(F.axes)
+        print(io, ", ")
+        summary(io, a)
+    end
+    print(io, ")")
+end
 
 getindex(F::QuasiFill{<:Any,0}) = getindex_value(F)
 

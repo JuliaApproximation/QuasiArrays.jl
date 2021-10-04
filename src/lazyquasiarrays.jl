@@ -102,6 +102,10 @@ subbroadcaststyle(::LazyQuasiArrayStyle{2}, ::Type{<:Tuple{Number,Number}}) = De
 subbroadcaststyle(::LazyQuasiArrayStyle{2}, ::Type{<:Tuple{Number,JR}}) where JR = Base.BroadcastStyle(JR)
 subbroadcaststyle(::LazyQuasiArrayStyle{2}, ::Type{<:Tuple{KR,Number}}) where KR = Base.BroadcastStyle(KR)
 
+layout_broadcasted(::S, _, f, args...) where S<:BroadcastStyle = Broadcasted{S}(f, args)
+
+broadcasted(S::LazyQuasiArrayStyle, f, args...) = layout_broadcasted(S, map(MemoryLayout,args), f, args...)
+
 
 struct BroadcastQuasiArray{T, N, F, Args} <: LazyQuasiArray{T, N}
     f::F
@@ -169,6 +173,9 @@ call(b::BroadcastLayout, a::SubQuasiArray) = call(b, parent(a))
 
 summary(io::IO, A::BroadcastQuasiArray) = _broadcastarray_summary(io, A)
 summary(io::IO, A::ApplyQuasiArray) = _applyarray_summary(io, A)
+
+_mul_summary(_, io, A) = _applyarray_summary(io, A)
+summary(io::IO, A::ApplyQuasiArray{<:Any,N,typeof(*)}) where N = _mul_summary(MemoryLayout(A), io, A)
 
 for op in (:+, :-, :*, :\, :/)
     @eval begin
