@@ -34,7 +34,7 @@ import Base: ones, zeros, one, zero, fill
 
 import Base.Broadcast: materialize, materialize!, BroadcastStyle, AbstractArrayStyle, Style, broadcasted, Broadcasted, Unknown,
                         newindex, broadcastable, preprocess, _eachindex, _broadcast_getindex, broadcast_shape,
-                        DefaultArrayStyle, axistype, throwdm, instantiate, combine_eltypes, eltypes
+                        DefaultArrayStyle, axistype, throwdm, instantiate, combine_eltypes, eltypes, combine_styles
 
 import LinearAlgebra: transpose, adjoint, checkeltype_adjoint, checkeltype_transpose, Diagonal,
                         AbstractTriangular, pinv, inv, promote_leaf_eltypes, power_by_squaring,

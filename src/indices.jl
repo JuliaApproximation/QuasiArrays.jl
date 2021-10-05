@@ -142,6 +142,10 @@ Inclusion(domain) = Inclusion{eltype(domain)}(domain)
 Inclusion(S::Inclusion) = S
 Inclusion(S::Slice) = Inclusion(S.indices)
 
+struct InclusionLayout <: MemoryLayout end
+
+MemoryLayout(::Type{<:Inclusion}) = InclusionLayout()
+
 convert(::Type{Inclusion}, d::Inclusion) = d
 convert(::Type{Inclusion{T}}, d::Inclusion) where T = Inclusion{T}(d)
 convert(::Type{AbstractVector}, d::Inclusion{<:Any,<:AbstractVector}) =
