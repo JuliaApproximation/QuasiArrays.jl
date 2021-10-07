@@ -142,9 +142,9 @@ Inclusion(domain) = Inclusion{eltype(domain)}(domain)
 Inclusion(S::Inclusion) = S
 Inclusion(S::Slice) = Inclusion(S.indices)
 
-struct InclusionLayout <: MemoryLayout end
+struct PolynomialLayout <: MemoryLayout end
 
-MemoryLayout(::Type{<:Inclusion}) = InclusionLayout()
+MemoryLayout(::Type{<:Inclusion}) = PolynomialLayout()
 
 convert(::Type{Inclusion}, d::Inclusion) = d
 convert(::Type{Inclusion{T}}, d::Inclusion) where T = Inclusion{T}(d)

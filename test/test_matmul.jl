@@ -7,7 +7,6 @@ import QuasiArrays: apply
         @test rowsupport(A,0.1) == colsupport(A,0.1) == 0.1
         b = Inclusion(0:0.1:1)
         Ab = A*b
-        @test Ab isa QuasiArray
         @test Ab[0.1] ≈ 0.1^2
         @test_throws DimensionMismatch A*Inclusion(1:2)
 
