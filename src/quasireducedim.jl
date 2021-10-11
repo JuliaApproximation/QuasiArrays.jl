@@ -267,10 +267,13 @@ _sum(V::AbstractQuasiArray, dims) = __sum(MemoryLayout(V), V, dims)
 _sum(V::AbstractQuasiArray, ::Colon) = __sum(MemoryLayout(V), V, :)
 
 _cumsum(A, dims) = __cumsum(MemoryLayout(A), A, dims)
-cumsum(A::AbstractQuasiArray; dims=:) = _cumsum(A, dims)
-
+cumsum(A::AbstractQuasiArray; dims::Integer) = _cumsum(A, dims)
+cumsum(x::AbstractQuasiVector) = cumsum(x, dims=1)
 
 # sum is equivalent to hitting by ones(n) on the left or right
+
+__cumsum(::QuasiArrayLayout, A, ::Colon) = QuasiArray(cumsum(parent(A)), axes(A))
+__cumsum(::QuasiArrayLayout, A, d::Int) = QuasiArray(cumsum(parent(A),dims=d), axes(A))
 
 for Sum in (:sum, :cumsum)
     __Sum = Symbol("__", Sum)
@@ -285,9 +288,9 @@ for Sum in (:sum, :cumsum)
     end
 end
 
-function __cumsum(LAY::ApplyLayout{typeof(*)}, V::AbstractQuasiVector, ::Colon)
+function __cumsum(LAY::ApplyLayout{typeof(*)}, V::AbstractQuasiVector, dims)
     a = arguments(LAY, V)
-    apply(*, cumsum(a[1]; dims=1), tail(a)...)
+    apply(*, cumsum(a[1]; dims=dims), tail(a)...)
 end
 
 function __sum(LAY::ApplyLayout{typeof(*)}, V::AbstractQuasiVector, ::Colon)

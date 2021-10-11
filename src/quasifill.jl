@@ -214,6 +214,16 @@ function summary(io::IO, F::QuasiZeros)
     print(io, ")")
 end
 
+function summary(io::IO, F::QuasiFill)
+    print(io, "fill($(F.value), ")
+    summary(io, F.axes[1])
+    for a in tail(F.axes)
+        print(io, ", ")
+        summary(io, a)
+    end
+    print(io, ")")
+end
+
 #########
 #  Special matrix types
 #########
