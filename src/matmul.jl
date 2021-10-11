@@ -86,9 +86,6 @@ function copyto!(dest::MulQuasiArray, src::MulQuasiArray)
     dest
 end
 
-
-struct QuasiArrayLayout <: MemoryLayout end
-MemoryLayout(::Type{<:AbstractQuasiArray}) = QuasiArrayLayout()
 Array(M::Mul{<:Any,<:Any,<:Any,<:AbstractQuasiMatrix}) = eltype(M)[M[k,j] for k in axes(M)[1], j in axes(M)[2]]
 Array(M::Mul{<:Any,<:Any,<:Any,<:AbstractQuasiVector}) = eltype(M)[M[k] for k in axes(M)[1]]
 _quasi_mul(M, _) = QuasiArray(M)
@@ -132,8 +129,12 @@ _rdiv_scal_reduce(x::Number, Z) = (Z / x,)
 _rdiv_scal_reduce(x::Number, Z::AbstractArray, Y...) = (Y..., Z/x)
 _rdiv_scal_reduce(x::Number, Z, Y...) = (_rdiv_scal_reduce(x, Y...)..., Z)
 
-*(x::Number, A::MulQuasiArray) = ApplyQuasiArray(*, _lmul_scal_reduce(x, arguments(A)...)...)
-*(A::MulQuasiArray, x::Number) = ApplyQuasiArray(*, _rmul_scal_reduce(x, reverse(arguments(A))...)...)
+broadcasted(::LazyQuasiArrayStyle{N}, ::typeof(*), x::Number, A::MulQuasiArray{<:Any,N}) where N = 
+    ApplyQuasiArray(*, _lmul_scal_reduce(x, arguments(A)...)...)
+broadcasted(::LazyQuasiArrayStyle{N}, ::typeof(*), A::MulQuasiArray{<:Any,N}, x::Number) where N = 
+    ApplyQuasiArray(*, _rmul_scal_reduce(x, reverse(arguments(A))...)...)
 
-\(x::Number, A::MulQuasiArray) = ApplyQuasiArray(*, _ldiv_scal_reduce(x, arguments(A)...)...)
-/(A::MulQuasiArray, x::Number) = ApplyQuasiArray(*, _rdiv_scal_reduce(x, reverse(arguments(A))...)...)
+broadcasted(::LazyQuasiArrayStyle{N}, ::typeof(\), x::Number, A::MulQuasiArray{<:Any,N}) where N = 
+    ApplyQuasiArray(*, _ldiv_scal_reduce(x, arguments(A)...)...)
+broadcasted(::LazyQuasiArrayStyle{N}, ::typeof(/), A::MulQuasiArray{<:Any,N}, x::Number) where N = 
+    ApplyQuasiArray(*, _ldiv_scal_reduce(x, arguments(A)...)...)

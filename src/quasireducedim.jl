@@ -266,19 +266,37 @@ end
 _sum(V::AbstractQuasiArray, dims) = __sum(MemoryLayout(V), V, dims)
 _sum(V::AbstractQuasiArray, ::Colon) = __sum(MemoryLayout(V), V, :)
 
-# sum is equivalent to hitting by ones(n) on the left or rifght
-function __sum(LAY::ApplyLayout{typeof(*)}, V::AbstractQuasiMatrix, d::Int)
-    a = arguments(LAY, V)
-    if d == 1
-        *(sum(first(a); dims=1), tail(a)...)
-    else
-        @assert d == 2
-        *(most(a)..., sum(last(a); dims=2))
+_cumsum(A, dims) = __cumsum(MemoryLayout(A), A, dims)
+cumsum(A::AbstractQuasiArray; dims::Integer) = _cumsum(A, dims)
+cumsum(x::AbstractQuasiVector) = cumsum(x, dims=1)
+
+# sum is equivalent to hitting by ones(n) on the left or right
+
+__cumsum(::QuasiArrayLayout, A, ::Colon) = QuasiArray(cumsum(parent(A)), axes(A))
+__cumsum(::QuasiArrayLayout, A, d::Int) = QuasiArray(cumsum(parent(A),dims=d), axes(A))
+
+for Sum in (:sum, :cumsum)
+    __Sum = Symbol("__", Sum)
+    @eval function $__Sum(LAY::ApplyLayout{typeof(*)}, V::AbstractQuasiMatrix, d::Int)
+        a = arguments(LAY, V)
+        if d == 1
+            *($Sum(first(a); dims=1), tail(a)...)
+        else
+            @assert d == 2
+            *(most(a)..., $Sum(last(a); dims=2))
+        end
     end
 end
+
+function __cumsum(LAY::ApplyLayout{typeof(*)}, V::AbstractQuasiVector, dims)
+    a = arguments(LAY, V)
+    apply(*, cumsum(a[1]; dims=dims), tail(a)...)
+end
+
 function __sum(LAY::ApplyLayout{typeof(*)}, V::AbstractQuasiVector, ::Colon)
     a = arguments(LAY, V)
     first(apply(*, sum(a[1]; dims=1), tail(a)...))
 end
 
 __sum(_, A, dims) = _sum(identity, A, dims)
+

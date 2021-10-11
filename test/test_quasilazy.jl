@@ -1,4 +1,4 @@
-using QuasiArrays, LazyArrays, ArrayLayouts, Test
+using QuasiArrays, LazyArrays, ArrayLayouts, Base64, Test
 import QuasiArrays: QuasiLazyLayout, QuasiArrayApplyStyle, LazyQuasiMatrix, LazyQuasiArrayStyle
 import LazyArrays: MulStyle, ApplyStyle
 
@@ -77,6 +77,11 @@ Base.getindex(A::MyQuasiLazyMatrix, x::Float64, y::Float64) = A.A[x,y]
             @test BroadcastQuasiArray(*, A, x)^2 ≈ (x .* A)^2
 
             @test BroadcastQuasiArray(*, x, ApplyQuasiArray(^, A, 2)) * y ≈ (x .* A^2) * y
+        end
+
+        @testset "summary" begin
+            A = ApplyQuasiArray(*, ones(Inclusion([1,2,3]), Inclusion([4,5])), fill(2,Inclusion([4,5])))
+            @test stringmime("text/plain", A) == "(ones(Inclusion([1, 2, 3]), Inclusion([4, 5]))) * (fill(2, Inclusion([4, 5])))"
         end
     end
     @testset "\\" begin

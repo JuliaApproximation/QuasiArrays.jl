@@ -98,7 +98,6 @@ copy(F::QuasiFill) = QuasiFill(F.value, F.axes)
 convert(::Type{T}, F::T) where T<:QuasiFill = F
 
 
-
 getindex(F::QuasiFill{<:Any,0}) = getindex_value(F)
 
 
@@ -190,6 +189,40 @@ for op in (:+, :-, :*, :/, :\)
     end
 end
 
+
+########
+# show
+#######
+
+function summary(io::IO, F::QuasiOnes)
+    print(io, "ones(")
+    summary(io, F.axes[1])
+    for a in tail(F.axes)
+        print(io, ", ")
+        summary(io, a)
+    end
+    print(io, ")")
+end
+
+function summary(io::IO, F::QuasiZeros)
+    print(io, "zeros(")
+    summary(io, F.axes[1])
+    for a in tail(F.axes)
+        print(io, ", ")
+        summary(io, a)
+    end
+    print(io, ")")
+end
+
+function summary(io::IO, F::QuasiFill)
+    print(io, "fill($(F.value), ")
+    summary(io, F.axes[1])
+    for a in tail(F.axes)
+        print(io, ", ")
+        summary(io, a)
+    end
+    print(io, ")")
+end
 
 #########
 #  Special matrix types
