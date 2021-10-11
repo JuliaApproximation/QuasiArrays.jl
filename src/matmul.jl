@@ -86,9 +86,6 @@ function copyto!(dest::MulQuasiArray, src::MulQuasiArray)
     dest
 end
 
-
-struct QuasiArrayLayout <: MemoryLayout end
-MemoryLayout(::Type{<:AbstractQuasiArray}) = QuasiArrayLayout()
 Array(M::Mul{<:Any,<:Any,<:Any,<:AbstractQuasiMatrix}) = eltype(M)[M[k,j] for k in axes(M)[1], j in axes(M)[2]]
 Array(M::Mul{<:Any,<:Any,<:Any,<:AbstractQuasiVector}) = eltype(M)[M[k] for k in axes(M)[1]]
 _quasi_mul(M, _) = QuasiArray(M)

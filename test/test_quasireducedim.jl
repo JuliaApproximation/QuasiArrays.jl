@@ -31,9 +31,9 @@ using QuasiArrays, Test
         @test sum(ApplyQuasiArray(*, A, B); dims=1) ≈ sum(A*B; dims=1)
         @test sum(ApplyQuasiArray(*, A, B); dims=2) ≈ sum(A*B; dims=2)
 
-        @test sum(b) == last(cumsum(b)) == cumsum(b)[2]
-        @test cumsum(B; dims=1)[2:2,:] == sum(B; dims=1)
-        @test cumsum(B; dims=2)[:,0.5:0.5] == sum(B; dims=2)
+        @test sum(b) ≈ last(cumsum(b)) ≈ cumsum(b)[2]
+        @test cumsum(B; dims=1)[2:2,:] ≈ sum(B; dims=1)
+        @test cumsum(B; dims=2)[:,0.5:0.5] ≈ sum(B; dims=2)
 
         @test cumsum(ApplyQuasiArray(*, A, b)) ≈ cumsum(A*b)
         @test cumsum(ApplyQuasiArray(*, A, B); dims=1) ≈ cumsum(A*B; dims=1)
