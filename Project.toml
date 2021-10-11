@@ -1,7 +1,7 @@
 name = "QuasiArrays"
 uuid = "c4ea9172-b204-11e9-377d-29865faadc5c"
 authors = ["Sheehan Olver <solver@mac.com>"]
-version = "0.8.2"
+version = "0.9"
 
 [deps]
 ArrayLayouts = "4c555306-a7a7-4459-81d9-ec55ddd5c99a"
