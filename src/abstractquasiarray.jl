@@ -295,12 +295,9 @@ similar(a::AbstractQuasiArray, ::Type{T}) where {T}                     = simila
 similar(a::AbstractQuasiArray{T}, dims::Tuple) where {T}                = similar(a, T, dims)
 similar(a::AbstractQuasiArray{T}, dims::QuasiDimOrInd...) where {T}          = similar(a, T, dims)
 similar(a::AbstractQuasiArray, ::Type{T}, dims::QuasiDimOrInd...) where {T}  = similar(a, T, dims)
-similar(::Type{<:AbstractQuasiArray{T}}, shape::NTuple{N,AbstractQuasiOrVector}) where {N,T} =
-    QuasiArray{T,N}(undef, convert.(AbstractVector, shape))
-similar(a::AbstractQuasiArray, ::Type{T}, dims::NTuple{N,AbstractQuasiOrVector}) where {T,N} =
-    QuasiArray{T,N}(undef, convert.(AbstractVector, dims))
-similar(a::AbstractQuasiArray, ::Type{T}, dims::Vararg{AbstractQuasiOrVector,N}) where {T,N} =
-    QuasiArray{T,N}(undef, convert.(AbstractVector, dims))
+similar(::Type{<:AbstractQuasiArray{T}}, shape::NTuple{N,AbstractQuasiOrVector}) where {N,T} = QuasiArray{T,N}(undef, shape)
+similar(a::AbstractQuasiArray, ::Type{T}, dims::NTuple{N,AbstractQuasiOrVector}) where {T,N} = QuasiArray{T,N}(undef, dims)
+similar(a::AbstractQuasiArray, ::Type{T}, dims::Vararg{AbstractQuasiOrVector,N}) where {T,N} = QuasiArray{T,N}(undef, dims)
 
 similar(a::AbstractQuasiArray{T}, m::Int) where {T}              = Vector{T}(undef, m)
 similar(a::AbstractQuasiArray, T::Type, dims::Dims{N}) where {N} = Array{T,N}(undef, dims)

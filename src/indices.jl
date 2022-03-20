@@ -169,6 +169,7 @@ copy(d::Inclusion) = d
 ==(A::Inclusion, B::Inclusion) = A.domain == B.domain
 domain(A::Inclusion) = A.domain
 domain(A::AbstractUnitRange) = A
+domain(A::IdentityUnitRange) = A.indices
 axes(S::Inclusion) = (S,)
 axes1(S::Inclusion) = S
 axes(S::Inclusion{<:Any,<:OneTo}) = (S.domain,)

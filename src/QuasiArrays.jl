@@ -36,7 +36,7 @@ import Base.Broadcast: materialize, materialize!, BroadcastStyle, AbstractArrayS
                         newindex, broadcastable, preprocess, _eachindex, _broadcast_getindex, broadcast_shape,
                         DefaultArrayStyle, axistype, throwdm, instantiate, combine_eltypes, eltypes, combine_styles
 
-import LinearAlgebra: transpose, adjoint, checkeltype_adjoint, checkeltype_transpose, Diagonal,
+import LinearAlgebra: transpose, adjoint, Diagonal,
                         AbstractTriangular, pinv, inv, promote_leaf_eltypes, power_by_squaring,
                         integerpow, schurpow, tr, factorize, copy_oftype, rank, dot
 
