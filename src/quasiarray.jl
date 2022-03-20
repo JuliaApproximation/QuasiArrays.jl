@@ -66,6 +66,13 @@ QuasiArray(par::AbstractArray) = QuasiArray(par, axes(par))
 QuasiMatrix(par::AbstractArray) = QuasiMatrix(par, axes(par))
 QuasiVector(par::AbstractArray) = QuasiVector(par, axes(par))
 
+QuasiArray{T,N,AXES}(::UndefInitializer, axes::NTuple{N,AbstractQuasiOrVector}) where {T,N,AXES} =
+    QuasiArray{T,N,AXES}(undef, map(domain,axes))
+QuasiArray{T,N}(::UndefInitializer, axes::NTuple{N,AbstractQuasiOrVector}) where {T,N} =
+    QuasiArray{T,N}(undef, map(domain,axes))    
+QuasiArray{T}(::UndefInitializer, axes::NTuple{N,AbstractQuasiOrVector}) where {T,N} =
+    QuasiArray{T}(undef, map(domain,axes))    
+
 QuasiArray{T,N,AXES}(par::AbstractArray{T,N}, axes::NTuple{N,AbstractQuasiOrVector}) where {T,N,AXES} =
     QuasiArray{T,N,AXES}(par, map(domain,axes))
 QuasiArray{T,N}(par::AbstractArray{T,N}, axes::NTuple{N,AbstractQuasiOrVector}) where {T,N} =
@@ -83,10 +90,10 @@ QuasiVector(par::AbstractVector{T}, axes::AbstractArray) where {T} =
     QuasiVector(par, (axes,))
     
 
-QuasiArray(a::AbstractQuasiArray{T}) where T = QuasiArray{T}(a[map(collect,axes(a))...], axes(a))
-QuasiArray{T}(a::AbstractQuasiArray) where T = QuasiArray(convert(AbstractArray{T},a[map(collect,axes(a))...]), axes(a))
-QuasiArray{T,N}(a::AbstractQuasiArray{<:Any,N}) where {T,N} = QuasiArray(convert(AbstractArray{T,N},a[map(collect,axes(a))...]), axes(a))
-QuasiArray{T,N,AXES}(a::AbstractQuasiArray{<:Any,N}) where {T,N,AXES} = QuasiArray{T,N,AXES}(Array{T}(a), axes(a))
+QuasiArray(a::AbstractQuasiArray{T}) where T = QuasiArray{T}(a[map(collect,axes(a))...], map(domain,axes(a)))
+QuasiArray{T}(a::AbstractQuasiArray) where T = QuasiArray(convert(AbstractArray{T},a[map(collect,axes(a))...]), map(domain,axes(a)))
+QuasiArray{T,N}(a::AbstractQuasiArray{<:Any,N}) where {T,N} = QuasiArray(convert(AbstractArray{T,N},a[map(collect,axes(a))...]), map(domain,axes(a)))
+QuasiArray{T,N,AXES}(a::AbstractQuasiArray{<:Any,N}) where {T,N,AXES} = QuasiArray{T,N,AXES}(Array{T}(a), map(domain,axes(a)))
 QuasiMatrix(a::AbstractQuasiMatrix) = QuasiArray(a)
 QuasiVector(a::AbstractQuasiVector) = QuasiArray(a)
 
