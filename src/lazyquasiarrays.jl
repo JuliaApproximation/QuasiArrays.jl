@@ -99,8 +99,11 @@ subbroadcaststyle(::AbstractQuasiArrayStyle{2}, ::Type{<:Tuple{Number,JR}}) wher
 subbroadcaststyle(::AbstractQuasiArrayStyle{2}, ::Type{<:Tuple{KR,Number}}) where KR = Base.BroadcastStyle(KR)
 
 subbroadcaststyle(::LazyQuasiArrayStyle{2}, ::Type{<:Tuple{Number,Number}}) = DefaultArrayStyle{0}()
-subbroadcaststyle(::LazyQuasiArrayStyle{2}, ::Type{<:Tuple{Number,JR}}) where JR = Base.BroadcastStyle(JR)
-subbroadcaststyle(::LazyQuasiArrayStyle{2}, ::Type{<:Tuple{KR,Number}}) where KR = Base.BroadcastStyle(KR)
+subbroadcaststyle(::LazyQuasiArrayStyle{2}, ::Type{<:Tuple{Number,JR}}) where JR = _lazyiflazystyle(Base.BroadcastStyle(JR))
+subbroadcaststyle(::LazyQuasiArrayStyle{2}, ::Type{<:Tuple{KR,Number}}) where KR = _lazyiflazystyle(Base.BroadcastStyle(KR))
+
+_lazyiflazystyle(_) = DefaultArrayStyle{1}()
+_lazyiflazystyle(laz::LazyArrayStyle) = laz
 
 layout_broadcasted(_, f, args...) = Broadcasted{typeof(combine_styles(args...))}(f, args)
 
