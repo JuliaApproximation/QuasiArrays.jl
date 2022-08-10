@@ -1,6 +1,6 @@
 # This file is based on a part of Julia. License is MIT: https://julialang.org/license
 
-using QuasiArrays, LazyArrays, Base64, Test
+using QuasiArrays, LazyArrays, Base64, StaticArrays, Test
 import Base: OneTo, Slice
 import Base.Broadcast: check_broadcast_axes, newindex, broadcasted, broadcastable, Broadcasted, DefaultArrayStyle, BroadcastStyle
 import QuasiArrays: QuasiCartesianIndex, QuasiCartesianIndices, DefaultQuasiArrayStyle, SubQuasiArray
@@ -266,7 +266,7 @@ import QuasiArrays: QuasiCartesianIndex, QuasiCartesianIndices, DefaultQuasiArra
                 end
                 @testset "constvec .$op mat" begin
                     B = BroadcastQuasiArray(op, c, A)
-                    @test B * b ≈ op.(c, A) * b 
+                    @test B * b ≈ op.(c, A) * b
                     @test B * A ≈ op.(c, A) * A
                     @test A * B ≈ A * op.(c, A)
                 end
@@ -281,7 +281,16 @@ import QuasiArrays: QuasiCartesianIndex, QuasiCartesianIndices, DefaultQuasiArra
             B = BroadcastQuasiArray(+, A, 2A)
             C = BroadcastQuasiArray(-, A, 2A)
             @test B*C ≈ 3A * (-A)
-            @test C*B ≈ (-A) * 3A 
+            @test C*B ≈ (-A) * 3A
         end
+    end
+
+    @testset "Static Broadcasting" begin
+        a = QuasiArray(randn(3,2), [0.1,0.2,0.3], [0.2,0.3])
+        v = view(a, SVector(0.1,0.2),0.2)
+        @test Base.BroadcastStyle(typeof(v)) isa DefaultArrayStyle{1}
+
+        v = view(a, BroadcastArray(+, [0.1,0.2]), 0.2)
+        @test Base.BroadcastStyle(typeof(v)) isa LazyArrays.LazyArrayStyle{1}
     end
 end
