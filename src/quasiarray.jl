@@ -19,9 +19,9 @@ QuasiArray{T,N}(::UndefInitializer, axes::NTuple{N,AbstractVector}) where {T,N} 
     QuasiArray(Array{T}(undef, map(length,axes)), axes)
 QuasiArray{T,N}(::UndefInitializer, axes::Vararg{AbstractVector,N}) where {T,N} =
     QuasiArray{T,N}(undef, axes)
-QuasiVector(::UndefInitializer, axes::AbstractVector) where T =
+QuasiVector(::UndefInitializer, axes::AbstractVector) =
     QuasiArray(Vector(undef,length(axes)), (axes,))
-QuasiMatrix(::UndefInitializer, ax1::AbstractVector, ax2::AbstractVector) where T =
+QuasiMatrix(::UndefInitializer, ax1::AbstractVector, ax2::AbstractVector) =
     QuasiArray(Matrix(undef,length(ax1),length(ax2)), (ax1,ax2))
 
 QuasiArray(par::AbstractArray{T,N}, axes::NTuple{N,AbstractVector}) where {T,N} = 

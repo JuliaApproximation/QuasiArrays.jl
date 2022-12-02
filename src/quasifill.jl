@@ -516,8 +516,8 @@ ones(::Type{T}, x::Inclusion, y::Union{OneTo,IdentityUnitRange,Inclusion}...) wh
 ones(x::Inclusion, y::Union{OneTo,IdentityUnitRange,Inclusion}...) = ones(Float64, x, y...)
 ones(::Type{T}, x::Union{OneTo,IdentityUnitRange}, y::Inclusion, z::Union{OneTo,IdentityUnitRange,Inclusion}...) where T = QuasiOnes{T}((x, y, z...))
 ones(x::Union{OneTo,IdentityUnitRange}, y::Inclusion, z::Union{OneTo,IdentityUnitRange,Inclusion}...) = ones(Float64, x, y, z...)
-fill(c, x::Inclusion, y::Union{OneTo,IdentityUnitRange,Inclusion}...) where T = QuasiFill(c, (x, y...))
-fill(c, x::Union{OneTo,IdentityUnitRange}, y::Inclusion, z::Union{OneTo,IdentityUnitRange,Inclusion}...) where T = QuasiFill(c, (x, y, z...))
+fill(c, x::Inclusion, y::Union{OneTo,IdentityUnitRange,Inclusion}...) = QuasiFill(c, (x, y...))
+fill(c, x::Union{OneTo,IdentityUnitRange}, y::Inclusion, z::Union{OneTo,IdentityUnitRange,Inclusion}...) = QuasiFill(c, (x, y, z...))
 
 iszero(x::AbstractQuasiFill) = iszero(getindex_value(x))
 isone(x::AbstractQuasiFill) = isone(getindex_value(x))
