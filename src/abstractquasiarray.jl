@@ -382,7 +382,7 @@ _getindex(_, ::IndexStyle, A::AbstractQuasiArray, I) = layout_getindex(A, I...)
 
 
 ## IndexCartesian Scalar indexing: Canonical method is full dimensionality of indices
-function _getindex(::Type{IND}, ::IndexCartesian, A::AbstractQuasiArray, I::IND) where {M,IND}
+function _getindex(::Type{IND}, ::IndexCartesian, A::AbstractQuasiArray, I::IND) where IND
     @_inline_meta
     @boundscheck checkbounds(A, I...) # generally _to_subscript_indices requires bounds checking
     @inbounds r = getindex(A, _to_subscript_indices(A, I...)...)
