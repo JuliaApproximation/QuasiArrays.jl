@@ -6,7 +6,7 @@ import Base: getindex, size, axes, axes1, length, ==, isequal, iterate, Cartesia
                 isreal, iszero, isempty, empty, isapprox, fill!, getproperty, showarg
 import Base: @_inline_meta, DimOrInd, OneTo, @_propagate_inbounds_meta, @_noinline_meta,
                 DimsInteger, error_if_canonical_getindex, @propagate_inbounds, _return_type,
-                _maybetail, tail, _getindex, _maybe_reshape, index_ndims, _unsafe_getindex,
+                safe_tail, tail, _getindex, _maybe_reshape, index_ndims, _unsafe_getindex,
                 index_shape, to_shape, @nloops, @ncall, unalias, _unaliascopy,
                 to_index, to_indices, _to_subscript_indices, _splatmap, dataids,
                 compute_stride1, compute_offset1, fill_to_length

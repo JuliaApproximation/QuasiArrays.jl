@@ -111,14 +111,19 @@ to_indices(A::AbstractQuasiArray, inds, ::Tuple{}) = ()
 to_indices(A::AbstractQuasiArray, ::Tuple{}, I::Tuple{Any,Vararg{Any}}) = 
     (@_inline_meta; (to_index(A, I[1]), to_indices(A, (), tail(I))...))
 to_indices(A::AbstractQuasiArray, inds, I::Tuple{Any,Vararg{Any}}) =
-    (@_inline_meta; (to_quasi_index(A, eltype(inds[1]), I[1]), to_indices(A, _maybetail(inds), tail(I))...))
+    (@_inline_meta; (to_quasi_index(A, eltype(inds[1]), I[1]), to_indices(A, _cutdim(inds, I[1]), tail(I))...))
 @inline to_indices(A::AbstractQuasiArray, inds, I::Tuple{CartesianIndex, Vararg{Any}}) =
     to_indices(A, inds, (I[1].I..., tail(I)...))
 @inline to_indices(A::AbstractQuasiArray, inds, I::Tuple{Colon, Vararg{Any}}) =
-    (uncolon(inds, I), to_indices(A, _maybetail(inds), tail(I))...)
+    (_uncolon(inds, I), to_indices(A, _cutdim(inds, I[1]), tail(I))...)
 
+_cutdim(inds, I1) = safe_tail(inds)
 
-
+if VERSION < v"1.9-"
+    _uncolon(inds, I) = uncolon(inds, I)
+else
+    _uncolon(inds, I) = uncolon(inds)
+end
 LinearIndices(A::AbstractQuasiArray) = LinearIndices(axes(A))
 
 
