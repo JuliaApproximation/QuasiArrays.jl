@@ -46,7 +46,7 @@ import LazyArrays: MemoryLayout, UnknownLayout, Mul, ApplyLayout, BroadcastLayou
                     MulStyle, MulAddStyle, LazyArrayApplyStyle, combine_mul_styles, DefaultArrayApplyStyle,
                     Applied, flatten, _flatten, arguments, _mat_mul_arguments, _vec_mul_arguments, _mul_arguments,
                     rowsupport, colsupport, tuple_type_memorylayouts, applylayout, broadcastlayout,
-                    LdivStyle, most, InvLayout, PInvLayout, sub_materialize, lazymaterialize,
+                    LdivStyle, InvLayout, PInvLayout, sub_materialize, lazymaterialize,
                     _mul, rowsupport, DiagonalLayout, adjointlayout, transposelayout, conjlayout,
                     sublayout, call, LazyArrayStyle, layout_getindex, _broadcast2broadcastarray, _applyarray_summary, _broadcastarray_summary,
                     _broadcasted_mul, simplifiable, simplify

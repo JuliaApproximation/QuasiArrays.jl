@@ -283,7 +283,7 @@ for Sum in (:sum, :cumsum)
             *($Sum(first(a); dims=1), tail(a)...)
         else
             @assert d == 2
-            *(most(a)..., $Sum(last(a); dims=2))
+            *(Base.front(a)..., $Sum(last(a); dims=2))
         end
     end
 end
