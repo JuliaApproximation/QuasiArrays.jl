@@ -523,8 +523,5 @@ end
 ##
 # show
 ##
-
-show(io::IO, A::AbstractQuasiArray) = summary(io, A)
-
 struct QuasiArrayLayout <: MemoryLayout end
 MemoryLayout(::Type{<:AbstractQuasiArray}) = QuasiArrayLayout()

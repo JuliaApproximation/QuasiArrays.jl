@@ -194,6 +194,8 @@ end
 # show
 #######
 
+show(io::IO, F::AbstractQuasiFill) = summary(io, F)
+
 function summary(io::IO, F::QuasiOnes)
     print(io, "ones(")
     summary(io, F.axes[1])

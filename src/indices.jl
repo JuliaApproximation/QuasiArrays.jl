@@ -194,6 +194,7 @@ getindex(S::Inclusion{T}, i::AbstractArray{T}) where T = (@_inline_meta; @bounds
 getindex(S::Inclusion, i::Inclusion) = (@_inline_meta; @boundscheck checkbounds(S, i); copy(S))
 getindex(S::Inclusion, ::Colon) = copy(S)
 Base.unsafe_getindex(S::Inclusion{T}, x) where T = convert(T, x)::T
+show(io::IO, r::Inclusion) = summary(io, r)
 summary(io::IO, r::Inclusion) = print(io, "Inclusion(", r.domain, ")")
 iterate(S::Inclusion, s...) = iterate(S.domain, s...)
 

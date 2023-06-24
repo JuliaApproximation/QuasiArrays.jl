@@ -173,12 +173,16 @@ call(b::BroadcastLayout, a::SubQuasiArray) = call(b, parent(a))
 # show
 ####
 
+show(io::IO, A::BroadcastQuasiArray) = summary(io, A)
+show(io::IO, A::ApplyQuasiArray) = summary(io, A)
 
 summary(io::IO, A::BroadcastQuasiArray) = _broadcastarray_summary(io, A)
 summary(io::IO, A::ApplyQuasiArray) = _applyarray_summary(io, A)
 
 _mul_summary(_, io, A) = _applyarray_summary(io, A)
 summary(io::IO, A::ApplyQuasiArray{<:Any,N,typeof(*)}) where N = _mul_summary(MemoryLayout(A), io, A)
+
+
 
 for op in (:+, :-, :*, :\, :/)
     @eval begin

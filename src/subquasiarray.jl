@@ -333,6 +333,8 @@ end
 # show
 ###
 
+show(io::IO, v::SubQuasiArray) = summary(io, v)
+
 function summary(io::IO, v::SubQuasiArray)
     print(io, "view(")
     summary(io, parent(v))

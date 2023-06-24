@@ -298,5 +298,6 @@ function __sum(LAY::ApplyLayout{typeof(*)}, V::AbstractQuasiVector, ::Colon)
     first(apply(*, sum(a[1]; dims=1), tail(a)...))
 end
 
-__sum(_, A, dims) = _sum(identity, A, dims)
+__sum(::MemoryLayout, A, dims) = __sum(size(A), A, dims)
+__sum(::NTuple{N,Int}, A, dims) where N = _sum(identity, A, dims)
 

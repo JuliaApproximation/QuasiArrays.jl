@@ -149,3 +149,19 @@ function reshape(A::QuasiVector, ax::Tuple{Any,OneTo{Int}})
     @assert ax == (axes(A,1),Base.OneTo(1))
     QuasiMatrix(reshape(A.parent,size(A.parent,1),1), (A.axes[1], Base.OneTo(1)))
 end
+
+function show(io::IO, A::QuasiVector)
+    print(io, "QuasiVector(")
+    show(io, A.parent)
+    print(io, ", ")
+    show(io, A.axes[1])
+    print(io, ")")
+end
+
+function show(io::IO, A::QuasiMatrix)
+    print(io, "QuasiMatrix(")
+    show(io, A.parent)
+    print(io, ", ")
+    show(io, A.axes)
+    print(io, ")")
+end
