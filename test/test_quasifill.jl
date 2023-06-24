@@ -710,4 +710,11 @@ import QuasiArrays: AbstractQuasiFill
         @test stringmime("text/plain",zeros(Inclusion([1,2,3]))) == "zeros(Inclusion([1, 2, 3]))"
         @test stringmime("text/plain",fill(2,Inclusion([1,2,3]))) == "fill(2, Inclusion([1, 2, 3]))"
     end
+
+    @testset "Mul" begin
+        A = QuasiArray(randn(3,3), 0:0.5:1, Base.OneTo(3))
+        @test A * Zeros(axes(A,2)) ≡ QuasiZeros(axes(A,1))
+        B = QuasiArray(randn(3,3), 0:0.5:1,1:0.5:2)
+        @test B * QuasiZeros(axes(B,2)) ≡ QuasiZeros(axes(B,1))
+    end
 end

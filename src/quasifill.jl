@@ -521,3 +521,11 @@ fill(c, x::Union{OneTo,IdentityUnitRange}, y::Inclusion, z::Union{OneTo,Identity
 
 iszero(x::AbstractQuasiFill) = iszero(getindex_value(x))
 isone(x::AbstractQuasiFill) = isone(getindex_value(x))
+
+
+function FillArrays.mult_zeros(a::AbstractQuasiArray, b)
+    axes(a, 2) ≠ axes(b, 1) &&
+        throw(DimensionMismatch("A has dimensions $(size(a)) but B has dimensions $(size(b))"))
+    T = promote_type(eltype(a), eltype(b))
+    fillsimilar(QuasiZeros{T}(), axes(a, 1), axes(b)[2:end]...)
+end
