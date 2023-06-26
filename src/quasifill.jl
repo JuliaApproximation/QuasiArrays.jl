@@ -490,7 +490,7 @@ MemoryLayout(::Type{<:QuasiZeros}) = ZerosLayout()
 MemoryLayout(::Type{<:QuasiOnes}) = OnesLayout()
 
 _quasi_mul(M::Mul{ZerosLayout}, _) = QuasiZeros{eltype(M)}(axes(M))
-_quasi_mul(M::Mul{QuasiArrayLayout,ZerosLayout}, _) = QuasiZeros{eltype(M)}(axes(M))
+_quasi_mul(M::Mul{QuasiArrayLayout,ZerosLayout}, _) = FillArrays.mult_zeros(M.A, M.B)
 _quasi_mul(M::Mul{QuasiArrayLayout,ZerosLayout}, ::NTuple{N,OneTo{Int}}) where N = Zeros{eltype(M)}(axes(M))
 fillzeros(::Type{T}, a::Tuple{AbstractQuasiVector,Vararg{Any}}) where T<:Number = QuasiZeros{T}(a)
 fillzeros(::Type{T}, a::Tuple{Any,AbstractQuasiVector,Vararg{Any}}) where T<:Number = QuasiZeros{T}(a)

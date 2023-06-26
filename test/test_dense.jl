@@ -1,4 +1,4 @@
-using QuasiArrays, ArrayLayouts, LazyArrays, Test
+using QuasiArrays, ArrayLayouts, LazyArrays, Base64, Test
 import QuasiArrays: QuasiArrayLayout, QuasiArrayApplyStyle
 import LazyArrays: ApplyStyle, MulStyle
 
@@ -23,5 +23,12 @@ import LazyArrays: ApplyStyle, MulStyle
         V = view(A,:,:)
         @test V^1 == A
         @test V^2 == A^2
+    end
+
+    @testset "show" begin
+        A = QuasiArray(reshape(1:9,3,3), (0:0.5:1, 0:0.5:1))
+        @test stringmime("text/plain", A) == "QuasiMatrix([1 4 7; 2 5 8; 3 6 9], (0.0:0.5:1.0, 0.0:0.5:1.0))"
+        x = QuasiArray(1:3, 0:0.5:1)
+        @test stringmime("text/plain", x) == "QuasiVector([1, 2, 3], 0.0:0.5:1.0)"
     end
 end

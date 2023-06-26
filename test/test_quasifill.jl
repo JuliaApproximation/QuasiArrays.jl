@@ -716,5 +716,15 @@ import QuasiArrays: AbstractQuasiFill
         @test A * Zeros(axes(A,2)) ≡ QuasiZeros(axes(A,1))
         B = QuasiArray(randn(3,3), 0:0.5:1,1:0.5:2)
         @test B * QuasiZeros(axes(B,2)) ≡ QuasiZeros(axes(B,1))
+
+        @test_throws DimensionMismatch A * Zeros(2)
+        @test_throws DimensionMismatch B * QuasiZeros(0:0.5:1)
+        @test_throws DimensionMismatch FillArrays.mult_zeros(B, QuasiZeros(0:0.5:1))
+    end
+
+    @testset "isone" begin
+        @test isone(QuasiFill(1, 0:0.5:1))
+        @test isone(QuasiOnes(0:0.5:1))
+        @test !isone(QuasiZeros(0:0.5:1))
     end
 end
