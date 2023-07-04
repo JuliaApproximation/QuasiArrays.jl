@@ -662,7 +662,7 @@ import QuasiArrays: AbstractQuasiFill
         @test A*QuasiOnes(bx) ≈ A*QuasiVector(QuasiOnes(bx))
         @test A*QuasiOnes(bx,cx) ≈ A*QuasiMatrix(QuasiOnes(bx,cx))
         @test A*QuasiZeros(bx)  ≡ Zeros((Base.OneTo(1),))
-        @test A*QuasiZeros(bx,cx) ≡ QuasiZeros(Base.OneTo(1),cx)
+        @test A*QuasiZeros(bx,cx) ≡ Zeros((Base.OneTo(1),Base.IdentityUnitRange(cx)))
 
         D = QuasiDiagonal(a)
         @test QuasiZeros(ax,bx)*D ≡ QuasiZeros(ax,bx)
