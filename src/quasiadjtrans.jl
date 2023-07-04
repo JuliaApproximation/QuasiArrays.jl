@@ -167,15 +167,10 @@ map(f, tvs::QuasiTransposeAbsVec...) = transpose(map((xs...) -> transpose(f(tran
 ## multiplication *
 
 # QuasiAdjoint/QuasiTranspose-vector * vector
+dot(a::AbstractQuasiArray, b::AbstractQuasiArray) = ArrayLayouts.dot(a, b)
+@inline copy(d::Dot{<:Any,<:Any,<:AbstractQuasiArray,<:AbstractQuasiArray}) = _dot(size(d.A,1), d.A, d.B)
+_dot(sz, a, b) = Base.invoke(dot, NTuple{2,Any}, a, b)
 
-# allow re-expansion using Legendre
-_dot(ax, a, b) = Base.invoke(dot, NTuple{2,Any}, a, b)
-
-function dot(a::AbstractQuasiArray, b::AbstractQuasiArray)
-    ax = axes(a,1)
-    ax == axes(b,1) || throw(DimensionMismatch())
-    _dot(ax, a, b)
-end
 
 *(u::QuasiAdjointAbsVec, v::AbstractQuasiVector) = dot(u.parent, v)
 *(u::QuasiTransposeAbsVec{T}, v::AbstractQuasiVector{T}) where {T<:Real} = dot(u.parent, v)

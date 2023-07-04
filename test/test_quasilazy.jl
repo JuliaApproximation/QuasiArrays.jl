@@ -39,6 +39,9 @@ Base.getindex(A::MyQuasiLazyMatrix, x::Float64, y::Float64) = A.A[x,y]
                 @test M/2 ≈ 2\M ≈ A*B/2
                 @test (2\M).args[2] == (M/2).args[2] == B/2
 
+                @test colsupport(M, 1) == axes(M,1)
+                @test rowsupport(M, 1) == axes(M,2)
+
                 M = ApplyQuasiArray(*, B', A')
                 @test M ≈ B'A'
                 @test M[[1,3], [0,0.5]] ≈ (B'A')[[1,3], [0,0.5]]

@@ -194,6 +194,8 @@ end
 # show
 #######
 
+show(io::IO, F::AbstractQuasiFill) = summary(io, F)
+
 function summary(io::IO, F::QuasiOnes)
     print(io, "ones(")
     summary(io, F.axes[1])
@@ -488,7 +490,7 @@ MemoryLayout(::Type{<:QuasiZeros}) = ZerosLayout()
 MemoryLayout(::Type{<:QuasiOnes}) = OnesLayout()
 
 _quasi_mul(M::Mul{ZerosLayout}, _) = QuasiZeros{eltype(M)}(axes(M))
-_quasi_mul(M::Mul{QuasiArrayLayout,ZerosLayout}, _) = QuasiZeros{eltype(M)}(axes(M))
+_quasi_mul(M::Mul{QuasiArrayLayout,ZerosLayout}, _) = FillArrays.mult_zeros(M.A, M.B)
 _quasi_mul(M::Mul{QuasiArrayLayout,ZerosLayout}, ::NTuple{N,OneTo{Int}}) where N = Zeros{eltype(M)}(axes(M))
 fillzeros(::Type{T}, a::Tuple{AbstractQuasiVector,Vararg{Any}}) where T<:Number = QuasiZeros{T}(a)
 fillzeros(::Type{T}, a::Tuple{Any,AbstractQuasiVector,Vararg{Any}}) where T<:Number = QuasiZeros{T}(a)
@@ -521,3 +523,11 @@ fill(c, x::Union{OneTo,IdentityUnitRange}, y::Inclusion, z::Union{OneTo,Identity
 
 iszero(x::AbstractQuasiFill) = iszero(getindex_value(x))
 isone(x::AbstractQuasiFill) = isone(getindex_value(x))
+
+
+function FillArrays.mult_zeros(a::AbstractQuasiArray, b)
+    axes(a, 2) ≠ axes(b, 1) &&
+        throw(DimensionMismatch("A has dimensions $(size(a)) but B has dimensions $(size(b))"))
+    T = promote_type(eltype(a), eltype(b))
+    fillsimilar(QuasiZeros{T}(), axes(a, 1), axes(b)[2:end]...)
+end

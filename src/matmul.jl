@@ -64,7 +64,10 @@ _factors(M) = (M,)
 @inline flatten(A::MulQuasiArray) = ApplyQuasiArray(flatten(Applied(A)))
 @inline flatten(A::SubQuasiArray{<:Any,2,<:MulQuasiArray}) = materialize(flatten(Applied(A)))
 
-
+colsupport(B::MulQuasiArray, j) = _mul_colsupport(j, reverse(B.args)...)
+rowsupport(B::MulQuasiArray, j) = _mul_rowsupport(j, B.args...)
+_mul_colsupport(j, Z::AbstractQuasiArray) = colsupport(Z,j)
+_mul_colsupport(j, Z::AbstractQuasiArray, Y...) = _mul_colsupport(colsupport(Z,j), Y...)
 
 adjoint(A::MulQuasiArray) = ApplyQuasiArray(*, reverse(adjoint.(A.args))...)
 transpose(A::MulQuasiArray) = ApplyQuasiArray(*, reverse(transpose.(A.args))...)

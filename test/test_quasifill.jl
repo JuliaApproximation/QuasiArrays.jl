@@ -299,7 +299,7 @@ import QuasiArrays: AbstractQuasiFill
         @test_throws DimensionMismatch B * QuasiZeros(ax, ax)
 
         # Check multiplication by Adjoint vectors works as expected.
-        @test QuasiArray(randn(3, 4),ax,bx)' * QuasiZeros(ax) === QuasiZeros(bx)
+        @test QuasiArray(randn(3, 4),ax,bx)' * QuasiZeros(ax) === Zeros((axes(B,2),))
         @test QuasiArray(randn(4),bx)' * QuasiZeros(bx) == zero(Float64)
         @test QuasiArray([1, 2, 3],ax)' * QuasiZeros{Int}(ax) == zero(Int)
         @test_broken QuasiArray([SVector(1,2)', SVector(2,3)', SVector(3,4)'],ax)' * QuasiZeros{Int}(ax) == SVector(0,0)
@@ -662,7 +662,7 @@ import QuasiArrays: AbstractQuasiFill
         @test A*QuasiOnes(bx) ≈ A*QuasiVector(QuasiOnes(bx))
         @test A*QuasiOnes(bx,cx) ≈ A*QuasiMatrix(QuasiOnes(bx,cx))
         @test A*QuasiZeros(bx)  ≡ Zeros((Base.OneTo(1),))
-        @test A*QuasiZeros(bx,cx) ≡ QuasiZeros(Base.OneTo(1),cx)
+        @test A*QuasiZeros(bx,cx) ≡ Zeros((Base.OneTo(1),Base.IdentityUnitRange(cx)))
 
         D = QuasiDiagonal(a)
         @test QuasiZeros(ax,bx)*D ≡ QuasiZeros(ax,bx)
@@ -709,5 +709,22 @@ import QuasiArrays: AbstractQuasiFill
         @test stringmime("text/plain",ones(Inclusion([1,2,3]))) == "ones(Inclusion([1, 2, 3]))"
         @test stringmime("text/plain",zeros(Inclusion([1,2,3]))) == "zeros(Inclusion([1, 2, 3]))"
         @test stringmime("text/plain",fill(2,Inclusion([1,2,3]))) == "fill(2, Inclusion([1, 2, 3]))"
+    end
+
+    @testset "Mul" begin
+        A = QuasiArray(randn(3,3), 0:0.5:1, Base.OneTo(3))
+        @test A * Zeros(axes(A,2)) ≡ QuasiZeros(axes(A,1))
+        B = QuasiArray(randn(3,3), 0:0.5:1,1:0.5:2)
+        @test B * QuasiZeros(axes(B,2)) ≡ QuasiZeros(axes(B,1))
+
+        @test_throws DimensionMismatch A * Zeros(2)
+        @test_throws DimensionMismatch B * QuasiZeros(0:0.5:1)
+        @test_throws DimensionMismatch FillArrays.mult_zeros(B, QuasiZeros(0:0.5:1))
+    end
+
+    @testset "isone" begin
+        @test isone(QuasiFill(1, 0:0.5:1))
+        @test isone(QuasiOnes(0:0.5:1))
+        @test !isone(QuasiZeros(0:0.5:1))
     end
 end
