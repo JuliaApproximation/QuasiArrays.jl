@@ -87,7 +87,7 @@ include("quasipermutedims.jl")
 include("quasibroadcast.jl")
 include("abstractquasiarraymath.jl")
 include("quasireducedim.jl")
-include("calculus.jl")
+
 
 include("quasiarray.jl")
 include("quasiarraymath.jl")
@@ -104,6 +104,8 @@ include("quasiadjtrans.jl")
 include("quasidiagonal.jl")
 include("quasifill.jl")
 include("dense.jl")
+
+include("calculus.jl")
 
 include("quasikron.jl")
 

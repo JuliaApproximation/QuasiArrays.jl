@@ -49,26 +49,46 @@ cumsum_size(::NTuple{N,Int}, A, dims) where N = error("Not implemented")
 ####
 
 @inline diff(a::AbstractQuasiArray; dims::Integer=1) = diff_layout(MemoryLayout(a), a, dims)
-
-function diff_layout(::SubBasisLayout, Vm, dims::Integer)
-    dims == 1 || error("not implemented")
-    diff(parent(Vm); dims=dims)[:,parentindices(Vm)[2]]
-end
-
-function diff_layout(::MappedBasisLayouts, V, dims)
-    kr = basismap(V)
-    @assert kr isa AbstractAffineQuasiVector
-    view(diff(demap(V); dims=dims)*kr.A, kr, :)
-end
-
-diff_layout(::ExpansionLayout, A, dims...) = diff_layout(ApplyLayout{typeof(*)}(), A, dims...)
 function diff_layout(LAY::ApplyLayout{typeof(*)}, V::AbstractQuasiVector, dims...)
     a = arguments(LAY, V)
     *(diff(a[1]), tail(a)...)
 end
 
+function diff_layout(LAY::ApplyLayout{typeof(*)}, V::AbstractQuasiMatrix, dims=1)
+    a = arguments(LAY, V)
+    @assert dims == 1 #for type stability, for now
+    # if dims == 1
+        *(diff(a[1]), tail(a)...)
+    # else
+    #     *(front(a)..., diff(a[end]; dims=dims))
+    # end
+end
+
 diff_layout(::MemoryLayout, A, dims...) = diff_size(size(A), A, dims...)
 diff_size(sz, a, dims...) = error("diff not implemented for $(typeof(a))")
 
-diff(x::Inclusion; dims::Integer=1) = ones(eltype(x), x)
-diff(c::AbstractQuasiFill{<:Any,1}; dims::Integer=1) =  zeros(eltype(c), axes(c,1))
+diff(x::Inclusion; dims::Integer=1) = ones(eltype(x), diffaxes(x))
+diff(c::AbstractQuasiFill{<:Any,1}; dims::Integer=1) =  zeros(eltype(c), diffaxes(axes(c,1)))
+function diff(c::AbstractQuasiFill{<:Any,2}; dims::Integer=1)
+    a,b = axes(c)
+    if dims == 1
+        zeros(eltype(c), diffaxes(a), b)
+    else
+        zeros(eltype(c), a, diffaxes(b))
+    end
+end
+
+
+diffaxes(a::Inclusion{<:Any,<:AbstractVector}) = Inclusion(a.domain[1:end-1])
+diffaxes(a) = a # default is differentiation does not change axes
+
+diff(b::QuasiVector; dims::Integer=1) = QuasiVector(diff(b.parent) ./ diff(b.axes[1]), (diffaxes(axes(b,1)),))
+function diff(A::QuasiMatrix; dims::Integer=1)
+    D = diff(A.parent; dims=dims)
+    a,b = axes(A)
+    if dims ==  1
+        QuasiMatrix(D ./ diff(a.domain), (diffaxes(a), b))
+    else
+        QuasiMatrix(D ./ permutedims(diff(b.domain)), (a, diffaxes(b)))
+    end
+end
