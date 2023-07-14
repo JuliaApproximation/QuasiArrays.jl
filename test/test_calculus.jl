@@ -1,4 +1,4 @@
-using QuasiArrays, Test
+using QuasiArrays, IntervalSets, Test
 
 @testset "Calculus" begin
     @testset "sum" begin
@@ -55,11 +55,11 @@ using QuasiArrays, Test
     end
 
     @testset "Interval" begin
-        @test diff(Inclusion(0..1)) ≡ ones(Inclusion(0..1))
-        @test diff(ones(Inclusion(0..1))) ≡ zeros(Inclusion(0..1))
-        @test diff(ones(Inclusion(0..1), Base.OneTo(3))) ≡ zeros(Inclusion(0..1), Base.OneTo(3))
-        @test diff(ones(Inclusion(0..1), Base.OneTo(3)); dims=2) ≡ zeros(Inclusion(0..1), Base.OneTo(2))
-        @test diff(ones(Base.OneTo(3), Inclusion(0..1))) ≡ zeros(Base.OneTo(2), Inclusion(0..1))
-        @test diff(ones(Base.OneTo(3), Inclusion(0..1)); dims=2) ≡ zeros(Base.OneTo(3), Inclusion(0..1))
+        @test diff(Inclusion(0.0..1)) ≡ ones(Inclusion(0.0..1))
+        @test diff(ones(Inclusion(0.0..1))) ≡ zeros(Inclusion(0.0..1))
+        @test diff(ones(Inclusion(0.0..1), Base.OneTo(3))) ≡ zeros(Inclusion(0.0..1), Base.OneTo(3))
+        @test diff(ones(Inclusion(0.0..1), Base.OneTo(3)); dims=2) ≡ zeros(Inclusion(0.0..1), Base.OneTo(2))
+        @test diff(ones(Base.OneTo(3), Inclusion(0.0..1))) ≡ zeros(Base.OneTo(2), Inclusion(0.0..1))
+        @test diff(ones(Base.OneTo(3), Inclusion(0.0..1)); dims=2) ≡ zeros(Base.OneTo(3), Inclusion(0.0..1))
     end
 end
