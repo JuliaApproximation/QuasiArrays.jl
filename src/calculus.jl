@@ -12,7 +12,6 @@ cumsum(x::AbstractQuasiVector) = cumsum(x, dims=1)
 
 # sum is equivalent to hitting by ones(n) on the left or right
 
-cumsum_layout(::QuasiArrayLayout, A, ::Colon) = QuasiArray(cumsum(parent(A)), axes(A))
 cumsum_layout(::QuasiArrayLayout, A, d::Int) = QuasiArray(cumsum(parent(A),dims=d), axes(A))
 
 for Sum in (:sum, :cumsum)
@@ -39,9 +38,9 @@ function sum_layout(LAY::ApplyLayout{typeof(*)}, V::AbstractQuasiVector, ::Colon
 end
 
 sum_layout(::MemoryLayout, A, dims) = sum_size(size(A), A, dims)
-sum_size(::NTuple{N,Int}, A, dims) where N = _sum(identity, A, dims)
+sum_size(::NTuple{N,Integer}, A, dims) where N = _sum(identity, A, dims)
 cumsum_layout(::MemoryLayout, A, dims) = cumsum_size(size(A), A, dims)
-cumsum_size(::NTuple{N,Int}, A, dims) where N = error("Not implemented")
+cumsum_size(::NTuple{N,Integer}, A, dims) where N = error("Not implemented")
 
 
 ####
@@ -80,6 +79,7 @@ end
 
 
 diffaxes(a::Inclusion{<:Any,<:AbstractVector}) = Inclusion(a.domain[1:end-1])
+diffaxes(a::OneTo) = oneto(length(a)-1)
 diffaxes(a) = a # default is differentiation does not change axes
 
 diff(b::QuasiVector; dims::Integer=1) = QuasiVector(diff(b.parent) ./ diff(b.axes[1]), (diffaxes(axes(b,1)),))
