@@ -13,6 +13,8 @@ include("test_continuous.jl")
 include("test_matmul.jl")
 include("test_quasifill.jl")
 
+include("test_calculus.jl")
+
 include("test_quasiconcat.jl")
 include("test_quasikron.jl")
 

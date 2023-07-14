@@ -168,8 +168,8 @@ map(f, tvs::QuasiTransposeAbsVec...) = transpose(map((xs...) -> transpose(f(tran
 
 # QuasiAdjoint/QuasiTranspose-vector * vector
 dot(a::AbstractQuasiArray, b::AbstractQuasiArray) = ArrayLayouts.dot(a, b)
-@inline copy(d::Dot{<:Any,<:Any,<:AbstractQuasiArray,<:AbstractQuasiArray}) = _dot(size(d.A,1), d.A, d.B)
-_dot(sz, a, b) = Base.invoke(dot, NTuple{2,Any}, a, b)
+@inline copy(d::Dot{<:Any,<:Any,<:AbstractQuasiArray,<:AbstractQuasiArray}) = dot_size(size(d.A,1), d.A, d.B)
+dot_size(sz, a, b) = Base.invoke(dot, NTuple{2,Any}, a, b)
 
 
 *(u::QuasiAdjointAbsVec, v::AbstractQuasiVector) = dot(u.parent, v)
@@ -248,3 +248,23 @@ arguments(::ApplyLayout{typeof(hcat)}, A::QuasiTranspose) = map(transpose, argum
 
 
 copy(M::Mul{ApplyLayout{typeof(vcat)},QuasiArrayLayout}) = vcat((arguments(vcat, M.A) .* Ref(M.B))...)
+
+
+###
+# show/summary
+###
+
+for shw in (:show, :summary)
+    @eval begin
+        function $shw(io::IO, Ac::QuasiAdjoint)
+            print(io, "adjoint(")
+            $shw(io, parent(Ac))
+            print(io, ")")
+        end
+        function $shw(io::IO, Ac::QuasiTranspose)
+            print(io, "transpose(")
+            $shw(io, parent(Ac))
+            print(io, ")")
+        end
+    end
+end
