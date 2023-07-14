@@ -248,3 +248,23 @@ arguments(::ApplyLayout{typeof(hcat)}, A::QuasiTranspose) = map(transpose, argum
 
 
 copy(M::Mul{ApplyLayout{typeof(vcat)},QuasiArrayLayout}) = vcat((arguments(vcat, M.A) .* Ref(M.B))...)
+
+
+###
+# show/summary
+###
+
+for shw in (:show, :summary)
+    @eval begin
+        function $shw(io::IO, Ac::QuasiAdjoint)
+            print(io, "adjoint(")
+            $shw(io, parent(Ac))
+            print(io, ")")
+        end
+        function $shw(io::IO, Ac::QuasiTranspose)
+            print(io, "transpose(")
+            $shw(io, parent(Ac))
+            print(io, ")")
+        end
+    end
+end

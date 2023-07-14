@@ -1,7 +1,7 @@
 # This file is based on a part of Julia. License is MIT: https://julialang.org/license
 
 
-using QuasiArrays, Test, LinearAlgebra
+using QuasiArrays, Test, Base64, LinearAlgebra
 import QuasiArrays: MemoryLayout
 
 
@@ -249,5 +249,13 @@ import QuasiArrays: MemoryLayout
         A = QuasiArray(randn(2,2),([0,0.5],Base.OneTo(2)))
         @test MemoryLayout(typeof(A)) == MemoryLayout(typeof(A')) == MemoryLayout(typeof(transpose(A)))
         @test QuasiArray(A') == QuasiArray(A.parent',(Base.OneTo(2),[0,0.5]))
+    end
+
+    @testset "show" begin
+        x = QuasiArray([1,2],[0,0.5])
+        @test stringmime("text/plain", x') == "adjoint(QuasiVector([1, 2], [0.0, 0.5]))"
+        @test stringmime("text/plain", transpose(x)) == "transpose(QuasiVector([1, 2], [0.0, 0.5]))"
+        @test summary(x') == "adjoint(QuasiVector{Int64, Tuple{Vector{Float64}}})"
+        @test summary(transpose(x)) == "transpose(QuasiVector{Int64, Tuple{Vector{Float64}}})"
     end
 end
