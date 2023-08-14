@@ -144,7 +144,7 @@ broadcasted(A::BroadcastQuasiArray) = instantiate(broadcasted(A.f, A.args...))
 axes(A::BroadcastQuasiArray) = axes(broadcasted(A))
 size(A::BroadcastQuasiArray) = map(length, axes(A))
 
-function _equals(::BroadcastLayout, ::BroadcastLayout, A, B)
+function equals_layout(::BroadcastLayout, ::BroadcastLayout, A, B)
     A.f == B.f && all(A.args .== B.args) && return true
     error("Not implemented")
 end

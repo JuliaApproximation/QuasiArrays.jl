@@ -501,7 +501,9 @@ function isequal(A::AbstractQuasiArray, B::AbstractQuasiArray)
     return true
 end
 
-function _equals(_, _, A, B)
+
+
+function equals_layout(_, _, A, B)
     if axes(A) != axes(B)
         return false
     end
@@ -517,8 +519,9 @@ function _equals(_, _, A, B)
     return anymissing ? missing : true
 end
 
+const _equals = equals_layout # TODO: Remove
 
-(==)(A::AbstractQuasiArray, B::AbstractQuasiArray) = _equals(MemoryLayout(A), MemoryLayout(B), A, B)
+(==)(A::AbstractQuasiArray, B::AbstractQuasiArray) = equals_layout(MemoryLayout(A), MemoryLayout(B), A, B)
 
 ##
 # show
