@@ -293,4 +293,10 @@ import QuasiArrays: QuasiCartesianIndex, QuasiCartesianIndices, DefaultQuasiArra
         v = view(a, BroadcastArray(+, [0.1,0.2]), 0.2)
         @test Base.BroadcastStyle(typeof(v)) isa LazyArrays.LazyArrayStyle{1}
     end
+
+    @testset "empty broadcast bug" begin
+        A = ones(Int, 4)
+        A[ones(Int)] .+= 1
+        @test A == [2,1,1,1]
+    end
 end

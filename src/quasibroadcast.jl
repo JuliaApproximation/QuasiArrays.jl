@@ -93,7 +93,7 @@ Base.similar(bc::Broadcasted{QuasiArrayConflict}, ::Type{ElType}) where ElType =
 _axes(bc::Broadcasted{<:AbstractQuasiArrayStyle{0}}, ::Nothing) = ()
 
 _eachindex(t::Tuple{AbstractQuasiVector{<:Number}}) = QuasiCartesianIndices(t)
-_eachindex(t::NTuple{N,AbstractQuasiVector{<:Number}}) where N = QuasiCartesianIndices(t)
+_eachindex(t::Tuple{AbstractQuasiVector{<:Number},Vararg{Any}}) = QuasiCartesianIndices(t)
 _eachindex(t::Tuple{AbstractQuasiVector{<:Number},Vararg{AbstractUnitRange}}) = QuasiCartesianIndices(t)
 _eachindex(t::Tuple{AbstractUnitRange,AbstractQuasiVector{<:Number},Vararg{AbstractUnitRange}}) = QuasiCartesianIndices(t)
 
