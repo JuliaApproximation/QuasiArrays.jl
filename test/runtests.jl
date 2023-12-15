@@ -20,3 +20,5 @@ include("test_quasikron.jl")
 
 include("test_ldiv.jl")
 include("test_quasilazy.jl")
+
+include("test_sparsequasi.jl")
