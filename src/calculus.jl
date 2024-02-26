@@ -7,8 +7,7 @@ _sum(V::AbstractQuasiArray, dims) = sum_layout(MemoryLayout(V), V, dims)
 _sum(V::AbstractQuasiArray, ::Colon) = sum_layout(MemoryLayout(V), V, :)
 
 _cumsum(A, dims) = cumsum_layout(MemoryLayout(A), A, dims)
-cumsum(A::AbstractQuasiArray; dims::Integer) = _cumsum(A, dims)
-cumsum(x::AbstractQuasiVector) = cumsum(x, dims=1)
+cumsum(A::AbstractQuasiArray; dims::Integer=1) = _cumsum(A, dims)
 
 # sum is equivalent to hitting by ones(n) on the left or right
 
