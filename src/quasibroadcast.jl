@@ -196,4 +196,4 @@ _broadcasted_mul(A::AbstractQuasiMatrix, B::Tuple{Union{AbstractMatrix,AbstractQ
 
 
 
-LazyArrays.converteltype(::Type{T}, A::AbstractQuasiArray) where T = convert(AbstractQuasiArray{T}, A)
+elconvert(::Type{T}, A::AbstractQuasiArray) where T = convert(AbstractQuasiArray{T}, A)
