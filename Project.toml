@@ -21,7 +21,7 @@ QuasiArraysSparseArraysExt = "SparseArrays"
 
 [compat]
 ArrayLayouts = "1"
-DomainSets = "0.6, 0.7"
+DomainSets = "0.7.6"
 FillArrays = "1"
 LazyArrays = "1.2"
 StaticArrays = "1"
