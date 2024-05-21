@@ -23,7 +23,7 @@ QuasiArraysSparseArraysExt = "SparseArrays"
 ArrayLayouts = "1"
 DomainSets = "0.7.6"
 FillArrays = "1"
-LazyArrays = "1.2"
+LazyArrays = "1.2, 2"
 StaticArrays = "1"
 julia = "1.6"
 
