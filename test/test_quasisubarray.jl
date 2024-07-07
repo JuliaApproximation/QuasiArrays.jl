@@ -315,8 +315,19 @@ using QuasiArrays, Base64, Test
         @test view(A,:,:) == view(A,:,:)
         @test A ≠ view(A,Inclusion(0:0.5:0.5),:)
         @test view(A,Inclusion(0:0.5:0.5),:) ≠ A
-        @test A ≠ view(B,Inclusion(0:0.5:1),:)
-        @test view(B,Inclusion(0:0.5:1),:) ≠ A
-        @test view(B,Inclusion(0:0.5:1),:) ≠ view(A,Inclusion(0:0.5:0.5),:)
+        @test A ≠ view(B,Inclusion(0:0.5:1),:)
+        @test view(B,Inclusion(0:0.5:1),:) ≠ A
+        @test view(B,Inclusion(0:0.5:1),:) ≠ view(A,Inclusion(0:0.5:0.5),:)
+    end
+
+    @testset "SubQuasiArray convert" begin
+        a = QuasiVector(randn(3), 0:0.5:1)
+        v = view(a, :)
+        @test convert(AbstractQuasiVector{Float64}, v) ≡ v
+        @test convert(AbstractQuasiVector{ComplexF64}, v) isa SubQuasiArray{ComplexF64}
+        @test convert(AbstractQuasiVector{ComplexF64}, v) == v
+        @test convert(AbstractQuasiArray{Float64}, v) ≡ v
+        @test convert(AbstractQuasiArray{ComplexF64}, v) isa SubQuasiArray{ComplexF64}
+        @test convert(AbstractQuasiArray{ComplexF64}, v) == v
     end
 end
