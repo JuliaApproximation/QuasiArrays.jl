@@ -298,6 +298,11 @@ pointer(V::SubQuasiArray, i::Int) = _pointer(V, i)
 _pointer(V::SubQuasiArray{<:Any,1}, i::Int) = pointer(V, (i,))
 _pointer(V::SubQuasiArray, i::Int) = pointer(V, Base._ind2sub(axes(V), i))
 
+convert(::Type{AbstractQuasiArray{T}}, V::SubQuasiArray{T}) where T = V
+convert(::Type{AbstractQuasiArray{T,N}}, V::SubQuasiArray{T,N}) where {T,N} = V
+convert(::Type{AbstractQuasiArray{T}}, V::SubQuasiArray) where T = SubQuasiArray(convert(AbstractQuasiArray{T}, parent(V)), V.indices)
+convert(::Type{AbstractQuasiArray{T,N}}, V::SubQuasiArray{<:Any,N}) where {T,N} = convert(AbstractQuasiArray{T}, V)
+
 
 # indices are taken from the range/vector
 # Since bounds-checking is performance-critical and uses

@@ -1,7 +1,7 @@
 name = "QuasiArrays"
 uuid = "c4ea9172-b204-11e9-377d-29865faadc5c"
 authors = ["Sheehan Olver <solver@mac.com>"]
-version = "0.11.4"
+version = "0.11.7"
 
 [deps]
 ArrayLayouts = "4c555306-a7a7-4459-81d9-ec55ddd5c99a"
@@ -21,9 +21,9 @@ QuasiArraysSparseArraysExt = "SparseArrays"
 
 [compat]
 ArrayLayouts = "1"
-DomainSets = "0.6, 0.7"
+DomainSets = "0.7.6"
 FillArrays = "1"
-LazyArrays = "1.2"
+LazyArrays = "1.2, 2"
 StaticArrays = "1"
 julia = "1.6"
 
