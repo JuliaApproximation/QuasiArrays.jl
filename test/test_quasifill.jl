@@ -370,11 +370,12 @@ import QuasiArrays: AbstractQuasiFill
         @test zero(QuasiFill(0.5, ax, ax)) == QuasiZeros(ax,ax)
     end
 
-    @testset "maximum/minimum/svd/sort/sum" begin
+    @testset "maximum/minimum/sort/sum" begin
         ax = [1,3,4]
         @test maximum(QuasiFill(1, ax)) == minimum(QuasiFill(1, ax)) == 1
         @test sort(QuasiOnes(ax)) == sort!(QuasiOnes(ax))
         @test sum(QuasiFill(1, ax)) == sum(QuasiOnes(ax)) == 3
+        @test sum(exp, QuasiFill(0, ax)) == sum(exp, QuasiZeros(ax)) == 3
     end
 
 
