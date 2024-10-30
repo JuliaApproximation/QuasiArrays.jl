@@ -709,6 +709,10 @@ import QuasiArrays: AbstractQuasiFill
         @test stringmime("text/plain",ones(Inclusion([1,2,3]))) == "ones(Inclusion([1, 2, 3]))"
         @test stringmime("text/plain",zeros(Inclusion([1,2,3]))) == "zeros(Inclusion([1, 2, 3]))"
         @test stringmime("text/plain",fill(2,Inclusion([1,2,3]))) == "fill(2, Inclusion([1, 2, 3]))"
+
+        @test stringmime("text/plain",QuasiOnes()) == "ones()"
+        @test stringmime("text/plain",QuasiZeros()) == "zeros()"
+        @test stringmime("text/plain",QuasiFill(2)) == "fill(2)"
     end
 
     @testset "Mul" begin

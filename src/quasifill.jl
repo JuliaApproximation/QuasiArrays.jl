@@ -200,10 +200,10 @@ function summary(io::IO, F::QuasiOnes)
     print(io, "ones(")
     if !isempty(F.axes)
         summary(io, F.axes[1])
-    end
-    for a in tail(F.axes)
-        print(io, ", ")
-        summary(io, a)
+        for a in tail(F.axes)
+            print(io, ", ")
+            summary(io, a)
+        end
     end
     print(io, ")")
 end
@@ -212,10 +212,10 @@ function summary(io::IO, F::QuasiZeros)
     print(io, "zeros(")
     if !isempty(F.axes)
         summary(io, F.axes[1])
-    end
-    for a in tail(F.axes)
-        print(io, ", ")
-        summary(io, a)
+        for a in tail(F.axes)
+            print(io, ", ")
+            summary(io, a)
+        end
     end
     print(io, ")")
 end
