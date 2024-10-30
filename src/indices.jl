@@ -210,6 +210,8 @@ union(x::Inclusion...) = Inclusion{mapreduce(eltype,promote_type,x)}(_union(map(
 
 checkindex(::Type{Bool}, inds::Inclusion{T}, i::T) where T = i ∈ inds
 checkindex(::Type{Bool}, inds::Inclusion, i) = i ⊆ inds
+checkindex(::Type{Bool}, inds::Inclusion{T}, i::T) where T<:AbstractArray = i ∈ inds
+checkindex(::Type{Bool}, inds::Inclusion, i::AbstractArray) = i ⊆ inds
 checkindex(::Type{Bool}, inds::Inclusion, ::Colon) = true
 checkindex(::Type{Bool}, inds::Inclusion, ::Inclusion) = true
 
