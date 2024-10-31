@@ -130,5 +130,4 @@ if !isdefined(Base, :get_extension)
     include("../ext/QuasiArraysSparseArraysExt.jl")
 end
 
-
 end
