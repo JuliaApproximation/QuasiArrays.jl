@@ -198,28 +198,31 @@ show(io::IO, F::AbstractQuasiFill) = summary(io, F)
 
 function summary(io::IO, F::QuasiOnes)
     print(io, "ones(")
-    summary(io, F.axes[1])
-    for a in tail(F.axes)
-        print(io, ", ")
-        summary(io, a)
+    if !isempty(F.axes)
+        summary(io, F.axes[1])
+        for a in tail(F.axes)
+            print(io, ", ")
+            summary(io, a)
+        end
     end
     print(io, ")")
 end
 
 function summary(io::IO, F::QuasiZeros)
     print(io, "zeros(")
-    summary(io, F.axes[1])
-    for a in tail(F.axes)
-        print(io, ", ")
-        summary(io, a)
+    if !isempty(F.axes)
+        summary(io, F.axes[1])
+        for a in tail(F.axes)
+            print(io, ", ")
+            summary(io, a)
+        end
     end
     print(io, ")")
 end
 
 function summary(io::IO, F::QuasiFill)
-    print(io, "fill($(F.value), ")
-    summary(io, F.axes[1])
-    for a in tail(F.axes)
+    print(io, "fill($(F.value)")
+    for a in F.axes
         print(io, ", ")
         summary(io, a)
     end
