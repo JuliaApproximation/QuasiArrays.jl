@@ -22,7 +22,6 @@ QuasiArraysSparseArraysExt = "SparseArrays"
 
 [compat]
 ArrayLayouts = "1"
-EltypeExtensions = "0.0.4"
 DomainSets = "0.7.6"
 EltypeExtensions = "0.0.4"
 FillArrays = "1"
