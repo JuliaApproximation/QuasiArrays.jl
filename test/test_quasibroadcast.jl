@@ -299,4 +299,12 @@ import QuasiArrays: QuasiCartesianIndex, QuasiCartesianIndices, DefaultQuasiArra
         A[ones(Int)] .+= 1
         @test A == [2,1,1,1]
     end
+
+    @testset "adjoint arguments" begin
+        a = QuasiVector(randn(6), 0:0.5:2.5)
+        @test MemoryLayout(BroadcastQuasiArray(*, 2, a)') isa LazyArrays.BroadcastLayout
+        @test MemoryLayout(transpose(BroadcastQuasiArray(*, 2, a))) isa LazyArrays.BroadcastLayout
+        @test LazyArrays.arguments(BroadcastQuasiArray(*, 2, a)') == (2, a')
+        @test LazyArrays.arguments(transpose(BroadcastQuasiArray(*, 2, a))) == (2, transpose(a))
+    end
 end

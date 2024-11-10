@@ -238,6 +238,14 @@ BroadcastStyle(::Type{<:QuasiTranspose{<:Any,<:Inclusion}}) = LazyQuasiArrayStyl
 
 
 ###
+# broadcast support
+###
+
+arguments(b::BroadcastLayout, A::QuasiAdjoint) = map(_adjoint, arguments(b, parent(A)))
+arguments(b::BroadcastLayout, A::QuasiTranspose) = map(_transpose, arguments(b, parent(A)))
+
+
+###
 # adjoint concat support
 ###
 
