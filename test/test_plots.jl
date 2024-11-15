@@ -11,8 +11,14 @@ function struct_isequal(a,b)
 end
 
 @testset "plots" begin
+    # QuasiVector
     v = QuasiVector(rand(5), rand(5))
     a = plot(v)
-    b = plot(axes(v,1),parent(v))
+    b = plot(v.axes[1],parent(v))
+    @test struct_isequal(a,b)
+
+    # Inclusion
+    a = plot(axes(v,1))
+    b = plot(v.axes[1])
     @test struct_isequal(a,b)
 end
