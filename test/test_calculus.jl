@@ -17,6 +17,7 @@ using QuasiArrays, IntervalSets, Test
         @test sum(ApplyQuasiArray(*, A, B)) ≈ sum(A*B)
         @test sum(ApplyQuasiArray(*, A, B); dims=1) ≈ sum(A*B; dims=1)
         @test sum(ApplyQuasiArray(*, A, B); dims=2) ≈ sum(A*B; dims=2)
+        @test sum(ApplyQuasiArray(*, A, B)) ≈ sum(A*B)
 
         @test sum(b) ≈ last(cumsum(b)) ≈ cumsum(b)[2]
         @test cumsum(B)[2:2,:] ≈ cumsum(B; dims=1)[2:2,:] ≈ sum(B; dims=1)
