@@ -1,4 +1,5 @@
 using QuasiArrays, Test
+include("test_plots.jl")
 
 include("test_abstractquasiarray.jl")
 include("test_quasibroadcast.jl")
