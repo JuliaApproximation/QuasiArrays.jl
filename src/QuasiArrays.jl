@@ -6,7 +6,7 @@ import Base: getindex, size, axes, axes1, length, ==, isequal, iterate, Cartesia
                 isreal, iszero, isempty, empty, isapprox, fill!, getproperty, showarg
 import Base: @_inline_meta, DimOrInd, OneTo, @_propagate_inbounds_meta, @_noinline_meta,
                 DimsInteger, error_if_canonical_getindex, @propagate_inbounds, _return_type,
-                safe_tail, tail, _getindex, _maybe_reshape, index_ndims, _unsafe_getindex,
+                safe_tail, front, tail, _getindex, _maybe_reshape, index_ndims, _unsafe_getindex,
                 index_shape, to_shape, @nloops, @ncall, unalias, _unaliascopy,
                 to_index, to_indices, _to_subscript_indices, _splatmap, dataids,
                 compute_stride1, compute_offset1, fill_to_length
@@ -49,7 +49,9 @@ import LazyArrays: MemoryLayout, UnknownLayout, Mul, ApplyLayout, BroadcastLayou
                     LdivStyle, InvLayout, PInvLayout, sub_materialize, lazymaterialize,
                     _mul, rowsupport, DiagonalLayout, adjointlayout, transposelayout, conjlayout,
                     sublayout, call, LazyArrayStyle, layout_getindex, _broadcast2broadcastarray, _applyarray_summary, _broadcastarray_summary,
-                    _broadcasted_mul, simplifiable, simplify, _mul_colsupport, _mul_rowsupport
+                    _broadcasted_mul, simplifiable, simplify, _mul_colsupport, _mul_rowsupport,
+                    _adjoint, _transpose
+
 import EltypeExtensions: elconvert
 
 import Base.IteratorsMD

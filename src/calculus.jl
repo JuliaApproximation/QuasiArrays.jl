@@ -33,7 +33,12 @@ end
 
 function sum_layout(LAY::ApplyLayout{typeof(*)}, V::AbstractQuasiVector, ::Colon)
     a = arguments(LAY, V)
-    first(apply(*, sum(a[1]; dims=1), tail(a)...))
+    only(*(sum(a[1]; dims=1), tail(a)...))
+end
+
+function sum_layout(LAY::ApplyLayout{typeof(*)}, V::AbstractQuasiMatrix, ::Colon)
+    a = arguments(LAY, V)
+    only(*(sum(a[1]; dims=1), front(tail(a))..., sum(a[end]; dims=2)))
 end
 
 sum_layout(::MemoryLayout, A, dims) = sum_size(size(A), A, dims)
