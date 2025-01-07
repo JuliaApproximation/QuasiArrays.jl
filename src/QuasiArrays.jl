@@ -16,7 +16,7 @@ import Base: Slice, IdentityUnitRange, ScalarIndex, RangeIndex, view, viewindexi
                 parentindices, reverse, ndims, checkbounds, uncolon,
                 maybeview, unsafe_view, checkindex, checkbounds_indices,
                 throw_boundserror, rdims, replace_in_print_matrix, show, summary,
-                hcat, vcat, hvcat
+                hcat, vcat, hvcat, isassigned
 import Base: *, /, \, +, -, ^, inv
 import Base: exp, log, sqrt,
           cos, sin, tan, csc, sec, cot,
