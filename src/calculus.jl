@@ -51,28 +51,30 @@ cumsum_size(::NTuple{N,Integer}, A, dims) where N = error("Not implemented")
 # diff
 ####
 
-@inline diff(a::AbstractQuasiArray; dims::Integer=1) = diff_layout(MemoryLayout(a), a, dims)
-function diff_layout(LAY::ApplyLayout{typeof(*)}, V::AbstractQuasiVector, dims...)
+@inline diff(a::AbstractQuasiArray, order...; dims::Integer=1) = diff_layout(MemoryLayout(a), a, order...; dims)
+function diff_layout(LAY::ApplyLayout{typeof(*)}, V::AbstractQuasiVector, order...; dims=1)
     a = arguments(LAY, V)
-    *(diff(a[1]), tail(a)...)
+    dims == 1 || throw(ArgumentError("cannot differentiate a vector along dimension $dims"))
+    *(diff(a[1], order...), tail(a)...)
 end
 
-function diff_layout(LAY::ApplyLayout{typeof(*)}, V::AbstractQuasiMatrix, dims=1)
+function diff_layout(LAY::ApplyLayout{typeof(*)}, V::AbstractQuasiMatrix, order...; dims=1)
     a = arguments(LAY, V)
     @assert dims == 1 #for type stability, for now
     # if dims == 1
-        *(diff(a[1]), tail(a)...)
+        *(diff(a[1], order...), tail(a)...)
     # else
     #     *(front(a)..., diff(a[end]; dims=dims))
     # end
 end
 
-diff_layout(::MemoryLayout, A, dims...) = diff_size(size(A), A, dims...)
-diff_size(sz, a, dims...) = error("diff not implemented for $(typeof(a))")
+diff_layout(::MemoryLayout, A, order...; dims...) = diff_size(size(A), A, order...; dims...)
+diff_size(sz, a, order...; dims...) = error("diff not implemented for $(typeof(a))")
 
 diff(x::Inclusion; dims::Integer=1) = ones(eltype(x), diffaxes(x))
-diff(c::AbstractQuasiFill{<:Any,1}; dims::Integer=1) =  zeros(eltype(c), diffaxes(axes(c,1)))
-function diff(c::AbstractQuasiFill{<:Any,2}; dims::Integer=1)
+diff(x::Inclusion, order::Int; dims::Integer=1) = fill(ifelse(isone(order), one(eltype(x)), zero(eltype(x))), diffaxes(x))
+diff(c::AbstractQuasiFill{<:Any,1}, order...; dims::Integer=1) =  zeros(eltype(c), diffaxes(axes(c,1)))
+function diff(c::AbstractQuasiFill{<:Any,2}, order...; dims::Integer=1)
     a,b = axes(c)
     if dims == 1
         zeros(eltype(c), diffaxes(a), b)
