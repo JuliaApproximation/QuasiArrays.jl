@@ -71,4 +71,10 @@ using QuasiArrays, IntervalSets, Test
         @test diff(ones(Base.OneTo(3), Inclusion(0.0..1))) ≡ zeros(Base.OneTo(2), Inclusion(0.0..1))
         @test diff(ones(Base.OneTo(3), Inclusion(0.0..1)); dims=2) ≡ zeros(Base.OneTo(3), Inclusion(0.0..1))
     end
+
+    @testset "Incomplete" begin
+        struct IncompleteQuasiArray <: AbstractQuasiVector{Int} end
+        Base.axes(::IncompleteQuasiArray) = (Base.OneTo(3),)
+        @test_throws ErrorException diff(IncompleteQuasiArray())
+    end
 end
