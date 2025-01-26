@@ -69,24 +69,29 @@ function diff_layout(LAY::ApplyLayout{typeof(*)}, V::AbstractQuasiMatrix, order.
 end
 
 diff_layout(::MemoryLayout, A, order...; dims...) = diff_size(size(A), A, order...; dims...)
-diff_size(sz, a, order...; dims...) = error("diff not implemented for $(typeof(a))")
+diff_size(sz, a; dims...) = error("diff not implemented for $(typeof(a))")
+function diff_size(sz, a, order::Int; dims...)
+    order < 0 && throw(ArgumentError("order must be non-negative"))
+    order == 0 && return a
+    isone(order) ? diff(a) : diff(diff(a), order-1)
+end
 
 diff(x::Inclusion; dims::Integer=1) = ones(eltype(x), diffaxes(x))
-diff(x::Inclusion, order::Int; dims::Integer=1) = fill(ifelse(isone(order), one(eltype(x)), zero(eltype(x))), diffaxes(x))
-diff(c::AbstractQuasiFill{<:Any,1}, order...; dims::Integer=1) =  zeros(eltype(c), diffaxes(axes(c,1)))
+diff(x::Inclusion, order::Int; dims::Integer=1) = fill(ifelse(isone(order), one(eltype(x)), zero(eltype(x))), diffaxes(x,order))
+diff(c::AbstractQuasiFill{<:Any,1}, order...; dims::Integer=1) =  zeros(eltype(c), diffaxes(axes(c,1),order...))
 function diff(c::AbstractQuasiFill{<:Any,2}, order...; dims::Integer=1)
     a,b = axes(c)
     if dims == 1
-        zeros(eltype(c), diffaxes(a), b)
+        zeros(eltype(c), diffaxes(a, order...), b)
     else
-        zeros(eltype(c), a, diffaxes(b))
+        zeros(eltype(c), a, diffaxes(b, order...))
     end
 end
 
 
-diffaxes(a::Inclusion{<:Any,<:AbstractVector}) = Inclusion(a.domain[1:end-1])
-diffaxes(a::OneTo) = oneto(length(a)-1)
-diffaxes(a) = a # default is differentiation does not change axes
+diffaxes(a::Inclusion{<:Any,<:AbstractVector}, order=1) = Inclusion(a.domain[1:end-order])
+diffaxes(a::OneTo, order=1) = oneto(length(a)-order)
+diffaxes(a, order...) = a # default is differentiation does not change axes
 
 diff(b::QuasiVector; dims::Integer=1) = QuasiVector(diff(b.parent) ./ diff(b.axes[1]), (diffaxes(axes(b,1)),))
 function diff(A::QuasiMatrix; dims::Integer=1)

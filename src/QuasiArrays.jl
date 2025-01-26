@@ -3,7 +3,7 @@ using Base, LinearAlgebra, LazyArrays, ArrayLayouts, DomainSets, FillArrays, Sta
 import Base: getindex, size, axes, axes1, length, ==, isequal, iterate, CartesianIndices, LinearIndices,
                 Indices, IndexStyle, getindex, setindex!, parent, vec, convert, similar, copy, copyto!, zero,
                 map, eachindex, eltype, first, last, firstindex, lastindex, in, reshape, permutedims, all,
-                isreal, iszero, isempty, empty, isapprox, fill!, getproperty, showarg
+                isreal, iszero, isone, isempty, empty, isapprox, fill!, getproperty, showarg
 import Base: @_inline_meta, DimOrInd, OneTo, @_propagate_inbounds_meta, @_noinline_meta,
                 DimsInteger, error_if_canonical_getindex, @propagate_inbounds, _return_type,
                 safe_tail, front, tail, _getindex, _maybe_reshape, index_ndims, _unsafe_getindex,
