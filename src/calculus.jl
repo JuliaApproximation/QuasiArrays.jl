@@ -70,7 +70,7 @@ end
 
 diff_layout(::MemoryLayout, A, order...; dims...) = diff_size(size(A), A, order...; dims...)
 diff_size(sz, a; dims...) = error("diff not implemented for $(typeof(a))")
-function diff_size(sz, a, order::Int; dims...)
+function diff_size(sz, a, order; dims...)
     order < 0 && throw(ArgumentError("order must be non-negative"))
     order == 0 && return a
     isone(order) ? diff(a) : diff(diff(a), order-1)
