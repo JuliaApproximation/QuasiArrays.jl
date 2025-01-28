@@ -30,19 +30,25 @@ using QuasiArrays, IntervalSets, Test
 
     @testset "Diff" begin
         x = range(0, 1; length=10_000)
-        @test diff(Inclusion(x)) == ones(Inclusion(x[1:end-1]))
-        @test diff(ones(Inclusion(x))) == zeros(Inclusion(x[1:end-1]))
+        @test diff(Inclusion(x)) == diff(Inclusion(x),1) == ones(Inclusion(x[1:end-1]))
+        @test diff(Inclusion(x),2) == diff(diff(Inclusion(x))) == zeros(Inclusion(x[1:end-2]))
+        @test diff(ones(Inclusion(x))) == diff(ones(Inclusion(x)),1) == zeros(Inclusion(x[1:end-1]))
+        @test diff(ones(Inclusion(x)),2) == diff(diff(ones(Inclusion(x)))) == zeros(Inclusion(x[1:end-2]))
 
         @test diff(ones(Inclusion(x), Inclusion(x))) == zeros(Inclusion(x[1:end-1]), Inclusion(x))
+        @test diff(ones(Inclusion(x), Inclusion(x)), 2) == zeros(Inclusion(x[1:end-2]), Inclusion(x))
         @test diff(ones(Inclusion(x), Inclusion(x)); dims=2) == zeros(Inclusion(x), Inclusion(x[1:end-1]))
+        @test diff(ones(Inclusion(x), Inclusion(x)), 2; dims=2) == zeros(Inclusion(x), Inclusion(x[1:end-2]))
 
         b = QuasiVector(exp.(x), x)
 
         @test diff(b) ≈ b[Inclusion(x[1:end-1])] atol=1E-2
+        @test diff(b,2) ≈ b[Inclusion(x[1:end-2])] atol=1E-1
 
 
         A = QuasiArray(randn(3,2), (1:0.5:2,0:0.5:0.5))
         @test diff(A; dims=1)[:,0] == diff(A[:,0])
+        @test diff(A,2; dims=1)[:,0] == diff(diff(A[:,0]))
         @test diff(A; dims=2)[1,:] == diff(A[1,:])
 
         @testset "* diff" begin
@@ -57,10 +63,18 @@ using QuasiArrays, IntervalSets, Test
 
     @testset "Interval" begin
         @test diff(Inclusion(0.0..1)) ≡ ones(Inclusion(0.0..1))
-        @test diff(ones(Inclusion(0.0..1))) ≡ zeros(Inclusion(0.0..1))
-        @test diff(ones(Inclusion(0.0..1), Base.OneTo(3))) ≡ zeros(Inclusion(0.0..1), Base.OneTo(3))
+        @test diff(Inclusion(0.0..1),1) ≡ fill(1.0,Inclusion(0.0..1))
+        @test diff(Inclusion(0.0..1),2) ≡ fill(0.0,Inclusion(0.0..1))
+        @test diff(ones(Inclusion(0.0..1))) ≡ diff(ones(Inclusion(0.0..1)),1) ≡ diff(ones(Inclusion(0.0..1)),2) ≡ zeros(Inclusion(0.0..1))
+        @test diff(ones(Inclusion(0.0..1), Base.OneTo(3))) ≡ diff(ones(Inclusion(0.0..1), Base.OneTo(3)),2) ≡ zeros(Inclusion(0.0..1), Base.OneTo(3))
         @test diff(ones(Inclusion(0.0..1), Base.OneTo(3)); dims=2) ≡ zeros(Inclusion(0.0..1), Base.OneTo(2))
         @test diff(ones(Base.OneTo(3), Inclusion(0.0..1))) ≡ zeros(Base.OneTo(2), Inclusion(0.0..1))
         @test diff(ones(Base.OneTo(3), Inclusion(0.0..1)); dims=2) ≡ zeros(Base.OneTo(3), Inclusion(0.0..1))
+    end
+
+    @testset "Incomplete" begin
+        struct IncompleteQuasiArray <: AbstractQuasiVector{Int} end
+        Base.axes(::IncompleteQuasiArray) = (Base.OneTo(3),)
+        @test_throws ErrorException diff(IncompleteQuasiArray())
     end
 end
