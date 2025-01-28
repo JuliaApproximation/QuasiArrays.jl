@@ -52,20 +52,10 @@ cumsum_size(::NTuple{N,Integer}, A, dims) where N = error("Not implemented")
 ####
 
 @inline diff(a::AbstractQuasiArray, order...; dims::Integer=1) = diff_layout(MemoryLayout(a), a, order...; dims)
-function diff_layout(LAY::ApplyLayout{typeof(*)}, V::AbstractQuasiVector, order...; dims=1)
+function diff_layout(LAY::ApplyLayout{typeof(*)}, V::AbstractQuasiVecOrMat, order...; dims=1)
     a = arguments(LAY, V)
     dims == 1 || throw(ArgumentError("cannot differentiate a vector along dimension $dims"))
     *(diff(a[1], order...), tail(a)...)
-end
-
-function diff_layout(LAY::ApplyLayout{typeof(*)}, V::AbstractQuasiMatrix, order...; dims=1)
-    a = arguments(LAY, V)
-    @assert dims == 1 #for type stability, for now
-    # if dims == 1
-        *(diff(a[1], order...), tail(a)...)
-    # else
-    #     *(front(a)..., diff(a[end]; dims=dims))
-    # end
 end
 
 diff_layout(::MemoryLayout, A, order...; dims...) = diff_size(size(A), A, order...; dims...)

@@ -186,13 +186,13 @@ LazyArrays._broadcast_mul_mul((A,b)::Tuple{AbstractQuasiMatrix,AbstractQuasiVect
 # support (A .* B) * y
 _broadcasted_mul(a::Tuple{Number,Vararg{Any}}, b::AbstractQuasiVector) = (first(a)*sum(b), _broadcasted_mul(tail(a), b)...)
 _broadcasted_mul(a::Tuple{Number,Vararg{Any}}, B::AbstractQuasiMatrix) = (first(a)*sum(B; dims=1), _broadcasted_mul(tail(a), B)...)
-_broadcasted_mul(a::Tuple{AbstractQuasiVector,Vararg{Any}}, b::AbstractQuasiVector) = (first(a)*sum(b), _broadcasted_mul(tail(a), b)...)
-_broadcasted_mul(a::Tuple{AbstractQuasiVector,Vararg{Any}}, B::AbstractQuasiMatrix) = (first(a)*sum(B; dims=1), _broadcasted_mul(tail(a), B)...)
-_broadcasted_mul(A::Tuple{AbstractQuasiMatrix,Vararg{Any}}, b::AbstractQuasiVector) = (axes(first(A),2) == Base.OneTo(1) ? first(A)*sum(b) : (first(A)*b), _broadcasted_mul(tail(A), b)...)
-_broadcasted_mul(A::Tuple{AbstractQuasiMatrix,Vararg{Any}}, B::AbstractQuasiMatrix) = (axes(first(A),2) == Base.OneTo(1) ? first(A)*sum(B; dims=1) : (first(A)*B), _broadcasted_mul(tail(A), B)...)
+_broadcasted_mul(a::Tuple{AbstractQuasiVector,Vararg{Any}}, b::AbstractQuasiOrVector) = (first(a)*sum(b), _broadcasted_mul(tail(a), b)...)
+_broadcasted_mul(a::Tuple{AbstractQuasiVector,Vararg{Any}}, B::AbstractQuasiOrMatrix) = (first(a)*sum(B; dims=1), _broadcasted_mul(tail(a), B)...)
+_broadcasted_mul(A::Tuple{AbstractQuasiMatrix,Vararg{Any}}, b::AbstractQuasiOrVector) = (axes(first(A),2) == Base.OneTo(1) ? first(A)*sum(b) : (first(A)*b), _broadcasted_mul(tail(A), b)...)
+_broadcasted_mul(A::Tuple{AbstractQuasiMatrix,Vararg{Any}}, B::AbstractQuasiOrMatrix) = (axes(first(A),2) == Base.OneTo(1) ? first(A)*sum(B; dims=1) : (first(A)*B), _broadcasted_mul(tail(A), B)...)
 _broadcasted_mul(A::AbstractQuasiMatrix, b::Tuple{Number,Vararg{Any}}) = (sum(A; dims=2)*first(b)[1], _broadcasted_mul(A, tail(b))...)
-_broadcasted_mul(A::AbstractQuasiMatrix, b::Tuple{Union{AbstractVector,AbstractQuasiVector},Vararg{Any}}) = (size(first(b),1) == 1 ? (sum(A; dims=2)*first(b)[1]) : (A*first(b)), _broadcasted_mul(A, tail(b))...)
-_broadcasted_mul(A::AbstractQuasiMatrix, B::Tuple{Union{AbstractMatrix,AbstractQuasiMatrix},Vararg{Any}}) = (size(first(B),1) == 1 ? (sum(A; dims=2) * first(B)) : (A * first(B)), _broadcasted_mul(A, tail(B))...)
+_broadcasted_mul(A::AbstractQuasiMatrix, b::Tuple{AbstractQuasiOrVector,Vararg{Any}}) = (size(first(b),1) == 1 ? (sum(A; dims=2)*first(b)[1]) : (A*first(b)), _broadcasted_mul(A, tail(b))...)
+_broadcasted_mul(A::AbstractQuasiMatrix, B::Tuple{AbstractQuasiOrMatrix,Vararg{Any}}) = (size(first(B),1) == 1 ? (sum(A; dims=2) * first(B)) : (A * first(B)), _broadcasted_mul(A, tail(B))...)
 
 
 
