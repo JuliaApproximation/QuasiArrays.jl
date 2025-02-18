@@ -52,6 +52,8 @@ import LazyArrays: MemoryLayout, UnknownLayout, Mul, ApplyLayout, BroadcastLayou
                     _broadcasted_mul, simplifiable, simplify, _mul_colsupport, _mul_rowsupport,
                     _adjoint, _transpose
 
+import EltypeExtensions: elconvert
+
 import Base.IteratorsMD
 
 export AbstractQuasiArray, AbstractQuasiMatrix, AbstractQuasiVector, materialize,

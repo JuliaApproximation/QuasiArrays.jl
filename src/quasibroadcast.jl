@@ -195,5 +195,5 @@ _broadcasted_mul(A::AbstractQuasiMatrix, b::Tuple{AbstractQuasiOrVector,Vararg{A
 _broadcasted_mul(A::AbstractQuasiMatrix, B::Tuple{AbstractQuasiOrMatrix,Vararg{Any}}) = (size(first(B),1) == 1 ? (sum(A; dims=2) * first(B)) : (A * first(B)), _broadcasted_mul(A, tail(B))...)
 
 
-
 LazyArrays.converteltype(::Type{T}, A::AbstractQuasiArray) where T = convert(AbstractQuasiArray{T}, A)
+elconvert(::Type{T}, A::AbstractQuasiArray) where T = convert(AbstractQuasiArray{T}, A)
