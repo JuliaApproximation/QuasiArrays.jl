@@ -4,7 +4,7 @@ module QuasiIteratorsMD
                  setindex!, IndexStyle, min, max, zero, oneunit, isless, eachindex,
                  ndims, IteratorSize, convert, show, iterate, promote_rule
 
-    import Base: +, -, *, (:)
+    import Base: +, -, *, (:), Tuple
     import Base: simd_outer_range, simd_inner_length, simd_index
     using Base: IndexLinear, IndexCartesian, AbstractCartesianIndex, fill_to_length, tail
     using Base.Iterators: Reverse

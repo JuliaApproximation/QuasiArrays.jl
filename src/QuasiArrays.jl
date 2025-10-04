@@ -32,6 +32,8 @@ import Base: BitInteger, IEEEFloat, uniontypes, _InitialValue, safe_tail, reduce
 
 import Base: ones, zeros, one, zero, fill
 
+import Base: AbstractVector, AbstractArray, AbstractMatrix
+
 import Base.Broadcast: materialize, materialize!, BroadcastStyle, AbstractArrayStyle, Style, broadcasted, Broadcasted, Unknown,
                         newindex, broadcastable, preprocess, _eachindex, _broadcast_getindex, broadcast_shape,
                         DefaultArrayStyle, axistype, throwdm, instantiate, combine_eltypes, eltypes, combine_styles
