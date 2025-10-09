@@ -93,3 +93,14 @@ function diff(A::QuasiMatrix; dims::Integer=1)
         QuasiMatrix(D ./ permutedims(diff(b.domain)), (a, diffaxes(b)))
     end
 end
+
+
+
+#####
+# norm
+#####
+
+if VERSION ≥ v"1.12-"
+    # avoid iterate call in v1.12
+    LinearAlgebra.norm_recursive_check(::AbstractQuasiArray) = nothing
+end

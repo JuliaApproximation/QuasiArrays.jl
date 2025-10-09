@@ -77,4 +77,9 @@ using QuasiArrays, IntervalSets, Test
         Base.axes(::IncompleteQuasiArray) = (Base.OneTo(3),)
         @test_throws ErrorException diff(IncompleteQuasiArray())
     end
+
+    @testset "norm" begin
+        b = QuasiVector(1:3, 1:0.5:2)
+        @test norm(b) ≈ norm(1:3) # TODO: this should rescale based on step
+    end
 end
