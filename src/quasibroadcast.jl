@@ -92,10 +92,23 @@ Base.similar(bc::Broadcasted{QuasiArrayConflict}, ::Type{ElType}) where ElType =
 
 _axes(bc::Broadcasted{<:AbstractQuasiArrayStyle{0}}, ::Nothing) = ()
 
-_eachindex(t::Tuple{AbstractQuasiVector{<:Number}}) = QuasiCartesianIndices(t)
-_eachindex(t::Tuple{AbstractQuasiVector{<:Number},Vararg{Any}}) = QuasiCartesianIndices(t)
-_eachindex(t::Tuple{AbstractQuasiVector{<:Number},Vararg{AbstractUnitRange}}) = QuasiCartesianIndices(t)
-_eachindex(t::Tuple{AbstractUnitRange,AbstractQuasiVector{<:Number},Vararg{AbstractUnitRange}}) = QuasiCartesianIndices(t)
+if VERSION < v"1.12-"
+    _eachindex(t::Tuple{AbstractQuasiVector{<:Number}}) = QuasiCartesianIndices(t)
+    _eachindex(t::Tuple{AbstractQuasiVector{<:Number},Vararg{Any}}) = QuasiCartesianIndices(t)
+    _eachindex(t::Tuple{AbstractQuasiVector{<:Number},Vararg{AbstractUnitRange}}) = QuasiCartesianIndices(t)
+    _eachindex(t::Tuple{AbstractUnitRange,AbstractQuasiVector{<:Number},Vararg{AbstractUnitRange}}) = QuasiCartesianIndices(t)
+else
+    # TODO: add LinearQuasiIndices
+    _eachindex(::IndexLinear, t::Tuple{AbstractQuasiVector{<:Number}}) = _eachindex(IndexCartesian(), t) # t[1] commented out since broadcast doesn't support Float64 indexing
+    _eachindex(::IndexLinear, t::Tuple{AbstractQuasiVector{<:Number},Vararg{Any}}) = _eachindex(IndexCartesian(), t)
+    _eachindex(::IndexLinear, t::Tuple{AbstractQuasiVector{<:Number},Vararg{AbstractUnitRange}}) = _eachindex(IndexCartesian(), t)
+    _eachindex(::IndexLinear, t::Tuple{AbstractUnitRange,AbstractQuasiVector{<:Number},Vararg{AbstractUnitRange}}) = _eachindex(IndexCartesian(), t)
+
+    _eachindex(::IndexCartesian, t::Tuple{AbstractQuasiVector{<:Number}}) = QuasiCartesianIndices(t)
+    _eachindex(::IndexCartesian, t::Tuple{AbstractQuasiVector{<:Number},Vararg{Any}}) = QuasiCartesianIndices(t)
+    _eachindex(::IndexCartesian, t::Tuple{AbstractQuasiVector{<:Number},Vararg{AbstractUnitRange}}) = QuasiCartesianIndices(t)
+    _eachindex(::IndexCartesian, t::Tuple{AbstractUnitRange,AbstractQuasiVector{<:Number},Vararg{AbstractUnitRange}}) = QuasiCartesianIndices(t)
+end
 
 instantiate(bc::Broadcasted{<:AbstractQuasiArrayStyle{0}}) = bc
 
