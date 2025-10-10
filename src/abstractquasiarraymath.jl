@@ -50,3 +50,6 @@ imag(x::AbstractQuasiArray{<:Real}) = zero(x)
     d > nd && (i == 1 || throw(BoundsError(A, (ntuple(k->Colon(),d-1)..., i))))
     return view(A, idxs...)
 end
+
+vec_layout(lay, _) = error("overload vec_layout(::$(typeof(lay)), _)")
+vec(a::AbstractQuasiArray) = vec_layout(MemoryLayout(a), a)
