@@ -141,3 +141,7 @@ broadcasted(::LazyQuasiArrayStyle{N}, ::typeof(\), x::Number, A::MulQuasiArray{<
     ApplyQuasiArray(*, _ldiv_scal_reduce(x, arguments(A)...)...)
 broadcasted(::LazyQuasiArrayStyle{N}, ::typeof(/), A::MulQuasiArray{<:Any,N}, x::Number) where N = 
     ApplyQuasiArray(*, _ldiv_scal_reduce(x, arguments(A)...)...)
+
+_transposeifnumber(a::AbstractQuasiArray{<:Number}) = transpose(a)
+_vec_mul_arguments(args, (kr,jr)::Tuple{AbstractQuasiVector,Number}) = _mat_mul_arguments(args, (kr,jr))
+_vec_mul_arguments(args, (kr,jr)::Tuple{Number,AbstractQuasiVector}) = _vec_mul_arguments(reverse(map(_transposeifnumber, args)), (jr,kr))
