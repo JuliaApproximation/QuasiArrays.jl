@@ -2,7 +2,9 @@
 
 
 using QuasiArrays, Test, Base64, LinearAlgebra
-import QuasiArrays: MemoryLayout
+using QuasiArrays: MemoryLayout
+using LazyArrays: BroadcastLayout
+
 
 
 @testset "QuasiAdjoint/Transpose" begin
@@ -257,5 +259,14 @@ import QuasiArrays: MemoryLayout
         @test stringmime("text/plain", transpose(x)) == "transpose(QuasiVector([1, 2], [0.0, 0.5]))"
         @test summary(x') == "adjoint(QuasiVector{Int64, Tuple{Vector{Float64}}})"
         @test summary(transpose(x)) == "transpose(QuasiVector{Int64, Tuple{Vector{Float64}}})"
+    end
+
+    @testset "Broadcast AdjTrans" begin
+        x = QuasiArray([1,2],[0,0.5])
+        @test MemoryLayout(BroadcastQuasiArray(exp, x)') isa BroadcastLayout
+        @test MemoryLayout(transpose(BroadcastQuasiArray(exp, x))) isa BroadcastLayout
+        @test BroadcastQuasiArray(exp, x)'[1,0.5] == exp(2)
+        @test BroadcastQuasiArray(exp, x)'[1,0.5:0.5] == [exp(2)]
+        @test exp.(axes(x,1)') isa BroadcastQuasiArray
     end
 end

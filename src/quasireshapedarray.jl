@@ -19,7 +19,7 @@ function reshape(parent::AbstractQuasiArray, ndims::Val{N}) where N
 end
 
 
-reshape_layout(lay, a, dims) = error("overload reshape_layout(::$(typeof(lay)), _, $(typeof(dims)))")
+reshape_layout(lay, a, dims...) = error("overload reshape_layout(::$(typeof(lay)), _, dims...)")
 
 
 """
