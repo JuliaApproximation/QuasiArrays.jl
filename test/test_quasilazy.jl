@@ -91,10 +91,12 @@ Base.getindex(A::MyQuasiLazyMatrix, x::Float64, y::Float64) = A.A[x,y]
             A = QuasiArray(rand(3,3),(0:0.5:1,Base.OneTo(3)))
             B = randn(3,3)
             M = ApplyQuasiArray(*, A, B)
-            @test arguments(view(M,0.5,:))[1] == B'
-            @test arguments(view(M,0.5,:))[2] == A[0.5,:]
-            @test arguments(view(M,:,2))[1] == A
-            @test arguments(view(M,:,2))[2] == B[:,2]
+            @test arguments(view(M,0.5,:)) == (B', A[0.5,:])
+            @test arguments(view(M,:,2)) == (A, B[:,2])
+
+            M = ApplyQuasiArray(*, B, A')
+            @test arguments(view(M,:,0.5)) == (B, A[0.5,:])
+            @test arguments(view(M,2,:)) == (A, B[2,:])
         end
     end
     @testset "\\" begin
