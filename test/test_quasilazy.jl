@@ -1,6 +1,6 @@
 using QuasiArrays, LazyArrays, ArrayLayouts, Base64, Test
 import QuasiArrays: QuasiLazyLayout, QuasiArrayApplyStyle, LazyQuasiMatrix, LazyQuasiArrayStyle
-import LazyArrays: MulStyle, ApplyStyle
+import LazyArrays: MulStyle, ApplyStyle, arguments
 
 struct MyQuasiLazyMatrix <: LazyQuasiMatrix{Float64}
     A::QuasiArray
@@ -85,6 +85,16 @@ Base.getindex(A::MyQuasiLazyMatrix, x::Float64, y::Float64) = A.A[x,y]
         @testset "summary" begin
             A = ApplyQuasiArray(*, ones(Inclusion([1,2,3]), Inclusion([4,5])), fill(2,Inclusion([4,5])))
             @test stringmime("text/plain", A) == "(ones(Inclusion([1, 2, 3]), Inclusion([4, 5]))) * (fill(2, Inclusion([4, 5])))"
+        end
+
+        @testset "sub *" begin
+            A = QuasiArray(rand(3,3),(0:0.5:1,Base.OneTo(3)))
+            B = randn(3,3)
+            M = ApplyQuasiArray(*, A, B)
+            @test arguments(view(M,0.5,:))[1] == B'
+            @test arguments(view(M,0.5,:))[2] == A[0.5,:]
+            @test arguments(view(M,:,2))[1] == A
+            @test arguments(view(M,:,2))[2] == B[:,2]
         end
     end
     @testset "\\" begin

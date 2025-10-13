@@ -266,7 +266,10 @@ using LazyArrays: BroadcastLayout
         @test MemoryLayout(BroadcastQuasiArray(exp, x)') isa BroadcastLayout
         @test MemoryLayout(transpose(BroadcastQuasiArray(exp, x))) isa BroadcastLayout
         @test BroadcastQuasiArray(exp, x)'[1,0.5] == exp(2)
+        @test transpose(BroadcastQuasiArray(exp, x))[1,0.5] == exp(2)
         @test BroadcastQuasiArray(exp, x)'[1,0.5:0.5] == [exp(2)]
+        @test transpose(BroadcastQuasiArray(exp, x))[1,0.5:0.5] == [exp(2)]
         @test exp.(axes(x,1)') isa BroadcastQuasiArray
+        @test exp.(transpose(axes(x,1))) isa BroadcastQuasiArray
     end
 end
