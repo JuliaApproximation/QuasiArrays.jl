@@ -26,19 +26,22 @@ for Sum in (:sum, :cumsum)
     end
 end
 
+_colon2one(::Colon) = 1
+_colon2one(dims::Int) = dims
+
 function cumsum_layout(LAY::ApplyLayout{typeof(*)}, V::AbstractQuasiVector, dims)
     a = arguments(LAY, V)
-    apply(*, cumsum(a[1]; dims=dims), tail(a)...)
+    apply(*, cumsum(a[1]; dims=_colon2one(dims)), tail(a)...)
 end
 
-function sum_layout(LAY::ApplyLayout{typeof(*)}, V::AbstractQuasiVector, ::Colon)
+function sum_layout(LAY::ApplyLayout{typeof(*)}, V::AbstractQuasiVector, dims)
     a = arguments(LAY, V)
-    only(*(sum(a[1]; dims=1), tail(a)...))
+    only(*(sum(a[1]; dims=_colon2one(dims)), tail(a)...))
 end
 
-function sum_layout(LAY::ApplyLayout{typeof(*)}, V::AbstractQuasiMatrix, ::Colon)
+function sum_layout(LAY::ApplyLayout{typeof(*)}, V::AbstractQuasiMatrix, dims)
     a = arguments(LAY, V)
-    only(*(sum(a[1]; dims=1), front(tail(a))..., sum(a[end]; dims=2)))
+    only(*(sum(a[1]; dims=_colon2one(dims)), front(tail(a))..., sum(a[end]; dims=2)))
 end
 
 sum_layout(::MemoryLayout, A, dims) = sum_size(size(A), A, dims)

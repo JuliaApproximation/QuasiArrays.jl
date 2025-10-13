@@ -6,6 +6,7 @@ include("test_arrayops.jl")
 include("test_quasisubarray.jl")
 include("test_quasipermutedims.jl")
 include("test_quasireducedim.jl")
+include("test_quasireshapedarray.jl")
 
 include("test_dense.jl")
 include("test_quasiadjtrans.jl")
