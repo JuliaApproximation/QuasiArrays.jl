@@ -167,12 +167,19 @@ count!(f, r::AbstractQuasiArray, A::AbstractQuasiArray; init::Bool=true) =
 
 for (fname, _fname, op) in [(:sum,     :_sum,     :add_sum), (:prod,    :_prod,    :mul_prod),
                             (:maximum, :_maximum, :max),     (:minimum, :_minimum, :min)]
+    fname_layout = Symbol(string(fname) * "_layout")
     @eval begin
         # User-facing methods with keyword arguments
         @inline ($fname)(a::AbstractQuasiArray; dims=:, kw...) = ($_fname)(a, dims; kw...)
         @inline ($fname)(f, a::AbstractQuasiArray; dims=:, kw...) = ($_fname)(f, a, dims; kw...)
+        @inline $_fname(f::AbstractQuasiArray, dims::Colon) = $fname_layout(MemoryLayout(f), f, dims)
+        @inline $_fname(f::AbstractQuasiArray, dims::Int) = $fname_layout(MemoryLayout(f), f, dims)
+        @inline $fname_layout(lay, A, dims; kw...) = mapreduce(identity, $(op), A; dims=dims, kw...)
+        @inline $fname_layout(lay, f, A, dims; kw...) = mapreduce(f, $(op), A; dims=dims, kw...)
     end
 end
+
+extrema(f::AbstractQuasiVector) = extrema_layout(MemoryLayout(f), f)
 
 
 

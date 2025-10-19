@@ -28,7 +28,8 @@ import Base: Array, Matrix, Vector
 import Base: union, intersect, sort, sort!
 import Base: conj, real, imag
 # reducedim.jl imports
-import Base: prod, sum, cumsum, diff, add_sum, mul_prod, mapreduce, max, min, count, _count, any, _any, all, _all, _sum, _prod, _mapreduce, reduced_index, check_reducedims, mapfoldl_impl
+import Base: prod, sum, cumsum, diff, add_sum, mul_prod, mapreduce, max, min, count, _count, any, _any, all, _all, _sum, _prod, _mapreduce, reduced_index, check_reducedims, mapfoldl_impl,
+                _minimum, _maximum, _extrema, _extrema_rf
 import Base: BitInteger, IEEEFloat, uniontypes, _InitialValue, safe_tail, reducedim1, _simple_count
 
 import Base: ones, zeros, one, zero, fill

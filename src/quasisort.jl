@@ -21,16 +21,4 @@ for func in (:searchsortedfirst, :searchsorted, :searchsortedlast)
     end
 end
 
-
-
-####
-# min/max/extrema
-####
-
-for func in (:minimum, :maximum, :extrema)
-    func_layout = Symbol(string(func) * "_layout")
-    @eval begin
-       $func(f::AbstractQuasiVector) = $func_layout(MemoryLayout(f), f)
-        $func_layout(lay, f::QuasiVector) = $func(parent(f))
-    end
-end
+extrema_layout(::QuasiArrayLayout, f) = extrema(parent(f)) # Hack that assumes QuasiArray
