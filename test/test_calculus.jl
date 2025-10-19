@@ -4,8 +4,13 @@ using QuasiArrays, IntervalSets, Test
     @testset "sum" begin
         A = QuasiArray(randn(2,3), (0:0.5:0.5, 1:0.5:2))
         @test sum(A) ≈ sum(A.parent)
+        @test sum(exp, A) ≈ sum(exp, A.parent)
         @test sum(A; dims=1) ≈ QuasiArray(sum(A.parent; dims=1), (1:1, 1:0.5:2))
         @test sum(A; dims=2) ≈ QuasiArray(sum(A.parent; dims=2), (0:0.5:0.5, 1:1))
+        @test sum(QuasiZeros(0:0.5:1)) ≡ 0.0
+        @test sum(exp, QuasiZeros(0:0.5:1)) ≡ 3.0
+        @test sum(QuasiOnes(0:0.5:1)) == 3
+        @test sum(exp, QuasiOnes(0:0.5:1)) == 3exp(1)
     end
 
     @testset "* sum" begin

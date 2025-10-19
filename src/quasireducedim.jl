@@ -172,8 +172,10 @@ for (fname, _fname, op) in [(:sum,     :_sum,     :add_sum), (:prod,    :_prod, 
         # User-facing methods with keyword arguments
         @inline ($fname)(a::AbstractQuasiArray; dims=:, kw...) = ($_fname)(a, dims; kw...)
         @inline ($fname)(f, a::AbstractQuasiArray; dims=:, kw...) = ($_fname)(f, a, dims; kw...)
-        @inline $_fname(f::AbstractQuasiArray, dims::Colon) = $fname_layout(MemoryLayout(f), f, dims)
-        @inline $_fname(f::AbstractQuasiArray, dims) = $fname_layout(MemoryLayout(f), f, dims)
+        @inline $_fname(a::AbstractQuasiArray, dims::Colon) = $fname_layout(MemoryLayout(a), a, dims)
+        @inline $_fname(a::AbstractQuasiArray, dims) = $fname_layout(MemoryLayout(a), a, dims)
+        @inline $_fname(f, a::AbstractQuasiArray, dims::Colon) = $fname_layout(MemoryLayout(a), f, a, dims)
+        @inline $_fname(f, a::AbstractQuasiArray, dims) = $fname_layout(MemoryLayout(a), f, a, dims)
         @inline $fname_layout(lay, A, dims; kw...) = mapreduce(identity, $(op), A; dims=dims, kw...)
         @inline $fname_layout(lay, f, A, dims; kw...) = mapreduce(f, $(op), A; dims=dims, kw...)
     end
