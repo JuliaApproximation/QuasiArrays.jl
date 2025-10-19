@@ -16,7 +16,8 @@ import Base: Slice, IdentityUnitRange, ScalarIndex, RangeIndex, view, viewindexi
                 parentindices, reverse, ndims, checkbounds, uncolon,
                 maybeview, unsafe_view, checkindex, checkbounds_indices,
                 throw_boundserror, rdims, replace_in_print_matrix, show, summary,
-                hcat, vcat, hvcat, isassigned, searchsortedfirst, searchsortedlast, searchsorted, findall, findfirst, findlast
+                hcat, vcat, hvcat, isassigned, searchsortedfirst, searchsortedlast, searchsorted,
+                findall, findfirst, findlast, minimum, maximum, extrema
 import Base: *, /, \, +, -, ^, inv
 import Base: exp, log, sqrt,
           cos, sin, tan, csc, sec, cot,

@@ -23,3 +23,10 @@ using QuasiArrays, Test
     @test_broken searchsortedfirst(w, 5) ≥ 2
     @test searchsortedlast(w, 5) == 2
 end
+
+@testset "minimum/maximum/extrema" begin
+    v = QuasiVector([1,0,2,3,0], 0:0.5:2)
+    @test minimum(v) == 0
+    @test maximum(v) == 3
+    @test extrema(v) == (0,3)
+end
