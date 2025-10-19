@@ -8,6 +8,8 @@ include("test_quasipermutedims.jl")
 include("test_quasireducedim.jl")
 include("test_quasireshapedarray.jl")
 
+include("test_quasisort.jl")
+
 include("test_dense.jl")
 include("test_quasiadjtrans.jl")
 include("test_continuous.jl")
@@ -23,3 +25,4 @@ include("test_ldiv.jl")
 include("test_quasilazy.jl")
 
 include("test_sparsequasi.jl")
+include("test_statsbaseext.jl")

@@ -16,7 +16,7 @@ import Base: Slice, IdentityUnitRange, ScalarIndex, RangeIndex, view, viewindexi
                 parentindices, reverse, ndims, checkbounds, uncolon,
                 maybeview, unsafe_view, checkindex, checkbounds_indices,
                 throw_boundserror, rdims, replace_in_print_matrix, show, summary,
-                hcat, vcat, hvcat, isassigned
+                hcat, vcat, hvcat, isassigned, searchsortedfirst, searchsortedlast, searchsorted, findall, findfirst, findlast
 import Base: *, /, \, +, -, ^, inv
 import Base: exp, log, sqrt,
           cos, sin, tan, csc, sec, cot,
@@ -91,8 +91,8 @@ include("quasibroadcast.jl")
 include("abstractquasiarraymath.jl")
 include("quasireducedim.jl")
 
-
 include("quasiarray.jl")
+include("quasisort.jl")
 include("quasiarraymath.jl")
 
 include("lazyquasiarrays.jl")
@@ -129,9 +129,12 @@ function isapprox(x::AbstractQuasiArray, y::AbstractQuasiArray;
     end
 end
 
-if !isdefined(Base, :get_extension)
-    include("../ext/QuasiArraysSparseArraysExt.jl")
-end
+
+###
+# extension support
+###
+
+function sample_layout end
 
 
 end
