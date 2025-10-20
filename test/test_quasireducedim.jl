@@ -18,4 +18,11 @@ using QuasiArrays, Test
     @test minimum(A) ≈ minimum(A.parent)
     @test_broken minimum(A; dims=1) ≈ QuasiArray(minimum(A.parent; dims=1), (1:1, 1:0.5:2))
     @test_broken minimum(A; dims=2) ≈ QuasiArray(minimum(A.parent; dims=2), (0:0.5:0.5, 1:1))
+
+    @testset "minimum/maximum/extrema" begin
+        v = QuasiVector([1,0,2,3,0], 0:0.5:2)
+        @test minimum(v) == 0
+        @test maximum(v) == 3
+        @test extrema(v) == (0,3)
+    end
 end

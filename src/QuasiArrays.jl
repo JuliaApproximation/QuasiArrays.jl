@@ -16,7 +16,8 @@ import Base: Slice, IdentityUnitRange, ScalarIndex, RangeIndex, view, viewindexi
                 parentindices, reverse, ndims, checkbounds, uncolon,
                 maybeview, unsafe_view, checkindex, checkbounds_indices,
                 throw_boundserror, rdims, replace_in_print_matrix, show, summary,
-                hcat, vcat, hvcat, isassigned
+                hcat, vcat, hvcat, isassigned, searchsortedfirst, searchsortedlast, searchsorted,
+                findall, findfirst, findlast, minimum, maximum, extrema
 import Base: *, /, \, +, -, ^, inv
 import Base: exp, log, sqrt,
           cos, sin, tan, csc, sec, cot,
@@ -27,7 +28,8 @@ import Base: Array, Matrix, Vector
 import Base: union, intersect, sort, sort!
 import Base: conj, real, imag
 # reducedim.jl imports
-import Base: prod, sum, cumsum, diff, add_sum, mul_prod, mapreduce, max, min, count, _count, any, _any, all, _all, _sum, _prod, _mapreduce, reduced_index, check_reducedims, mapfoldl_impl
+import Base: prod, sum, cumsum, diff, add_sum, mul_prod, mapreduce, max, min, count, _count, any, _any, all, _all, _sum, _prod, _mapreduce, reduced_index, check_reducedims, mapfoldl_impl,
+                _minimum, _maximum, _extrema, _extrema_rf
 import Base: BitInteger, IEEEFloat, uniontypes, _InitialValue, safe_tail, reducedim1, _simple_count
 
 import Base: ones, zeros, one, zero, fill
@@ -91,8 +93,8 @@ include("quasibroadcast.jl")
 include("abstractquasiarraymath.jl")
 include("quasireducedim.jl")
 
-
 include("quasiarray.jl")
+include("quasisort.jl")
 include("quasiarraymath.jl")
 
 include("lazyquasiarrays.jl")
@@ -129,9 +131,12 @@ function isapprox(x::AbstractQuasiArray, y::AbstractQuasiArray;
     end
 end
 
-if !isdefined(Base, :get_extension)
-    include("../ext/QuasiArraysSparseArraysExt.jl")
-end
+
+###
+# extension support
+###
+
+function sample_layout end
 
 
 end

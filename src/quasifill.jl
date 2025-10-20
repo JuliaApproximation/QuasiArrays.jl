@@ -264,9 +264,8 @@ sum(x::AbstractQuasiFill) = getindex_value(x)*measure(axes(x,1))
 sum(x::QuasiZeros) = getindex_value(x)
 
 # define `sum(::Callable, ::AbstractQuasiFill)` to avoid method ambiguity errors on Julia 1.0
-sum(f, x::AbstractQuasiFill) = _sum(f, x)
-sum(f::Base.Callable, x::AbstractQuasiFill) = _sum(f, x)
-_sum(f, x::AbstractQuasiFill) = measure(x) * f(getindex_value(x))
+_sum(f, x::AbstractQuasiFill, ::Colon) = measure(x) * f(getindex_value(x))
+_sum(f, x::AbstractQuasiFill, dims) = measure(x) * f(getindex_value(x))
 
 
 #########
