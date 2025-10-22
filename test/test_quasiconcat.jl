@@ -39,7 +39,8 @@ import QuasiArrays: ApplyQuasiMatrix, UnionVcat, cardinality
             @test cardinality(axes(c,1)) == length(c) == 7
             @test c[0.5] ≡ a[0.5]
             @test c[3] ≡ c[3.0] ≡ 6.0
-            @test c[1] == a[1]
+            @test c[1] == a[1] # first 
+            @test cardinality(UnionDomain(0:0.5:2, 3:5)) == 8
             @test_throws BoundsError c[2.5]
         end
         @testset "matrix" begin
