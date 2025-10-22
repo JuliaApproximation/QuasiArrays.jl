@@ -1,5 +1,5 @@
 using QuasiArrays, DomainSets, Test
-import QuasiArrays: ApplyQuasiMatrix, UnionVcat
+import QuasiArrays: ApplyQuasiMatrix, UnionVcat, cardinality
 
 @testset "Concatenation" begin
     @testset "Hcat" begin
@@ -36,8 +36,10 @@ import QuasiArrays: ApplyQuasiMatrix, UnionVcat
             b = QuasiVector([5,6,8], [1,3,4])
             c = UnionVcat(a,b)
             @test axes(c,1) == Inclusion(union(0:0.5:2, [1,3,4]))
+            @test cardinality(axes(c,1)) == length(c) == 7
             @test c[0.5] ≡ a[0.5]
             @test c[3] ≡ c[3.0] ≡ 6.0
+            @test c[1] == a[1]
             @test_throws BoundsError c[2.5]
         end
         @testset "matrix" begin
