@@ -78,7 +78,8 @@ const AbstractQuasiOrArray{T} = Union{AbstractArray{T},AbstractQuasiArray{T}}
 
 
 cardinality(d) = length(d)
-cardinality(d::UnionDomain) = +(cardinality.(d.domains)...)
+cardinality(d::UnionDomain) = sum(cardinality, d.domains)
+cardinality(d::VcatDomain) = prod(cardinality, d.domains)
 
 size(A::AbstractQuasiArray) = map(cardinality, axes(A))
 axes(A::AbstractQuasiArray) = error("Override axes for $(typeof(A))")

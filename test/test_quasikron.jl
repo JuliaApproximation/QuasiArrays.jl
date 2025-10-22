@@ -10,6 +10,13 @@ import QuasiArrays: ArrayQuasiVector
         @test c[SVector(0.5,3)] == SVector(0.5,3)
         @test_throws BoundsError c[SVector(0.6,3)]
         @test_throws BoundsError c[SVector(0.5,2)]
+        @testset "Hcat" begin
+            H = [first.(c) last.(c)]
+            @test H[SVector(0.5,3),1] == 0.5
+            @test H[SVector(0.5,3),1:2] == H[SVector(0.5,3),:] == [0.5, 3]
+            @test H[[SVector(0.5,3),SVector(1,4)],1] == [0.5,1]
+            @test H[[SVector(0.5,3),SVector(1,4)],1:2] == H[[SVector(0.5,3),SVector(1,4)],:] == [0.5 3; 1 4]
+        end
     end
 
     @testset "QuasiKron" begin
