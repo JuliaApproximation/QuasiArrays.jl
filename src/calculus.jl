@@ -41,7 +41,6 @@ function sum_layout(LAY::ApplyLayout{typeof(*)}, V::AbstractQuasiMatrix, dims)
     only(*(sum(a[1]; dims=_colon2one(dims)), front(tail(a))..., sum(a[end]; dims=2)))
 end
 
-sum_layout(::MemoryLayout, A, dims) = sum_size(size(A), A, dims)
 sum_size(::NTuple{N,Integer}, A, dims) where N = _sum(identity, A, dims)
 cumsum_layout(::MemoryLayout, A, dims) = cumsum_size(size(A), A, dims)
 cumsum_size(::NTuple{N,Integer}, A, dims) where N = error("Not implemented")
@@ -104,3 +103,14 @@ if VERSION ≥ v"1.12-"
     # avoid iterate call in v1.12
     LinearAlgebra.norm_recursive_check(::AbstractQuasiArray) = nothing
 end
+
+norm2_layout(_, f::AbstractQuasiVector) = sqrt(real(dot(f,f)))
+norm1_layout(_, f::AbstractQuasiVector) = sum(abs.(f))
+normInf_layout(_, f::AbstractQuasiVector) = maximum(abs.(f))
+normp_layout(_, f::AbstractQuasiVector, p) = sum(abs.(f) .^ p) .^ (1/ convert(real(eltype(f)),p))
+
+for (op, op_layout) in ((:norm2, :norm2_layout), (:norm1, :norm1_layout), (:normInf, :normInf_layout))
+    @eval $op(A::AbstractQuasiArray) = $op_layout(MemoryLayout(A), A)
+end
+
+normp(A::AbstractQuasiArray, p) = normp_layout(MemoryLayout(A), A, p)
