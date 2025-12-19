@@ -86,5 +86,8 @@ using QuasiArrays, IntervalSets, Test
     @testset "norm" begin
         b = QuasiVector(1:3, 1:0.5:2)
         @test norm(b) ≈ norm(1:3) # TODO: this should rescale based on step
+        @test norm(b,1) ≈ norm(1:3,1)
+        @test norm(b,3) ≈ norm(1:3,3)
+        @test norm(b,Inf) ≈ norm(1:3,Inf)
     end
 end
