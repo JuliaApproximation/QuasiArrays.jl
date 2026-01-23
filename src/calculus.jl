@@ -45,6 +45,7 @@ sum_size(::NTuple{N,Integer}, A, dims) where N = _sum(identity, A, dims)
 cumsum_layout(::MemoryLayout, A, dims) = cumsum_size(size(A), A, dims)
 cumsum_size(::NTuple{N,Integer}, A, dims) where N = error("Not implemented")
 sum(g::Base.Generator{<:Inclusion}; kwds...) = sum(g.f.(g.iter); kwds...)
+sum(g::Base.Generator{<:Domain}; kwds...) = sum(Base.Generator(g.f, Inclusion(g.iter)); kwds...) # type piracy...
 
 ####
 # diff
