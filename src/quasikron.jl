@@ -18,7 +18,7 @@ QuasiKron{T}(a::AbstractQuasiOrMatrix...) where T = QuasiKron{mapreduce(eltype,p
 QuasiKron(a...) = QuasiKron{mapreduce(eltype,promote_type,a)}(a...)
 
 
-quasikron(a::Union{Inclusion,OneTo}...) = Inclusion(ProductDomain(map(domain,a)...))
+quasikron(a::Union{Inclusion,OneTo}...) = Inclusion(_product(map(domain,a)...))
 quasikron(a...) = QuasiKron(a...)
 
 _kronaxes(::Tuple{}...) = ()
