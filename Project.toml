@@ -18,7 +18,6 @@ SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [extensions]
-QuasiArraysIntervalSetsExt = "IntervalSets"
 QuasiArraysDomainSetsExt = "DomainSets"
 QuasiArraysSparseArraysExt = "SparseArrays"
 QuasiArraysStatsBaseExt = "StatsBase"
@@ -36,6 +35,7 @@ julia = "1.10"
 
 [extras]
 Base64 = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
+DomainSets = "5b8099bc-c8ec-5219-889f-1d9e522a28bf"
 IntervalSets = "8197267c-284f-5f27-9208-e0e47529a953"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
@@ -43,4 +43,4 @@ StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Base64", "IntervalSets", "Random", "SparseArrays", "StatsBase", "Test"]
+test = ["Base64", "DomainSets", "IntervalSets", "Random", "SparseArrays", "StatsBase", "Test"]

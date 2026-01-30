@@ -1,7 +1,7 @@
 module QuasiArraysDomainSetsExt
 
 using QuasiArrays, DomainSets
-import QuasiArrays: cardinality
+import QuasiArrays: cardinality, _union
 import DomainSets: ClosedInterval
 
 cardinality(d::UnionDomain) = sum(cardinality, d.domains)
