@@ -543,5 +543,6 @@ for op in (:maximum, :minimum, :sum)
     @eval begin
         $op(g::Base.Generator{<:Inclusion}; kwds...) = $op(g.f.(g.iter); kwds...)
         $op(g::Base.Generator{<:Domain}; kwds...) = $op(Base.Generator(g.f, Inclusion(g.iter)); kwds...) # type piracy...
+        $op(g::Base.Generator{<:Base.Iterators.ProductIterator{<:Tuple{Vararg{Domain}}}}; kwds...) = $op(Base.Generator(g.f, ×(g.iter.iterators...)); kwds...) # type piracy...
     end
 end
