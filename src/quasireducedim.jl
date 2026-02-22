@@ -275,3 +275,15 @@ end
 
 
 
+
+####
+# generators
+####
+
+collect(g::Base.Generator{<:Inclusion}) = g.f.(g.iter)
+collect(g::Base.Generator{<:Domain}) = collect(Base.Generator(g.f, Inclusion(g.iter)))
+collect(g::Base.Generator{<:Base.Iterators.ProductIterator{<:Tuple{Vararg{Domain}}}}) = collect(Base.Generator(g.f, ×(g.iter.iterators...)))
+
+for op in (:maximum, :minimum, :sum)
+    @eval  $op(g::Base.Generator{<:Union{Inclusion,Domain,Base.Iterators.ProductIterator{<:Tuple{Vararg{Domain}}}}}; kwds...) = $op(collect(g); kwds...)
+end
