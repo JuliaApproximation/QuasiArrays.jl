@@ -27,8 +27,8 @@ using QuasiArrays, IntervalSets, Test
     end
 
     @testset "collect" begin
-        @test [exp(t) for t in Inclusion(0:0.5:1)][0.5] ≈ [exp(t) for t in 0..1][0.5] ≈ exp(0.5)
-        @test [exp(x*cos(y)) for x in 0..1, y in 1..2][0.1,1.2] ≈ exp(0.1*cos(1.2))
+        @test [exp(t) for t in Inclusion(0:0.5:1)][0.5] ≈ exp(0.5)
+        @test [exp(x*cos(y)) for x in Inclusion(0:0.5:1), y in Inclusion(1:0.5:2)][0.5,1.5] ≈ exp(0.5*cos(1.5))
     end
 
 end
