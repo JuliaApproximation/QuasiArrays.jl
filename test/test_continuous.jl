@@ -52,5 +52,7 @@ import QuasiArrays: ApplyQuasiArray
     @testset "comprehensions" begin
         @test_throws MethodError sum(exp(x) for x in 1..2) # needs ContinuumArrays.jl
         @test_throws MethodError sum(exp(x*cos(y)) for x in 1..2, y in 2..3)
+        @test [exp(x) for x in 1..2] isa BroadcastQuasiVector
+        @test_throws MethodError [exp(x*cos(y)) for x in 1..2, y in 2..3]
     end
 end
