@@ -25,4 +25,10 @@ using QuasiArrays, Test
         @test maximum(v) == 3
         @test extrema(v) == (0,3)
     end
+
+    @testset "collect" begin
+        @test [exp(t) for t in Inclusion(0:0.5:1)][0.5] ≈ exp(0.5)
+        @test [exp(x*cos(y)) for x in Inclusion(0:0.5:1), y in Inclusion(1:0.5:2)][0.5,1.5] ≈ exp(0.5*cos(1.5))
+    end
+
 end

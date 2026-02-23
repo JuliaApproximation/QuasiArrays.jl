@@ -275,3 +275,19 @@ end
 
 
 
+
+####
+# generators
+####
+
+collect(g::Base.Generator{<:AbstractQuasiVector}) = g.f.(g.iter)
+collect(g::Base.Generator{<:Domain}) = collect(Base.Generator(g.f, Inclusion(g.iter)))
+collect(g::Base.Generator{<:Base.Iterators.ProductIterator{<:Tuple{AbstractQuasiVector,AbstractQuasiVector}}}) = broadcast(function(x...) g.f(x) end, g.iter.iterators[1], g.iter.iterators[2]')
+collect(g::Base.Generator{<:Base.Iterators.ProductIterator{<:Tuple{Vararg{Domain}}}}) = collect(Base.Generator(g.f, Base.Iterators.ProductIterator(map(Inclusion, g.iter.iterators))))
+
+for op in (:maximum, :minimum, :sum)
+    @eval begin
+        $op(g::Base.Generator{<:Union{Inclusion,Domain}}; kwds...) = $op(collect(g); kwds...)
+        $op(g::Base.Generator{<:Base.Iterators.ProductIterator{<:Tuple{Vararg{Domain}}}}; kwds...) = $op(Base.Generator(g.f, ×(g.iter.iterators...)); kwds...)
+    end
+end

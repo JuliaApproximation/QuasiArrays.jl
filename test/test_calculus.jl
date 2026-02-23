@@ -31,6 +31,9 @@ using QuasiArrays, IntervalSets, Test
         @test cumsum(ApplyQuasiArray(*, A, b)) ≈ cumsum(A*b)
         @test cumsum(ApplyQuasiArray(*, A, B); dims=1) ≈ cumsum(A*B; dims=1)
         @test cumsum(ApplyQuasiArray(*, A, B); dims=2) ≈ cumsum(A*B; dims=2)
+
+        @test sum(exp(t) for t in Inclusion(0:0.5:1)) ≈ 5.367003099159174
+        @test_throws MethodError sum(exp(t) for t in 0..1) # requires down-stream
     end
 
     @testset "Diff" begin
