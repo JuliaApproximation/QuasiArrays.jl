@@ -1,4 +1,4 @@
-using QuasiArrays, IntervalSets, Test
+using QuasiArrays, Test
 
 @testset "reducedim" begin
     A = QuasiArray(randn(2,3), (0:0.5:0.5, 1:0.5:2))

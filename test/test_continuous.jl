@@ -48,4 +48,9 @@ import QuasiArrays: ApplyQuasiArray
         @test D[1,1] ≡ 1.0
         @test_throws BoundsError D[1.1,1.2]
     end
+
+    @testset "comprehensions" begin
+        @test_throws MethodError sum(exp(x) for x in 1..2) # needs ContinuumArrays.jl
+        @test_throws MethodError sum(exp(x*cos(y)) for x in 1..2, y in 2..3)
+    end
 end
