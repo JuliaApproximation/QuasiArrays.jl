@@ -280,10 +280,16 @@ end
 # generators
 ####
 
-collect(g::Base.Generator{<:AbstractQuasiVector}) = g.f.(g.iter)
+# Axiom of Choice: choose a point in the set
+pointchoice(x) = first(x)
+pointchoice(x::Inclusion{<:Any,<:AbstractInterval}) = leftendpoint(x.domain)
+chooseeltype(g) = eltype(g.f(pointchoice(g.iter)))
+collect(g::Base.Generator{<:AbstractQuasiVector}) = BroadcastQuasiVector{chooseeltype(g)}(g.f, g.iter)
 collect(g::Base.Generator{<:Domain}) = collect(Base.Generator(g.f, Inclusion(g.iter)))
 collect(g::Base.Generator{<:Base.Iterators.ProductIterator{<:Tuple{AbstractQuasiVector,AbstractQuasiVector}}}) = broadcast(function(x...) g.f(x) end, g.iter.iterators[1], g.iter.iterators[2]')
 collect(g::Base.Generator{<:Base.Iterators.ProductIterator{<:Tuple{Vararg{Domain}}}}) = collect(Base.Generator(g.f, Base.Iterators.ProductIterator(map(Inclusion, g.iter.iterators))))
+
+
 
 for op in (:maximum, :minimum, :sum)
     @eval begin

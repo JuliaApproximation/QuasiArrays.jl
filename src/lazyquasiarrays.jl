@@ -150,6 +150,9 @@ function equals_layout(::BroadcastLayout, ::BroadcastLayout, A, B)
 end
 copy(A::BroadcastQuasiArray) = A # BroadcastQuasiArray are immutable
 
+AbstractQuasiArray{T}(A::BroadcastQuasiArray{V,N}) where {T,V,N} = BroadcastQuasiArray{T,N}(A.f, A.args...)
+AbstractQuasiArray{T,N}(A::BroadcastQuasiArray{V,N}) where {T,V,N} = BroadcastQuasiArray{T,N}(A.f, A.args...)
+
 @propagate_inbounds _getindex(::Type{IND}, bc::BroadcastQuasiArray, kj::IND) where IND = bc[QuasiCartesianIndex(kj...)]
 @propagate_inbounds function getindex(bc::BroadcastQuasiArray{T,N}, kj::QuasiCartesianIndex{N}) where {T,N}
     args = Base.Broadcast._getindex(bc.args, kj)
