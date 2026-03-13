@@ -32,6 +32,7 @@ jobs:
         package:
           - {repo: ContinuumArrays.jl, group: JuliaApproximation}
           - {repo: ClassicalOrthogonalPolynomials.jl, group: JuliaApproximation}
+          - {repo: MultivariateOrthogonalPolynomials.jl, group: JuliaApproximation}
 
     steps:
       - uses: actions/checkout@v4
