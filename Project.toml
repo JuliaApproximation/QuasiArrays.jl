@@ -1,7 +1,7 @@
 name = "QuasiArrays"
 uuid = "c4ea9172-b204-11e9-377d-29865faadc5c"
-authors = ["Sheehan Olver <solver@mac.com>"]
 version = "0.13.5"
+authors = ["Sheehan Olver <solver@mac.com>"]
 
 [deps]
 ArrayLayouts = "4c555306-a7a7-4459-81d9-ec55ddd5c99a"
@@ -20,10 +20,9 @@ StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 QuasiArraysSparseArraysExt = "SparseArrays"
 QuasiArraysStatsBaseExt = "StatsBase"
 
-
 [compat]
 ArrayLayouts = "1"
-DomainSets = "0.7.6"
+DomainSets = "0.7.6, 0.8"
 FillArrays = "1"
 LazyArrays = "2"
 Random = "1.0"
