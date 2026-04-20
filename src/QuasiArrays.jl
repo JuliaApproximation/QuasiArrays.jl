@@ -1,5 +1,5 @@
 module QuasiArrays
-using Base, LinearAlgebra, LazyArrays, ArrayLayouts, DomainSets, FillArrays, StaticArrays
+using Base, LinearAlgebra, LazyArrays, ArrayLayouts, FillArrays, StaticArrays
 import Base: getindex, size, axes, axes1, length, ==, isequal, iterate, CartesianIndices, LinearIndices,
                 Indices, IndexStyle, getindex, setindex!, parent, vec, convert, similar, copy, copyto!, zero,
                 map, eachindex, eltype, first, last, firstindex, lastindex, in, reshape, permutedims, all,
@@ -78,8 +78,6 @@ const AbstractQuasiOrArray{T} = Union{AbstractArray{T},AbstractQuasiArray{T}}
 
 
 cardinality(d) = length(d)
-cardinality(d::UnionDomain) = sum(cardinality, d.domains)
-cardinality(d::VcatDomain) = prod(cardinality, d.domains)
 
 size(A::AbstractQuasiArray) = map(cardinality, axes(A))
 axes(A::AbstractQuasiArray) = error("Override axes for $(typeof(A))")

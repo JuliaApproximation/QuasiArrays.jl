@@ -196,8 +196,6 @@ Base.issubset(S::Inclusion, d) = S.domain ⊆ d
 Base.issubset(S::Inclusion, d::Inclusion) = S.domain ⊆ d.domain
 
 intersect(x::Inclusion...) = Inclusion{mapreduce(eltype,promote_type,x)}(intersect(map(domain,x)...))
-# use UnionDomain to support intervals
-_union(a::ClosedInterval...) = UnionDomain(a...)
 _union(a...) = union(a...)
 union(x::Inclusion...) = Inclusion{mapreduce(eltype,promote_type,x)}(_union(map(domain,x)...))
 
