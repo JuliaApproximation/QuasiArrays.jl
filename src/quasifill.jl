@@ -478,9 +478,10 @@ function broadcasted(::AbstractQuasiArrayStyle{1}, ::typeof(+), a::QuasiZeros{T,
     broadcast_shape(axes(a), axes(b)) == axes(a) || throw(ArgumentError("Cannot broadcast $a and $b. Convert $a to a Vector first."))
     LinearAlgebra.copy_oftype(b, promote_type(T,V))
 end
-
 broadcasted(::AbstractQuasiArrayStyle{1}, ::typeof(+), a::QuasiZeros{V,1}, b::AbstractQuasiFill{T,1}) where {T,V} = 
-            Base.invoke(broadcasted, Tuple{DefaultQuasiArrayStyle, typeof(+), AbstractQuasiFill, AbstractQuasiFill}, DefaultQuasiArrayStyle{1}(), +, a, b)
+Base.invoke(broadcasted, Tuple{DefaultQuasiArrayStyle, typeof(+), AbstractQuasiFill, AbstractQuasiFill}, DefaultQuasiArrayStyle{1}(), +, a, b)
+broadcasted(::LazyQuasiArrayStyle, ::typeof(+), a::QuasiZeros{T,N}, b::AbstractQuasiArray{V,N}) where {T,V,N} =
+    broadcasted(DefaultQuasiArrayStyle{N}(), +, a, b)
 
 # Need to prevent array-valued fills from broadcasting over entry
 _broadcast_getindex_value(a::AbstractQuasiFill{<:Number}) = getindex_value(a)
