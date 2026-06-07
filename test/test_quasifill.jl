@@ -735,4 +735,15 @@ import QuasiArrays: AbstractQuasiFill
         @test isone(QuasiOnes(0:0.5:1))
         @test !isone(QuasiZeros(0:0.5:1))
     end
+
+    @testset "lazy amiguities (#129)" begin
+        A = QuasiArray(rand(3,3),(0:0.5:1,0:0.5:1))
+        x = QuasiArray(rand(3),(0:0.5:1,))
+        m = ApplyQuasiArray(*, A, x)
+        z = zero(m)
+        @test m .* z ≡ z .* m ≡ z
+        @test z .* (m .+ m) ≡ (m .+ m) .* z ≡ z
+        @test m .+ z ≡ z .+ m ≡ m
+
+    end
 end

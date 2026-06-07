@@ -432,6 +432,8 @@ for op in (:*, :/)
         broadcasted(::AbstractQuasiArrayStyle, ::typeof($op), a::QuasiZeros, b::Number) = _broadcasted_zeros($op, a, b)
         broadcasted(::AbstractQuasiArrayStyle, ::typeof($op), a::QuasiZeros, b::Base.Broadcast.Broadcasted) = _broadcasted_zeros($op, a, b)
         broadcasted(::AbstractQuasiArrayStyle, ::typeof($op), a::QuasiZeros, b::AbstractQuasiArray{<:Number}) = _broadcasted_zeros($op, a, b)
+        broadcasted(::LazyQuasiArrayStyle, ::typeof($op), a::QuasiZeros, b::Base.Broadcast.Broadcasted) = _broadcasted_zeros($op, a, b)
+        broadcasted(::LazyQuasiArrayStyle, ::typeof($op), a::QuasiZeros, b::AbstractQuasiArray{<:Number}) = _broadcasted_zeros($op, a, b)
     end
 end
 
@@ -442,6 +444,8 @@ for op in (:*, :\)
         broadcasted(::AbstractQuasiArrayStyle, ::typeof($op), a::Number, b::QuasiZeros) = _broadcasted_zeros($op, a, b)
         broadcasted(::AbstractQuasiArrayStyle, ::typeof($op), a::Base.Broadcast.Broadcasted, b::QuasiZeros) = _broadcasted_zeros($op, a, b)
         broadcasted(::AbstractQuasiArrayStyle, ::typeof($op), a::AbstractQuasiArray{<:Number}, b::QuasiZeros) = _broadcasted_zeros($op, a, b)
+        broadcasted(::LazyQuasiArrayStyle, ::typeof($op), a::Base.Broadcast.Broadcasted, b::QuasiZeros) = _broadcasted_zeros($op, a, b)
+        broadcasted(::LazyQuasiArrayStyle, ::typeof($op), a::AbstractQuasiArray{<:Number}, b::QuasiZeros) = _broadcasted_zeros($op, a, b)
     end
 end
 
@@ -461,6 +465,10 @@ for op in (:+, -)
             LinearAlgebra.copy_oftype(a, promote_type(T,V))
         end
 
+        broadcasted(::LazyQuasiArrayStyle{N}, f::typeof($op), a::AbstractQuasiArray{T,N}, b::QuasiZeros{V,N}) where {T,V,N} =
+            broadcasted(DefaultQuasiArrayStyle{N}(), f, a, b)
+
+
         broadcasted(::AbstractQuasiArrayStyle{1}, ::typeof($op), a::AbstractQuasiFill{T,1}, b::QuasiZeros{V,1}) where {T,V} = 
             Base.invoke(broadcasted, Tuple{DefaultQuasiArrayStyle, typeof($op), AbstractQuasiFill, AbstractQuasiFill}, DefaultQuasiArrayStyle{1}(), $op, a, b)
     end
@@ -470,9 +478,10 @@ function broadcasted(::AbstractQuasiArrayStyle{1}, ::typeof(+), a::QuasiZeros{T,
     broadcast_shape(axes(a), axes(b)) == axes(a) || throw(ArgumentError("Cannot broadcast $a and $b. Convert $a to a Vector first."))
     LinearAlgebra.copy_oftype(b, promote_type(T,V))
 end
-
 broadcasted(::AbstractQuasiArrayStyle{1}, ::typeof(+), a::QuasiZeros{V,1}, b::AbstractQuasiFill{T,1}) where {T,V} = 
-            Base.invoke(broadcasted, Tuple{DefaultQuasiArrayStyle, typeof(+), AbstractQuasiFill, AbstractQuasiFill}, DefaultQuasiArrayStyle{1}(), +, a, b)
+Base.invoke(broadcasted, Tuple{DefaultQuasiArrayStyle, typeof(+), AbstractQuasiFill, AbstractQuasiFill}, DefaultQuasiArrayStyle{1}(), +, a, b)
+broadcasted(::LazyQuasiArrayStyle, ::typeof(+), a::QuasiZeros{T,N}, b::AbstractQuasiArray{V,N}) where {T,V,N} =
+    broadcasted(DefaultQuasiArrayStyle{N}(), +, a, b)
 
 # Need to prevent array-valued fills from broadcasting over entry
 _broadcast_getindex_value(a::AbstractQuasiFill{<:Number}) = getindex_value(a)
