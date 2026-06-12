@@ -295,6 +295,6 @@ collect(g::Base.Generator{<:Base.Iterators.ProductIterator{<:Tuple{Vararg{Domain
 for op in (:maximum, :minimum, :sum)
     @eval begin
         $op(g::Base.Generator{<:Union{Inclusion,Domain}}; kwds...) = $op(collect(g); kwds...)
-        $op(g::Base.Generator{<:Base.Iterators.ProductIterator{<:Tuple{Vararg{Domain}}}}; kwds...) = $op(Base.Generator(g.f, ×(g.iter.iterators...)); kwds...)
+        $op(g::Base.Generator{<:Base.Iterators.ProductIterator{<:Tuple{Vararg{Domain}}}}; kwds...) = $op(Base.Generator(g.f, cartesianproduct(g.iter.iterators...)); kwds...)
     end
 end
