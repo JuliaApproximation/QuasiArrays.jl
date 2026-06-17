@@ -97,7 +97,7 @@ function diff_size(sz, a, kj::NTuple{N,Int}; dims...) where N
     all(iszero, kj) && return a
     _is_basis_tuple(kj...) && return diff(a, Val(kj); dims...)
     bkj = _find_basis_tuple(kj...)
-    diff(diff(a, bkj; dims...), map(-, kj, bkj))
+    diff(diff(a, bkj; dims...), map(-, kj, bkj); dims...)
 end
 
 diff(x::Inclusion; dims::Integer=1) = ones(eltype(x), diffaxes(x))

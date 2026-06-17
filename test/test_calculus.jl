@@ -68,9 +68,13 @@ using QuasiArrays, IntervalSets, Test
             @test @inferred(diff(ApplyQuasiArray(*, A, B))) ≈ diff(A*B)
         end
 
-        @testset "diff dims=2" begin
+        @testset "diff dims=2 / tuples" begin
             A = QuasiArray(randn(2,3), (0:0.5:0.5, 1:0.5:2))
             B = QuasiArray(randn(3,2), (1:0.5:2,0:0.5:0.5))
+            @test diff(A, (1,)) == diff(A)
+            @test diff(A, (2,)) == diff(A,2) == diff(diff(A))
+            @test diff(A, (1,); dims=2) == diff(A; dims=2)
+            @test diff(A, (2,); dims=2) == diff(A,2;dims=2) == diff(diff(A;dims=2);dims=2)
             @test @inferred(diff(ApplyQuasiArray(*, A, B); dims=2)) ≈ diff(A*B; dims=2)
             @test_throws ArgumentError diff(ApplyQuasiArray(*, A, B); dims=3)
         end
