@@ -79,15 +79,7 @@ end
 diff_size(sz, a, ::Val{K}; dims...) where K = diff(a, only(K); dims...)
 
 _is_basis_tuple() = false
-function _is_basis_tuple(k, j...)
-    if isone(k)
-        all(iszero, j) 
-    elseif iszero(k)
-        _is_basis_tuple(j...)
-    else
-        false
-    end
-end
+_is_basis_tuple(k, j...) = iszero(k) ? _is_basis_tuple(j...) : (isone(k) && all(iszero, j...))
 
 _find_basis_tuple() = ()
 _find_basis_tuple(k, j...) = (ifelse(iszero(k), 0, 1), _find_basis_tuple(j...)...)
