@@ -4,7 +4,7 @@
 
 
 _cumsum(A, dims) = cumsum_layout(MemoryLayout(A), A, dims)
-cumsum(A::AbstractQuasiArray; dims::Integer=1) = _cumsum(A, dims)
+cumsum(A::AbstractQuasiArray; dims=1) = _cumsum(A, dims)
 
 # sum is equivalent to hitting by ones(n) on the left or right
 
@@ -49,11 +49,24 @@ cumsum_size(::NTuple{N,Integer}, A, dims) where N = error("Not implemented")
 # diff
 ####
 
-@inline diff(a::AbstractQuasiArray, order...; dims::Integer=1) = diff_layout(MemoryLayout(a), a, order...; dims)
-function diff_layout(LAY::ApplyLayout{typeof(*)}, V::AbstractQuasiVecOrMat, order...; dims=1)
+@inline diff(a::AbstractQuasiArray, order...; dims=1) = diff_layout(MemoryLayout(a), a, order...; dims)
+function diff_layout(LAY::ApplyLayout{typeof(*)}, V::AbstractQuasiVector, order...; dims=1)
     a = arguments(LAY, V)
     dims == 1 || throw(ArgumentError("cannot differentiate a vector along dimension $dims"))
     *(diff(a[1], order...), tail(a)...)
+end
+
+function diff_layout(LAY::ApplyLayout{typeof(*)}, V::AbstractQuasiMatrix, order...; dims=1)
+    a = arguments(LAY, V)
+    if dims == 1
+        *(diff(a[1], order...), tail(a)...)
+    elseif dims == 2
+        *(front(a)..., diff(a[end], order...; dims=2))
+    elseif dims == (1,2)
+        diff(diff(V, order...; dims=1), order...; dims=2)
+    else
+        throw(ArgumentError("cannot differentiate a quasimatrix along dimension $dims"))
+    end
 end
 
 diff_layout(::MemoryLayout, A, order...; dims...) = diff_size(size(A), A, order...; dims...)
@@ -64,10 +77,10 @@ function diff_size(sz, a, order; dims...)
     isone(order) ? diff(a) : diff(diff(a), order-1)
 end
 
-diff(x::Inclusion; dims::Integer=1) = ones(eltype(x), diffaxes(x))
-diff(x::Inclusion, order::Int; dims::Integer=1) = fill(ifelse(isone(order), one(eltype(x)), zero(eltype(x))), diffaxes(x,order))
-diff(c::AbstractQuasiFill{<:Any,1}, order...; dims::Integer=1) =  zeros(eltype(c), diffaxes(axes(c,1),order...))
-function diff(c::AbstractQuasiFill{<:Any,2}, order...; dims::Integer=1)
+diff(x::Inclusion; dims=1) = ones(eltype(x), diffaxes(x))
+diff(x::Inclusion, order::Int; dims=1) = fill(ifelse(isone(order), one(eltype(x)), zero(eltype(x))), diffaxes(x,order))
+diff(c::AbstractQuasiFill{<:Any,1}, order...; dims=1) =  zeros(eltype(c), diffaxes(axes(c,1),order...))
+function diff(c::AbstractQuasiFill{<:Any,2}, order...; dims=1)
     a,b = axes(c)
     if dims == 1
         zeros(eltype(c), diffaxes(a, order...), b)
@@ -81,8 +94,8 @@ diffaxes(a::Inclusion{<:Any,<:AbstractVector}, order=1) = Inclusion(a.domain[1:e
 diffaxes(a::OneTo, order=1) = oneto(length(a)-order)
 diffaxes(a, order...) = a # default is differentiation does not change axes
 
-diff(b::QuasiVector; dims::Integer=1) = QuasiVector(diff(b.parent) ./ diff(b.axes[1]), (diffaxes(axes(b,1)),))
-function diff(A::QuasiMatrix; dims::Integer=1)
+diff(b::QuasiVector; dims=1) = QuasiVector(diff(b.parent) ./ diff(b.axes[1]), (diffaxes(axes(b,1)),))
+function diff(A::QuasiMatrix; dims=1)
     D = diff(A.parent; dims=dims)
     a,b = axes(A)
     if dims ==  1
@@ -91,6 +104,15 @@ function diff(A::QuasiMatrix; dims::Integer=1)
         QuasiMatrix(D ./ permutedims(diff(b.domain)), (a, diffaxes(b)))
     end
 end
+
+_reverse(x::Number) = (x,)
+_reverse(x) = (reverse(x),)
+_reverse() = ()
+
+_reversediffdims(d::Integer) = d == 1 ? 2 : 1
+
+diff(A::QuasiAdjoint, order...; dims=1) = diff(A.parent, _reverse(order...)...; dims=_reversediffdims(dims))'
+diff(A::QuasiTranspose, order...; dims=1) = transpose(diff(A.parent, _reverse(order); dims=_reversediffdims(dims)))
 
 
 
