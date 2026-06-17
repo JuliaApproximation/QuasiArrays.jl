@@ -4,7 +4,7 @@
 
 
 _cumsum(A, dims) = cumsum_layout(MemoryLayout(A), A, dims)
-cumsum(A::AbstractQuasiArray; dims::Integer=1) = _cumsum(A, dims)
+cumsum(A::AbstractQuasiArray; dims=1) = _cumsum(A, dims)
 
 # sum is equivalent to hitting by ones(n) on the left or right
 
@@ -50,18 +50,46 @@ cumsum_size(::NTuple{N,Integer}, A, dims) where N = error("Not implemented")
 ####
 
 @inline diff(a::AbstractQuasiArray, order...; dims::Integer=1) = diff_layout(MemoryLayout(a), a, order...; dims)
-function diff_layout(LAY::ApplyLayout{typeof(*)}, V::AbstractQuasiVecOrMat, order...; dims=1)
+function diff_layout(LAY::ApplyLayout{typeof(*)}, V::AbstractQuasiVector, order...; dims::Integer=1)
     a = arguments(LAY, V)
     dims == 1 || throw(ArgumentError("cannot differentiate a vector along dimension $dims"))
     *(diff(a[1], order...), tail(a)...)
 end
 
+function diff_layout(LAY::ApplyLayout{typeof(*)}, V::AbstractQuasiMatrix, order...; dims::Integer=1)
+    a = arguments(LAY, V)
+    if dims == 1
+        *(diff(a[1], order...), tail(a)...)
+    elseif dims == 2
+        *(front(a)..., diff(a[end], order...; dims=2))
+    else
+        throw(ArgumentError("cannot differentiate a quasimatrix along dimension $dims"))
+    end
+end
+
 diff_layout(::MemoryLayout, A, order...; dims...) = diff_size(size(A), A, order...; dims...)
 diff_size(sz, a; dims...) = error("diff not implemented for $(typeof(a))")
-function diff_size(sz, a, order; dims...)
+function diff_size(sz, a, order::Integer; dims...)
     order < 0 && throw(ArgumentError("order must be non-negative"))
     order == 0 && return a
-    isone(order) ? diff(a) : diff(diff(a), order-1)
+    isone(order) ? diff(a; dims...) : diff(diff(a; dims...), order-1; dims...)
+end
+
+# support diff(A, (2,)) etc.
+diff_size(sz, a, ::Val{K}; dims...) where K = diff(a, only(K); dims...)
+
+_is_basis_tuple() = false
+_is_basis_tuple(k, j...) = iszero(k) ? _is_basis_tuple(j...) : (isone(k) && all(iszero, j))
+
+_find_basis_tuple() = ()
+_find_basis_tuple(k, j...) = (ifelse(iszero(k), 0, 1), _find_basis_tuple(j...)...)
+
+function diff_size(sz, a, kj::NTuple{N,Int}; dims...) where N
+    any(<(0), kj) && throw(ArgumentError("order must be non-negative"))
+    all(iszero, kj) && return a
+    _is_basis_tuple(kj...) && return diff(a, Val(kj); dims...)
+    bkj = _find_basis_tuple(kj...)
+    diff(diff(a, bkj; dims...), map(-, kj, bkj); dims...)
 end
 
 diff(x::Inclusion; dims::Integer=1) = ones(eltype(x), diffaxes(x))
@@ -90,6 +118,16 @@ function diff(A::QuasiMatrix; dims::Integer=1)
     else
         QuasiMatrix(D ./ permutedims(diff(b.domain)), (a, diffaxes(b)))
     end
+end
+
+_reverse(x::Number) = (x,)
+_reverse(x) = (reverse(x),)
+_reverse() = ()
+
+
+
+for (adj, Adj) in ((:adjoint, :QuasiAdjoint), (:transpose, :QuasiTranspose))
+    @eval diff(A::$Adj, order...; dims::Integer=1) = $adj(diff(A.parent, _reverse(order...)...; dims=(dims == 1 ? 2 : 1)))
 end
 
 
