@@ -45,6 +45,8 @@ import LinearAlgebra: transpose, adjoint, Diagonal,
                         integerpow, schurpow, tr, factorize, copy_oftype, rank, dot, norm, norm2, norm1, normInf, normp
 
 import ArrayLayouts: indextype, concretize, fillzeros, OnesLayout, AbstractFillLayout, FillLayout, ZerosLayout, diagonallayout, diagonaldata, diagonal
+
+import DomainSets: choice
 import LazyArrays: MemoryLayout, UnknownLayout, Mul, ApplyLayout, BroadcastLayout,
                     InvOrPInv, ApplyStyle, AbstractLazyLayout, LazyLayout,
                     MulStyle, MulAddStyle, LazyArrayApplyStyle, combine_mul_styles, DefaultArrayApplyStyle,
