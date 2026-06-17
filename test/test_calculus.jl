@@ -80,6 +80,8 @@ using QuasiArrays, IntervalSets, Test
             @test diff(A') == diff(A;dims=2)'
             @test diff(A'; dims=2) == diff(A;dims=1)'
             @test diff(transpose(A)) == transpose(diff(A;dims=2))
+            @test diff(A', 2) == diff(A', (2,)) == diff(A,2; dims=2)'
+            @test diff(A', 2; dims=2) == diff(A', (2,); dims=2) == diff(A,2)'
         end
     end
 

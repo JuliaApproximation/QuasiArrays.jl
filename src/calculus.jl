@@ -69,10 +69,35 @@ end
 
 diff_layout(::MemoryLayout, A, order...; dims...) = diff_size(size(A), A, order...; dims...)
 diff_size(sz, a; dims...) = error("diff not implemented for $(typeof(a))")
-function diff_size(sz, a, order; dims...)
+function diff_size(sz, a, order::Integer; dims...)
     order < 0 && throw(ArgumentError("order must be non-negative"))
     order == 0 && return a
     isone(order) ? diff(a; dims...) : diff(diff(a; dims...), order-1; dims...)
+end
+
+# support diff(A, (2,)) etc.
+diff_size(sz, a, ::Val{K}; dims...) where K = diff(a, only(K); dims...)
+
+_is_basis_tuple() = false
+function _is_basis_tuple(k, j...)
+    if isone(k)
+        all(iszero, j) 
+    elseif iszero(k)
+        _is_basis_tuple(j...)
+    else
+        false
+    end
+end
+
+_find_basis_tuple() = ()
+_find_basis_tuple(k, j...) = (ifelse(iszero(k), 0, 1), _find_basis_tuple(j...)...)
+
+function diff_size(sz, a, kj::NTuple{N,Int}; dims...) where N
+    any(<(0), kj) && throw(ArgumentError("order must be non-negative"))
+    all(iszero, kj) && return a
+    _is_basis_tuple(kj...) && return diff(a, Val(kj); dims...)
+    bkj = _find_basis_tuple(kj...)
+    diff(diff(a, bkj; dims...), map(-, kj, bkj))
 end
 
 diff(x::Inclusion; dims::Integer=1) = ones(eltype(x), diffaxes(x))
