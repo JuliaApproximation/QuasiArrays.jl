@@ -67,6 +67,20 @@ using QuasiArrays, IntervalSets, Test
             @test @inferred(diff(ApplyQuasiArray(*, A, b))) ≈ diff(A*b)
             @test @inferred(diff(ApplyQuasiArray(*, A, B))) ≈ diff(A*B)
         end
+
+        @testset "diff dims=2" begin
+            A = QuasiArray(randn(2,3), (0:0.5:0.5, 1:0.5:2))
+            B = QuasiArray(randn(3,2), (1:0.5:2,0:0.5:0.5))
+            @test @inferred(diff(ApplyQuasiArray(*, A, B); dims=2)) ≈ diff(A*B; dims=2)
+            @test_throws ArgumentError diff(ApplyQuasiArray(*, A, B); dims=3)
+        end
+
+        @testset "diff adj/trans" begin
+            A = QuasiArray(randn(2,3) .+ im, (0:0.5:0.5, 1:0.5:2))
+            @test diff(A') == diff(A;dims=2)'
+            @test diff(A'; dims=2) == diff(A;dims=1)'
+            @test diff(transpose(A)) == transpose(diff(A;dims=2))
+        end
     end
 
     @testset "Interval" begin
