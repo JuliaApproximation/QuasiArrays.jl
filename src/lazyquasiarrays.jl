@@ -95,12 +95,15 @@ subbroadcaststyle(::AbstractQuasiArrayStyle{N}, _) where N = DefaultArrayStyle{N
 
 # TODO: generalise
 subbroadcaststyle(::AbstractQuasiArrayStyle{2}, ::Type{<:Tuple{Number,Number}}) = DefaultArrayStyle{0}()
-subbroadcaststyle(::AbstractQuasiArrayStyle{2}, ::Type{<:Tuple{Number,JR}}) where JR = _lazyiflazystyle(Base.BroadcastStyle(JR))
-subbroadcaststyle(::AbstractQuasiArrayStyle{2}, ::Type{<:Tuple{KR,Number}}) where KR = _lazyiflazystyle(Base.BroadcastStyle(KR))
+subbroadcaststyle(::AbstractQuasiArrayStyle{2}, ::Type{<:Tuple{Number,JR}}) where JR = _lazyiflazystyle(_broadcaststyle(JR))
+subbroadcaststyle(::AbstractQuasiArrayStyle{2}, ::Type{<:Tuple{KR,Number}}) where KR = _lazyiflazystyle(_broadcaststyle(KR))
 
 subbroadcaststyle(::LazyQuasiArrayStyle{2}, ::Type{<:Tuple{Number,Number}}) = DefaultArrayStyle{0}()
-subbroadcaststyle(::LazyQuasiArrayStyle{2}, ::Type{<:Tuple{Number,JR}}) where JR = _lazyiflazystyle(Base.BroadcastStyle(JR))
-subbroadcaststyle(::LazyQuasiArrayStyle{2}, ::Type{<:Tuple{KR,Number}}) where KR = _lazyiflazystyle(Base.BroadcastStyle(KR))
+subbroadcaststyle(::LazyQuasiArrayStyle{2}, ::Type{<:Tuple{Number,JR}}) where JR = _lazyiflazystyle(_broadcaststyle(JR))
+subbroadcaststyle(::LazyQuasiArrayStyle{2}, ::Type{<:Tuple{KR,Number}}) where KR = _lazyiflazystyle(_broadcaststyle(KR))
+
+_broadcaststyle(JR) = Base.BroadcastStyle(JR)
+_broadcaststyle(::Type{<:Base.Slice}) = LazyArrayStyle{1}()
 
 _lazyiflazystyle(_) = DefaultArrayStyle{1}()
 _lazyiflazystyle(laz::LazyArrayStyle) = laz
