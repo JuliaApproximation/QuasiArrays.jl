@@ -243,7 +243,6 @@ module QuasiIteratorsMD
 
     For cartesian to linear index conversion, see [`LinearIndices`](@ref).
     """
-
     struct QuasiCartesianIndices{N,R<:NTuple{N,AbstractQuasiOrVector},RR<:NTuple{N,Any}} <: AbstractArray{QuasiCartesianIndex{N,RR},N}
         indices::R
     end
