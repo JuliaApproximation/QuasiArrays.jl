@@ -80,7 +80,7 @@ size(A::ApplyQuasiArray) = map(length, axes(A))
 copy(A::ApplyQuasiArray) = A # immutable arrays don't need to copy
 
 @propagate_inbounds _getindex(::Type{IND}, A::ApplyQuasiArray{T}, I::IND) where {IND,T} =
-    Applied(A)[I...]::T
+    convert(T, Applied(A)[I...])::T
 
 MemoryLayout(M::Type{ApplyQuasiArray{T,N,F,Args}}) where {T,N,F,Args} =
     applylayout(F, tuple_type_memorylayouts(Args)...)
