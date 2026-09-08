@@ -27,6 +27,31 @@ Base.getindex(A::MyQuasiLazyMatrix, x::Float64, y::Float64) = A.A[x,y]
                 @test 2M ≈ M*2 ≈ 2A*A
                 @test 2\M ≈ M/2 ≈ A*A/2
             end
+            @testset "convert" begin
+                A = QuasiArray(rand(3,3),(0:0.5:1,0:0.5:1))
+                M = ApplyQuasiArray(*, A, A)
+
+                @test convert(ApplyQuasiArray{Float64}, M) === M
+                @test convert(ApplyQuasiArray{Float64,2}, M) === M
+                @test convert(AbstractQuasiArray{Float64}, M) === M
+                @test convert(AbstractQuasiArray{Float64,2}, M) === M
+
+                Mc = convert(ApplyQuasiArray{ComplexF64}, M)
+                @test Mc isa ApplyQuasiArray{ComplexF64,2}
+                @test Mc == M
+
+                Mc₂ = convert(ApplyQuasiArray{ComplexF64,2}, M)
+                @test Mc₂ isa ApplyQuasiArray{ComplexF64,2}
+                @test Mc₂ == M
+
+                Ac = convert(AbstractQuasiArray{ComplexF64}, M)
+                @test Ac isa ApplyQuasiArray{ComplexF64,2}
+                @test Ac == M
+
+                Ac₂ = convert(AbstractQuasiArray{ComplexF64,2}, M)
+                @test Ac₂ isa ApplyQuasiArray{ComplexF64,2}
+                @test Ac₂ == M
+            end
             @testset "Quasi * Array" begin
                 A = QuasiArray(rand(3,3),(0:0.5:1,Base.OneTo(3)))
                 B = randn(3,3)
