@@ -63,6 +63,15 @@ ApplyQuasiArray{T,N}(f, factors...) where {T,N} = ApplyQuasiArray{T,N}(applied(f
 ApplyQuasiVector(f, factors...) = ApplyQuasiVector(applied(f, factors...))
 ApplyQuasiMatrix(f, factors...) = ApplyQuasiMatrix(applied(f, factors...))
 
+convert(::Type{ApplyQuasiArray{T}}, A::ApplyQuasiArray{T}) where T = A
+convert(::Type{ApplyQuasiArray{T,N}}, A::ApplyQuasiArray{T,N}) where {T,N} = A
+convert(::Type{AbstractQuasiArray{T}}, A::ApplyQuasiArray{T}) where T = A
+convert(::Type{AbstractQuasiArray{T,N}}, A::ApplyQuasiArray{T,N}) where {T,N} = A
+convert(::Type{ApplyQuasiArray{T}}, A::ApplyQuasiArray) where T = ApplyQuasiArray{T}(A.f, A.args...)
+convert(::Type{ApplyQuasiArray{T,N}}, A::ApplyQuasiArray{<:Any,N}) where {T,N} = ApplyQuasiArray{T,N}(A.f, A.args...)
+convert(::Type{AbstractQuasiArray{T}}, A::ApplyQuasiArray) where T = convert(ApplyQuasiArray{T}, A)
+convert(::Type{AbstractQuasiArray{T,N}}, A::ApplyQuasiArray) where {T,N} = convert(ApplyQuasiArray{T,N}, A)
+
 @inline Applied(A::AbstractQuasiArray) = Applied(call(A), arguments(A)...)
 @inline ApplyQuasiArray(A::AbstractQuasiArray) = ApplyQuasiArray(call(A), arguments(A)...)
 
@@ -70,8 +79,8 @@ axes(A::ApplyQuasiArray) = axes(Applied(A))
 size(A::ApplyQuasiArray) = map(length, axes(A))
 copy(A::ApplyQuasiArray) = A # immutable arrays don't need to copy
 
-@propagate_inbounds _getindex(::Type{IND}, A::ApplyQuasiArray, I::IND) where IND =
-    Applied(A)[I...]
+@propagate_inbounds _getindex(::Type{IND}, A::ApplyQuasiArray{T}, I::IND) where {IND,T} =
+    convert(T, Applied(A)[I...])::T
 
 MemoryLayout(M::Type{ApplyQuasiArray{T,N,F,Args}}) where {T,N,F,Args} =
     applylayout(F, tuple_type_memorylayouts(Args)...)
