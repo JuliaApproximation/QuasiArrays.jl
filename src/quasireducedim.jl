@@ -82,6 +82,8 @@ reducedim_initarray(A::AbstractQuasiArray, region, init::T) where {T} = reducedi
 
 reducedim_init(f, op::typeof(&), A::AbstractQuasiArray, region) = reducedim_initarray(A, region, true)
 reducedim_init(f, op::typeof(|), A::AbstractQuasiArray, region) = reducedim_initarray(A, region, false)
+reducedim_init(f, op::typeof(Base.and_all), A::AbstractQuasiArray, region) = reducedim_initarray(A, region, true)
+reducedim_init(f, op::typeof(Base.or_any), A::AbstractQuasiArray, region) = reducedim_initarray(A, region, false)
 
 # specialize to make initialization more efficient for common cases
 
