@@ -16,6 +16,16 @@ import QuasiArrays: ArrayQuasiVector
             @test H[SVector(0.5,3),1:2] == H[SVector(0.5,3),:] == [0.5, 3]
             @test H[[SVector(0.5,3),SVector(1,4)],1] == [0.5,1]
             @test H[[SVector(0.5,3),SVector(1,4)],1:2] == H[[SVector(0.5,3),SVector(1,4)],:] == [0.5 3; 1 4]
+
+            H = [first.(c) last.(c) last.(c)]
+
+            v = view(H,SVector(0.5,3),1:3)
+            @test eachindex(v) == 1:3
+            @test isassigned(v,1)
+            @test isassigned(v,3)
+            @test !isassigned(v,4)
+            
+            @test H[SVector(0.5,3),1:3] == [H[SVector(0.5,3),k] for k = 1:3] == [c[SVector(0.5,3)]; c[SVector(0.5,3)][2]]
         end
     end
 

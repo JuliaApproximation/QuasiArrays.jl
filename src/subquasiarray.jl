@@ -187,6 +187,7 @@ end
 # indices, it's worth optimizing these implementations thoroughly
 axes(S::SubArray{T,N,<:AbstractQuasiArray}) where {T,N} =
     _quasi_indices_sub(axes(parent(S)), S.indices)
+Base.axes1(S::SubArray{T,N,<:AbstractQuasiArray}) where {T,N} = axes(S,1)
 _quasi_indices_sub(axs::Tuple{AbstractQuasiVector{IND},Vararg{Any}}, inds::Tuple{IND,Vararg{Any}}) where IND =
     (@_inline_meta; _quasi_indices_sub(tail(axs), tail(inds)))
 _quasi_indices_sub(axs::Tuple{AbstractVector{IND},Vararg{Any}}, inds::Tuple{IND,Vararg{Any}}) where IND =
@@ -203,6 +204,8 @@ end
 
 quasi_reindex(axs::Tuple{AbstractQuasiOrVector{IND}, Vararg{Any}}, idxs::Tuple{IND, Vararg{Any}}, subidxs::Tuple{Vararg{Any}}) where IND =
     (@_propagate_inbounds_meta; (idxs[1], quasi_reindex(tail(axs), tail(idxs), subidxs)...))
+quasi_reindex(axs::Tuple{AbstractQuasiOrVector{IND}, Vararg{Any}}, idxs::Tuple{Slice, Vararg{Any}}, subidxs::Tuple{Any, Vararg{Any}}) where IND =
+    (@_propagate_inbounds_meta; (subidxs[1], quasi_reindex(tail(axs), tail(idxs), tail(subidxs))...))
 quasi_reindex(axs::Tuple{AbstractQuasiOrVector{IND}, Vararg{Any}}, idxs::Tuple{AbstractQuasiOrVector{IND}, Vararg{Any}}, subidxs::Tuple{Any, Vararg{Any}}) where IND =
     (@_propagate_inbounds_meta; (idxs[1][subidxs[1]], quasi_reindex(tail(axs), tail(idxs), tail(subidxs))...))
 
@@ -220,7 +223,12 @@ function getindex(V::SubArray{T,N,<:AbstractQuasiArray}, I::Vararg{Int,N}) where
     r
 end
 
-
+function isassigned(V::SubArray{T,N,<:AbstractQuasiArray}, I::Vararg{Int,N}) where {T,N}
+    @inline
+    @boundscheck checkbounds(Bool, V, I...) || return false
+    @inbounds r = isassigned(V.parent, quasi_reindex(axes(parent(V)), V.indices, I)...)
+    r
+end
 
 # In general, we simply re-index the parent indices by the provided ones
 SlowSubQuasiArray{T,N,P,I} = SubQuasiArray{T,N,P,I,false}
