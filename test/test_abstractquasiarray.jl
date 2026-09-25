@@ -32,6 +32,12 @@ import QuasiArrays: QuasiCartesianIndex
         @test_throws BoundsError A[0.1,2,6]
     end
 
+    @testset "first" begin
+        @test first(A) == A[0,1,2] == A.parent[1]
+        v = QuasiArray([3,4,5], (0:0.5:1,))
+        @test first(v) ≡ 3
+    end
+
     @testset "Bounds checking" begin
         @test QuasiArrays.checkbounds(Bool, A, 0, 1, 2) == QuasiArrays.checkbounds(Bool, A, 0.0, 1, 2) == true
         @test QuasiArrays.checkbounds(Bool, A, 1, 4, 3) == true
