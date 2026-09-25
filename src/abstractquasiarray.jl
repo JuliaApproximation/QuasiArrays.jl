@@ -254,7 +254,7 @@ julia> firstindex(rand(3,4,5), 2)
 firstindex(a::AbstractQuasiArray) = (@_inline_meta; first(eachindex(IndexLinear(), a)))
 firstindex(a::AbstractQuasiArray, d) = (@_inline_meta; first(axes(a, d)))
 
-first(a::AbstractQuasiArray) = a[first(eachindex(a))]
+first(a::AbstractQuasiArray) = a[map(first, axes(a))...]
 stride(A::AbstractQuasiArray, k::Integer) = strides(A)[k]
 
 function isassigned(a::AbstractQuasiArray, i...)
