@@ -63,6 +63,11 @@ Base.getindex(A::MyQuasiLazyMatrix, x::Float64, y::Float64) = A.A[x,y]
                 @test (2M).args[2] == (M*2).args[2] == 2B
                 @test M/2 ≈ 2\M ≈ A*B/2
                 @test (2\M).args[2] == (M/2).args[2] == B/2
+                # negation also reduces array
+                @test -M isa ApplyQuasiArray
+                @test -M ≈ -(A*B)
+                @test (-M).args[1] === A
+                @test (-M).args[2] == -B
 
                 @test colsupport(M, 1) == axes(M,1)
                 @test rowsupport(M, 1) == axes(M,2)
@@ -75,6 +80,10 @@ Base.getindex(A::MyQuasiLazyMatrix, x::Float64, y::Float64) = A.A[x,y]
                 @test (2M).args[1] == (M*2).args[1] == 2B'
                 @test M/2 ≈ 2\M ≈ B'A'/2
                 @test (2\M).args[1] == (M/2).args[1] == B'/2
+                @test -M isa ApplyQuasiArray
+                @test -M ≈ -(B'A')
+                @test (-M).args[1] == -B'
+                @test (-M).args[2] === A'
             end
         end
         @testset "MyQuasi" begin

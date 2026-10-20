@@ -132,10 +132,17 @@ _rdiv_scal_reduce(x::Number, Z) = (Z / x,)
 _rdiv_scal_reduce(x::Number, Z::AbstractArray, Y...) = (Y..., Z/x)
 _rdiv_scal_reduce(x::Number, Z, Y...) = (_rdiv_scal_reduce(x, Y...)..., Z)
 
+_neg_reduce(A) = (-A,)
+_neg_reduce(A::AbstractArray, B...) = (-A, B...)
+_neg_reduce(A, B...) = (A, _neg_reduce(B...)...)
+
 broadcasted(::LazyQuasiArrayStyle{N}, ::typeof(*), x::Number, A::MulQuasiArray{<:Any,N}) where N = 
     ApplyQuasiArray(*, _lmul_scal_reduce(x, arguments(A)...)...)
 broadcasted(::LazyQuasiArrayStyle{N}, ::typeof(*), A::MulQuasiArray{<:Any,N}, x::Number) where N = 
     ApplyQuasiArray(*, _rmul_scal_reduce(x, reverse(arguments(A))...)...)
+
+broadcasted(::LazyQuasiArrayStyle{N}, ::typeof(-), A::MulQuasiArray{<:Any,N}) where N =
+    ApplyQuasiArray(*, _neg_reduce(arguments(A)...)...)
 
 broadcasted(::LazyQuasiArrayStyle{N}, ::typeof(\), x::Number, A::MulQuasiArray{<:Any,N}) where N = 
     ApplyQuasiArray(*, _ldiv_scal_reduce(x, arguments(A)...)...)
