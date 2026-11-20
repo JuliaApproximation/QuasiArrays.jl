@@ -490,6 +490,7 @@ dataids(A::AbstractQuasiArray) = (UInt(objectid(A)),)
 
 
 function equals_layout(_, _, A, B)
+    A === B && return true
     if axes(A) != axes(B)
         return false
     end
