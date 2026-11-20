@@ -488,20 +488,6 @@ dataids(A::AbstractQuasiArray) = (UInt(objectid(A)),)
 
 ## Reductions and accumulates ##
 
-function isequal(A::AbstractQuasiArray, B::AbstractQuasiArray)
-    if A === B return true end
-    if axes(A) != axes(B)
-        return false
-    end
-    for (a, b) in zip(A, B)
-        if !isequal(a, b)
-            return false
-        end
-    end
-    return true
-end
-
-
 
 function equals_layout(_, _, A, B)
     if axes(A) != axes(B)
