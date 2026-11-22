@@ -181,6 +181,24 @@ import QuasiArrays: QuasiCartesianIndex, QuasiCartesianIndices, DefaultQuasiArra
             @test B[[0.1,0.2],2] == 2*[0.1,0.2]
             @test B[[0.1,0.2],2:3] == [0.1,0.2] * (2:3)'
         end
+
+        @testset "indexing at finitely many points materialises" begin
+            x, y = Inclusion(0:0.5:2), Inclusion(1:0.5:2)
+            b = exp.(x)
+            @test b[[0.5,1.0]] isa Vector{Float64}
+            @test b[[0.5,1.0]] == exp.([0.5,1.0])
+
+            B = [exp(s*cos(t)) for s in x, t in y]
+            @test B[[0.5,1.0],[1.5,2.0]] isa Matrix{Float64}
+            @test B[[0.5,1.0],[1.5,2.0]] ≈ exp.([0.5,1.0] .* cos.([1.5,2.0]'))
+            @test B[0.5,[1.5,2.0]] isa Vector{Float64}
+            @test B[[0.5,1.0],1.5] isa Vector{Float64}
+            @test B[[0.5,1.0],1.5] ≈ exp.([0.5,1.0] .* cos(1.5))
+
+            @test @inferred(BroadcastStyle(typeof(view(x, [0.5,1.0])))) isa DefaultArrayStyle{1}
+            @test @inferred(BroadcastStyle(typeof(view(B, [0.5,1.0], [1.5,2.0])))) isa DefaultArrayStyle{2}
+            @test BroadcastStyle(typeof(view(x, BroadcastArray(+, [0.5,1.0])))) isa LazyArrays.LazyArrayStyle{1}
+        end
     end
 
     @testset "SubQuasi Broadcast" begin
