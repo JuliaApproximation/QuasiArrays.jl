@@ -99,7 +99,9 @@ struct LazyQuasiArrayStyle{N} <: AbstractQuasiArrayStyle{N} end
 LazyQuasiArrayStyle(::Val{N}) where N = LazyQuasiArrayStyle{N}()
 LazyQuasiArrayStyle{M}(::Val{N}) where {N,M} = LazyQuasiArrayStyle{N}()
 quasisubbroadcaststyle(::LazyQuasiArrayStyle{N}, _) where N = LazyQuasiArrayStyle{N}()
-subbroadcaststyle(::LazyQuasiArrayStyle{N}, _) where N = LazyArrayStyle{N}()
+# A view with ordinary indices has finitely many entries, so it is only lazy if one of its indices is.
+subbroadcaststyle(::LazyQuasiArrayStyle{N}, ::Type{I}) where {N,I<:Tuple} =
+    _haslazyindex(I) ? LazyArrayStyle{N}() : DefaultArrayStyle{N}()
 subbroadcaststyle(::AbstractQuasiArrayStyle{N}, _) where N = DefaultArrayStyle{N}()
 
 # TODO: generalise
@@ -113,6 +115,11 @@ subbroadcaststyle(::LazyQuasiArrayStyle{2}, ::Type{<:Tuple{KR,Number}}) where KR
 
 _broadcaststyle(JR) = Base.BroadcastStyle(JR)
 _broadcaststyle(::Type{<:Base.Slice}) = LazyArrayStyle{1}()
+
+_islazyindex(::Type{<:Number}) = false
+_islazyindex(::Type{JR}) where JR = _broadcaststyle(JR) isa LazyArrayStyle
+_haslazyindex(::Type{Tuple{}}) = false
+_haslazyindex(::Type{I}) where I<:Tuple = _islazyindex(fieldtype(I, 1)) || _haslazyindex(Base.tuple_type_tail(I))
 
 _lazyiflazystyle(_) = DefaultArrayStyle{1}()
 _lazyiflazystyle(laz::LazyArrayStyle) = laz
