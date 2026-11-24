@@ -1,6 +1,7 @@
-axistype(a::AbstractQuasiVector{<:Number}, b::AbstractQuasiVector{<:Number}) = a
-axistype(a::AbstractQuasiVector{<:Number}, b::AbstractVector{<:Number}) = a
-axistype(a::AbstractVector{<:Number}, b::AbstractQuasiVector{<:Number}) = b
+# quasi-axes can have non-numeric points, e.g. Inclusion(UnitDisk()) has SVector points
+axistype(a::AbstractQuasiVector, b::AbstractQuasiVector) = a
+axistype(a::AbstractQuasiVector, b::AbstractVector{<:Number}) = a
+axistype(a::AbstractVector{<:Number}, b::AbstractQuasiVector) = b
 
 """
 `Broadcast.AbstractQuasiArrayStyle{N} <: BroadcastStyle` is the abstract supertype for any style

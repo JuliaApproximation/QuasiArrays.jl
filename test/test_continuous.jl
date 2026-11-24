@@ -54,5 +54,10 @@ import QuasiArrays: ApplyQuasiArray
         @test_throws MethodError sum(exp(x*cos(y)) for x in 1..2, y in 2..3)
         @test [exp(x) for x in 1..2] isa BroadcastQuasiVector
         @test_throws MethodError [exp(x*cos(y)) for x in 1..2, y in 2..3]
+
+        # non-numeric points, e.g. (x,y) in UnitDisk()
+        f = [x*z + y for (x,y) in Inclusion([(0.1,0.2), (0.3,0.4)]), z in Inclusion([1.0,2.0,3.0])]
+        @test f isa BroadcastQuasiMatrix{Float64}
+        @test f[(0.3,0.4),2.0] ≈ 1.0
     end
 end
