@@ -38,6 +38,20 @@ import QuasiArrays: ApplyQuasiArray
         @test union(y,y) ≡ y
         z = Inclusion(UnitInterval())
         @test union(z,z) ≡ z
+
+        @testset "abstract quasi-array constructors and conversions" begin
+            d = UnitInterval()
+            x = Inclusion(d)
+            x32 = Inclusion{Float32}(d)
+            for A in (AbstractQuasiArray, AbstractQuasiVector)
+                @test A(x) === x
+                @test A{Float32}(x) === x32
+                @test A(d) === x
+                @test A{Float32}(d) === x32
+                @test convert(A, d) === x
+                @test convert(A{Float32}, d) === x32
+            end
+        end
     end
 
     @testset "QuasiDiagonal" begin
@@ -54,5 +68,13 @@ import QuasiArrays: ApplyQuasiArray
         @test_throws MethodError sum(exp(x*cos(y)) for x in 1..2, y in 2..3)
         @test [exp(x) for x in 1..2] isa BroadcastQuasiVector
         @test_throws MethodError [exp(x*cos(y)) for x in 1..2, y in 2..3]
+
+        d, y = UnitInterval(), Inclusion(1:0.5:2)
+        @test_throws ErrorException("not implemented") [s*t*u for s in d, t in y, u in y]
+
+        # non-numeric points, e.g. (x,y) in UnitDisk()
+        f = [x*z + y for (x,y) in Inclusion([(0.1,0.2), (0.3,0.4)]), z in Inclusion([1.0,2.0,3.0])]
+        @test f isa BroadcastQuasiMatrix{Float64}
+        @test f[(0.3,0.4),2.0] ≈ 1.0
     end
 end

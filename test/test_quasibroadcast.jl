@@ -182,6 +182,28 @@ import QuasiArrays: QuasiCartesianIndex, QuasiCartesianIndices, DefaultQuasiArra
             @test B[[0.1,0.2],2:3] == [0.1,0.2] * (2:3)'
         end
 
+        @testset "non-numeric points" begin # e.g. Inclusion(UnitDisk()) has SVector points
+            x, z = Inclusion([(0.1,0.2), (0.3,0.4)]), Inclusion([1.0,2.0,3.0])
+            B = first.(x) .* z'
+            @test axes(B) == (x, z)
+            @test B[(0.3,0.4),2.0] ≈ 0.6
+            @test axes(z' .* last.(x)) == (x, z)
+            @test axes(first.(x) .* (1:3)') == (x, Base.OneTo(3))
+            @test (first.(x) .+ last.(x))[(0.3,0.4)] ≈ 0.7
+        end
+
+        @testset "broadcasting singleton quasi and ordinary axes" begin
+            x = Inclusion(1:3)
+            B = x .+ [5]
+            @test axes(B) == (x,)
+            @test B[2] == 7
+
+            y = Inclusion(2:2)
+            C = [4,5,6] .+ y
+            @test axes(C) == (y,)
+            @test C[2] == 7
+        end
+
         @testset "indexing at finitely many points materialises" begin
             x, y = Inclusion(0:0.5:2), Inclusion(1:0.5:2)
             b = exp.(x)
