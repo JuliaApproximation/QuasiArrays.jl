@@ -143,6 +143,21 @@ Inclusion(domain) = Inclusion{eltype(domain)}(domain)
 Inclusion(S::Inclusion) = S
 Inclusion(S::Slice) = Inclusion(S.indices)
 
+AbstractQuasiArray(d::Inclusion) = d
+AbstractQuasiVector(d::Inclusion) = d
+AbstractQuasiArray{T}(d::Inclusion) where T = Inclusion{T}(d)
+AbstractQuasiVector{T}(d::Inclusion) where T = Inclusion{T}(d)
+
+AbstractQuasiArray(d::Domain) = Inclusion(d)
+AbstractQuasiVector(d::Domain) = Inclusion(d)
+AbstractQuasiArray{T}(d::Domain) where T = Inclusion{T}(d)
+AbstractQuasiVector{T}(d::Domain) where T = Inclusion{T}(d)
+convert(::Type{AbstractQuasiArray}, d::Domain) = AbstractQuasiArray(d)
+convert(::Type{AbstractQuasiVector}, d::Domain) = AbstractQuasiVector(d)
+convert(::Type{AbstractQuasiArray{T}}, d::Domain) where T = AbstractQuasiArray{T}(d)
+convert(::Type{AbstractQuasiVector{T}}, d::Domain) where T = AbstractQuasiVector{T}(d)
+
+
 struct PolynomialLayout <: MemoryLayout end
 
 MemoryLayout(::Type{<:Inclusion}) = PolynomialLayout()
