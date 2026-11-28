@@ -369,8 +369,32 @@ getindex(A::AbstractQuasiArray, I...) = _getindex(indextype(A), A, I)
 function _getindex(::Type{IND}, A::AbstractQuasiArray, I) where IND
     @_propagate_inbounds_meta
     error_if_canonical_getindex(IndexStyle(A), A, I)
-    _getindex(IND, IndexStyle(A), A, to_indices(A, I))
+    J = to_indices(A, I)
+    _getindex_convertedpoints(IND, A, I, J, _convertpoints(IND, I, J))
 end
+
+# If converting the indices changed the type of a point (eg, a Tuple to an SVector, or an Int to a Float64),
+# we call getindex again with the converted points so that methods for their types are used, eg, a method
+# for a point and a range. Other indices, such as Colon or arrays, are left as they are, so the
+# second call does not convert any points and falls back to the generic implementation.
+# Scalar indexing (the converted indices are of the index type) already calls getindex again
+# after checking bounds.
+_getindex_convertedpoints(::Type{IND}, A::AbstractQuasiArray, ::K, J, ::K) where {IND,K} =
+    (@_propagate_inbounds_meta; _getindex(IND, IndexStyle(A), A, J))
+_getindex_convertedpoints(::Type{IND}, A::AbstractQuasiArray, I, J, K) where IND =
+    (@_propagate_inbounds_meta; J isa IND ? _getindex(IND, IndexStyle(A), A, J) : getindex(A, K...))
+
+# replace the indices of I that are points with their conversions in J
+_convertpoints(::Type{Tuple{}}, ::Tuple{}, ::Tuple{}) = ()
+_convertpoints(::Type{IND}, I::Tuple{Any,Vararg{Any,N}}, J::Tuple{Any,Vararg{Any,N}}) where {N,IND<:Tuple{Any,Vararg{Any,N}}} =
+    (_convertpoint(Base.tuple_type_head(IND), first(I), first(J)), _convertpoints(Base.tuple_type_tail(IND), tail(I), tail(J))...)
+_convertpoints(_, I, _) = I # the indices do not correspond to the dimensions, eg, linear indexing
+
+_convertpoint(::Type, i, j) = i
+_convertpoint(::Type{T}, i, j::T) where T = _ispoint(i) ? j : i
+_ispoint(_) = true
+_ispoint(::Union{AbstractArray,AbstractQuasiArray,Colon}) = false
+
 function unsafe_getindex(A::AbstractQuasiArray, I...)
     @_inline_meta
     @inbounds r = getindex(A, I...)

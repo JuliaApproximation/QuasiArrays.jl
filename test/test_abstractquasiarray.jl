@@ -1,6 +1,12 @@
 using QuasiArrays, LinearAlgebra, Test
 import QuasiArrays: QuasiCartesianIndex
 
+# has a specialised getindex for a point and a vector of indices, which returns -1s so it can be distinguished
+struct SpecialisedIndexing <: AbstractQuasiMatrix{Float64} end
+Base.axes(::SpecialisedIndexing) = (Inclusion(0:0.5:1), Base.OneTo(3))
+Base.getindex(A::SpecialisedIndexing, x::Float64, j::Int) = (@boundscheck checkbounds(A, x, j); x + j)
+Base.getindex(A::SpecialisedIndexing, x::Float64, jr::AbstractVector{Int}) = (@boundscheck checkbounds(A, x, jr); fill(-1.0, length(jr)))
+
 @testset "AbstractQuasiArray" begin
     A = QuasiArray(rand(5,4,3), (range(0;stop=1,length=5), Base.OneTo(4), [2,3,6]))
 
@@ -137,6 +143,19 @@ import QuasiArrays: QuasiCartesianIndex
         @test Base.to_indices(A, axes(A), ([1,2],)) isa Tuple{Vector{Float64}}
         @test parentindices(view(A,[1,2])) isa Tuple{Vector{Float64}}
         @test A[[1,2]] == A[[1.0,2.0]] == parent(A)[1] 
+    end
+
+    @testset "converted points use specialised getindex" begin
+        A = SpecialisedIndexing()
+        @test A[1.0, 2] == A[1, 2] == 3.0
+        @test A[1.0, 1:2] == fill(-1.0, 2)
+        # the point 1 is converted to 1.0, after which the specialised method is used
+        @test @inferred(A[1, 1:2]) == A[1, [1,2]] == fill(-1.0, 2)
+        # Colon is not a point, so it is not converted before calling getindex again
+        @test @inferred(A[0.5, :]) == @inferred(A[1, :]) .- 0.5 == [1.5, 2.5, 3.5]
+        @test_throws BoundsError A[2, 1]
+        @test_throws BoundsError A[1, 1:4]
+        @test_throws BoundsError A[2, 1:2]
     end
 
     @testset "convert" begin
